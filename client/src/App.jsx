@@ -1,20 +1,17 @@
-import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react'
-
-import './App.css'
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import CareerPortal from "./components/CareerPage";
+import JobDetail from "./components/JobDetail";
 
 function App() {
-
   return (
-    <>
-      <h1>Hi</h1>
-      <SignedOut>
-        <SignInButton />
-      </SignedOut>
-      <SignedIn>
-        <UserButton />
-      </SignedIn>
-    </>
-  )
+    <Router>
+      <Routes>
+        <Route path="/" element={<h1>Welcome to SkillSwap</h1>} />
+        <Route path="/careers" element={<CareerPortal />} />
+        <Route path="/careers/frontend-dev" element={<JobDetail />} />
+      </Routes>
+    </Router>
+  );
 }
 
-export default App
+export default App;

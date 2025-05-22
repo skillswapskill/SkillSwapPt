@@ -7,6 +7,8 @@ const sessionSchema = new mongoose.Schema({
     scheduledAt: Date,
     duration: Number,
     creditsUsed: Number,
+    subscribed:Boolean,
+    unsubscribed:{type:Boolean,default:false},
     status: { type: String, enum: ['Scheduled', 'Completed', 'Cancelled'], default: 'Scheduled' }
 });
 

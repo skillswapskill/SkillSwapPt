@@ -15,7 +15,8 @@ const userSchema=new mongoose.Schema({
     },
     creditEarned: { type: Number, default: 0 },
     creditSpent: { type: Number, default: 0 },
-    totalCredits: { type: Number, default: 100 }, // Initial credits
+    demandedCredit:{type:Number,default:0},
+    totalCredits: { type: Number, default: 200 }, // Initial credits
     clerkId: {
         type: String,
         required: true,
