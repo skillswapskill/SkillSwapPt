@@ -1,6 +1,6 @@
 export default function JobDetail() {
   return (
-    <div className="min-h-screen bg-white p-8 max-w-3xl mx-auto">
+    <div className="min-h-screen bg-white p-35 max-w-3xl mx-auto">
       <h1 className="text-3xl font-bold text-indigo-700 mb-4">Frontend / UI-UX Developer</h1>
       <p className="text-gray-700 mb-4">
         We're looking for a creative and passionate frontend/UI-UX dev to join SkillSwap. You'll design user-centric interfaces, work with React and Tailwind, and help shape the future of learning experiences.
