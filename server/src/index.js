@@ -2,7 +2,7 @@ import express from "express"
 import dotenv from "dotenv"
 import {connectDB} from "./db/db.js"
 import cors from "cors"
-import creditRoutes from './routes/credit.routes.js';
+import creditRoutes from './routes/credits.routes.js';
 
 
 dotenv.config()
