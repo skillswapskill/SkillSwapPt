@@ -30,8 +30,11 @@ const userSchema = new mongoose.Schema(
     },
     totalCredits: {
       type: Number,
-      default: 200,
+      default: 0,
     },
+    firstLoginRewarded: { type: Boolean, default: false },
+
+
   },
   { timestamps: true }
 );
