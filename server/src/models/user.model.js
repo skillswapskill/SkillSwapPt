@@ -33,7 +33,9 @@ const userSchema = new mongoose.Schema(
       default: 0,
     },
     firstLoginRewarded: { type: Boolean, default: false },
-
+    isSetupDone: { type: Boolean, default: false },
+    profilePic: String, // New field if you store image URL or base64
+    skills: [String],
 
   },
   { timestamps: true }
