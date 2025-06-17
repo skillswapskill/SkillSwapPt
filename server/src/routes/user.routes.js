@@ -85,5 +85,14 @@ router.put("/update", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+router.get("/all",async(req,res)=>{
+  try {
+    const users=await User.find({},"name");
+    res.status(200).json({users})
+  } catch (err) {
+    console.error("Error fetching all users", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+})
 
 export default router;

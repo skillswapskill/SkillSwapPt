@@ -10,6 +10,7 @@ import Login from "./components/Login";
 import Register from "./components/Register";
 import Business from "./components/Business"
 import Profile from "./components/Profile"
+import Dashboard from "./components/dashboard"
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
         <Route path="/careers/frontend-dev" element={<JobDetail />} />
         <Route path="business" element={<Business/>}/>
         <Route path="/profile" element={<Profile/>}/>
+        <Route path="/dashboard" element={<Dashboard/>}/>
       </Routes>
 
       <Footer />
