@@ -36,6 +36,7 @@ function Profile() {
         setSkills(data.skills );
         setProfilePic(data.profilePic );
         if (data.showCongrats) setShowCongrats(true);
+        
       } catch (err) {
         console.error("Sync failed", err);
       }

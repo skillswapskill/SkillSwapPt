@@ -13,7 +13,7 @@ router.post("/webhook", handleClerkWebhook);
 
 // in user.routes.js
 router.post("/sync", async (req, res) => {
-  const { clerkId, name, email } = req.body;
+  const { clerkId, name, email,profilePic } = req.body;
   try {
     let user = await User.findOne({ clerkId });
     if (!user) {
@@ -22,6 +22,7 @@ router.post("/sync", async (req, res) => {
         clerkId, name, email,
         totalCredits: 300,
         isSetupDone: false,
+        profilePic: req.body.profilePic || ""
       });
     }
     res.json({
@@ -87,7 +88,8 @@ router.put("/update", async (req, res) => {
 });
 router.get("/all",async(req,res)=>{
   try {
-    const users=await User.find({},"name");
+    
+    const users = await User.find({}, "name profilePic");
     res.status(200).json({users})
   } catch (err) {
     console.error("Error fetching all users", err);
@@ -97,6 +99,7 @@ router.get("/all",async(req,res)=>{
 
 router.get("/setup-complete",async(req,res)=>{
   const {clerkId}=req.query;
+  if(!clerkId) return res.status(400).json({ error: "Missing clerkId in request body" });
   try {
     const user=await User.findOne({clerkId})
 
