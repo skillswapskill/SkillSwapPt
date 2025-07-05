@@ -1,11 +1,29 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { FaSearch } from "react-icons/fa";
+import { useUser } from "@clerk/clerk-react";
 
-const Dashboard = ({ user }) => {
+
+const Dashboard = () => {
+  const { user, isSignedIn } = useUser();
+  // console.log("Clerk User:", user);
+
   const [allUsers, setAllUsers] = useState([]);
   const [treesPlanted, setTreesPlanted] = useState(10000);
   const [search, setSearch] = useState("");
+  // const { user, isSignedIn } = useUser();
+
+  const userInfo = async () => {
+  try {
+    const res = await axios.get("http://localhost:5000/api/users/setup-complete", {
+      params: { clerkId: user?.id },
+      withCredentials: true,
+    });
+    console.log(res.data);
+  } catch (err) {
+    console.error("Error fetching setup info:", err);
+  }
+};
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -24,52 +42,53 @@ const Dashboard = ({ user }) => {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setTreesPlanted((prev) => prev + 199);
+      setTreesPlanted((prev) => prev + 1);
     }, 1000);
     return () => clearInterval(interval);
   }, []);
 
   const getTimeGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return "Good Morning";
-    else if (hour < 18) return "Good Afternoon";
-    else return "Good Evening";
+    if (hour < 12) return "Good Morning 🌅 ";
+    else if (hour < 18) return "Good Afternoon 🌇";
+    else return "Good Evening 🌃";
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-between px-6 py-10 bg-gray-50">
+    <div className="min-h-screen flex flex-col justify-between px-6 py-10 bg-gradient-to-br from-purple-100 via-white to-blue-100">
       {/* Greeting and Search */}
+      <br></br>
+      <br></br>
       <div>
-        <br></br>
-        <br></br>
-        <h1 className="text-3xl font-bold text-center mb-8  text-blue-700">
-          {getTimeGreeting()}, {user?.name ||"Sir"} ☀️
+        <h1 className="text-3xl font-bold text-center mb-8 text-blue-700">
+          {getTimeGreeting()}, {user?.firstName || "Sir"}
+
         </h1>
 
-        {/* Centered search bar */}
+        {/* Centered Search Bar */}
         <div className="flex justify-center mb-12">
           <div className="flex items-center bg-white rounded-full px-4 py-2 shadow-md w-full max-w-md">
-            <FaSearch className=" text-blue-700 mr-3" />
+            <FaSearch className="text-blue-700 mr-3" />
             <input
               type="text"
               placeholder="Dive into your Skills"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="outline-none w-full bg-transparent  text-blue-700"
+              className="outline-none w-full bg-transparent text-blue-700"
             />
           </div>
         </div>
 
-        {/* Circular avatars */}
-        <div className="flex flex-wrap justify-center gap-64">
+        {/* Circular Avatars */}
+        <div className="flex flex-wrap justify-center gap-9">
           {allUsers.map((u, idx) => (
             <div
               key={idx}
-              className="w-20 h-20 rounded-full bg-white shadow-md flex items-center justify-center hover:scale-105 transition"
+              className="w-20 h-20 rounded-full bg-#1212 shadow-md flex items-center justify-center hover:scale-110 transition"
             >
-              <span className="text-sm font-semibold text-center px-2  text-blue-700">
+              <button className="text-sm font-semibold text-center px-6 text-blue-500" onClick={userInfo}>
                 {u.name.split(" ")[0]}
-              </span>
+              </button>
             </div>
           ))}
         </div>

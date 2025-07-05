@@ -5,13 +5,13 @@ const Login = () => {
   const { isSignedIn, isLoaded } = useUser();
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-50">
+    <div className="flex justify-center items-center min-h-screen bg-gray-100">
       {!isLoaded ? (
-        <p className="text-lg font-semibold">Loading...</p>
+        <p className="text-lg font-semibold">Curating your Profile Sir</p>
       ) : isSignedIn ? (
-        <p className="text-lg font-semibold text-green-600">You are already signed in!</p>
+        <p className="text-lg font-semibold text-green-600">You are already signed in</p>
       ) : (
-        <SignIn path="/sign-in" redirectUrl="/profile" />
+        <SignIn afterSignInUrl="/profile" />
       )}
     </div>
   );

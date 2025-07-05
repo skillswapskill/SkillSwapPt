@@ -10,11 +10,22 @@ export default function CareerPortal() {
       description: "Design and build modern UIs for SkillSwap.",
     },
     // Add more roles later
+    {
+      id:"Blockchain Developer",
+      title:"Blockchain Developer",
+      description: "Design BlockChain and Crypto System for SkillSwap."
+    }
   ];
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
-      <h1 className="text-3xl font-bold text-center mb-8 ">🚀 Career Portal</h1>
+      <br>
+      </br>
+      <br>
+      </br>
+      <br>
+      </br>
+      <h1 className="text-3xl font-bold text-center mb-8 text-blue-800">🚀 Career Portal</h1>
       <div className="grid gap-6 md:grid-cols-3 sm:grid-cols-2 grid-cols-1">
         {jobs.map((job) => (
           <div

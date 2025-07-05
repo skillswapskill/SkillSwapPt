@@ -95,4 +95,24 @@ router.get("/all",async(req,res)=>{
   }
 })
 
+router.get("/setup-complete",async(req,res)=>{
+  const {clerkId}=req.query;
+  try {
+    const user=await User.findOne({clerkId})
+
+    if(!user)return res.status(404).json({message:"User not found"});
+
+    res.json({
+      name:user.name,
+      skills:user.skills,
+      
+    })
+
+
+  } catch (error) {
+    console.error("Failed to fetch setup data:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+})
+
 export default router;

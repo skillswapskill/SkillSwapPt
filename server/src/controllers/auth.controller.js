@@ -19,6 +19,7 @@ export const handleUserSync = async (req, res) => {
       // If not, create a new one — you may get more details via Clerk API
       user = await User.create({
         clerkId: userId,
+        // console.log("Some issue with users generally clerk related")
         // Add other fields if needed, like email, name from frontend or Clerk API
       });
     }
