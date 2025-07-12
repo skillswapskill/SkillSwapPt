@@ -11,6 +11,7 @@ import Register from "./components/Register";
 import Business from "./components/Business"
 import Profile from "./components/Profile"
 import Dashboard from "./components/dashboard"
+import ProfileClicked from "./components/ProfileClicked";
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
         <Route path="business" element={<Business/>}/>
         <Route path="/profile" element={<Profile/>}/>
         <Route path="/dashboard" element={<Dashboard/>}/>
+        <Route path="/profileclicked" element={<ProfileClicked />} />
       </Routes>
 
       <Footer />
