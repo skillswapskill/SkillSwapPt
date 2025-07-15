@@ -4,9 +4,9 @@ import { useLocation, useNavigate } from "react-router-dom";
 const ProfileClicked = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const user = "John Doe"; // Placeholder for user data, replace with actual user data from context or props  
-
-  if (!user) {
+  const user = location.state?.selectedUser;; // Placeholder for user data, replace with actual user data from context or props  
+  console.log("User data in ProfileClicked:", user);
+  if (!user.name) {
     return (
       <div className="min-h-screen flex items-center justify-center text-red-500 text-xl">
         No user selected. Go back and click on a user profile.
@@ -34,7 +34,7 @@ const ProfileClicked = () => {
           />
           <div>
             {/* {user.name} in down */}
-            <h2 className="text-2xl font-bold text-blue-800">{user}</h2>
+            <h2 className="text-2xl font-bold text-blue-800">{user.name}</h2>
             <div className="flex flex-wrap gap-2 mt-2">
               {user.skills && user.skills.length > 0 ? (
                 user.skills.map((skill, idx) => (

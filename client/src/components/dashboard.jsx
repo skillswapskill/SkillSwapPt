@@ -13,16 +13,34 @@ const Dashboard = () => {
   const [search, setSearch] = useState("");
   const [selectedUser, setSelectedUser] = useState(null); // 🌟 Popup state
 
+  // Helper function to extract profile pic URL from Clerk user object or DB field
+  const getProfilePic = (userObj) => {
+    if (!userObj) return "/user.png";
+    return (
+      userObj.profile_image_url ||
+      (userObj.external_accounts &&
+        userObj.external_accounts.length > 0 &&
+        (userObj.external_accounts[0].avatar_url || userObj.external_accounts[0].image_url)) ||
+      userObj.image_url ||
+      userObj.profilePic || // fallback to DB field profilePic
+      "/user.png"
+    );
+  };
+
   const syncLoggedInUser = async () => {
     try {
       if (!user?.id) return;
+
+      // Extract profile pic URL from Clerk user object
+      const profilePic = getProfilePic(user);
+
       await axios.post(
         "http://localhost:5000/api/users/sync",
         {
           clerkId: user.id,
           name: user.fullName,
           email: user.primaryEmailAddress?.emailAddress,
-          profilePic: user.imageUrl,
+          profilePic: profilePic,
         },
         { withCredentials: true }
       );
@@ -63,21 +81,7 @@ const Dashboard = () => {
     if (hour < 18) return "Good Afternoon 🌇";
     return "Good Evening 🌃";
   };
-  const collectSkills = (users) => {
-    const skillSet = new Set();
 
-    users.forEach((user) => {
-      if (Array.isArray(user.skills)) {
-        user.skills.forEach((skill) => {
-          if (typeof skill === "string" && skill.trim()) {
-            skillSet.add(skill.trim());
-          }
-        });
-      }
-    });
-
-    return Array.from(skillSet).sort();
-  };
   return (
     <div className="min-h-screen flex flex-col justify-between px-6 py-10 bg-gradient-to-br from-purple-100 via-white to-blue-100">
       {/* Greeting */}
@@ -112,7 +116,7 @@ const Dashboard = () => {
                 title={u.name}
               >
                 <img
-                  src={u.profilePic || "/user.png"}
+                  src={getProfilePic(u)}
                   alt={u.name}
                   className="w-full h-full object-cover cursor-pointer"
                   onClick={() => setSelectedUser(u)} // 👈 Show popup
@@ -143,7 +147,7 @@ const Dashboard = () => {
             </button>
             <div className="flex flex-col items-center">
               <img
-                src={selectedUser.profilePic || "/user.png"}
+                src={getProfilePic(selectedUser)}
                 alt={selectedUser.name}
                 className="w-24 h-24 rounded-full object-cover mb-4 border-2 border-blue-500"
               />
@@ -166,7 +170,9 @@ const Dashboard = () => {
                 )}
               </div>
               <button
-                onClick={() => navigate("/profileclicked")}
+                onClick={() =>
+                  navigate("/profileclicked", { state: { selectedUser } })
+                }
                 className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700"
               >
                 View Full Profile

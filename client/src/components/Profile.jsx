@@ -4,6 +4,7 @@ import axios from "axios";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DateCalendar } from "@mui/x-date-pickers/DateCalendar";
+import { set } from "mongoose";
 
 function Profile() {
   const { user, isSignedIn } = useUser();
@@ -18,25 +19,43 @@ function Profile() {
   const [isSetupDone, setIsSetupDone] = useState(false);
   const [editMode, setEditMode] = useState(false);
 
+  const [services, setServices] = useState([]);
+  const [serviceName, setServiceName] = useState("");
+  const [serviceCredits, setServiceCredits] = useState("");
+
+  const handleAddService = () => {
+    if (serviceName.trim() && serviceCredits) {
+      setServices([
+        ...services,
+        { name: serviceName.trim(), credits: parseInt(serviceCredits) },
+      ]);
+      setServiceName("");
+      setServiceCredits("");
+    }
+  };
+
   useEffect(() => {
     const syncUser = async () => {
       if (!isSignedIn) return;
 
       try {
-        const res = await axios.post("http://localhost:5000/api/users/sync", {
-          clerkId: user.id,
-          name: user.fullName,
-          email: user.primaryEmailAddress?.emailAddress,
-        }, { withCredentials: true });
+        const res = await axios.post(
+          "http://localhost:5000/api/users/sync",
+          {
+            clerkId: user.id,
+            name: user.fullName,
+            email: user.primaryEmailAddress?.emailAddress,
+          },
+          { withCredentials: true }
+        );
 
         const data = res.data;
         setCredits(data.totalCredits);
-        setIsSetupDone(data.isSetupDone );
-        setName(data.name );
-        setSkills(data.skills );
-        setProfilePic(data.profilePic );
+        setIsSetupDone(data.isSetupDone);
+        setName(data.name);
+        setSkills(data.skills);
+        setProfilePic(data.profilePic);
         if (data.showCongrats) setShowCongrats(true);
-        
       } catch (err) {
         console.error("Sync failed", err);
       }
@@ -66,12 +85,16 @@ function Profile() {
 
   const handleSubmit = async () => {
     try {
-      await axios.post("http://localhost:5000/api/users/setup-complete", {
-        clerkId: user.id,
-        name,
-        skills,
-        profilePic,
-      }, { withCredentials: true });
+      await axios.post(
+        "http://localhost:5000/api/users/setup-complete",
+        {
+          clerkId: user.id,
+          name,
+          skills,
+          profilePic,
+        },
+        { withCredentials: true }
+      );
 
       setIsSetupDone(true);
       setEditMode(false);
@@ -85,9 +108,13 @@ function Profile() {
   if (showCongrats) {
     return (
       <div className="fixed inset-0 bg-white/90 z-50 flex flex-col items-center justify-center p-6 text-center">
-        <h2 className="text-3xl font-bold text-green-600 mb-3">🎉 Congratulations!</h2>
+        <h2 className="text-3xl font-bold text-green-600 mb-3">
+          🎉 Congratulations!
+        </h2>
         <p className="text-gray-700 mb-5">
-          You've earned <span className="font-semibold text-blue-600">{credits} credits</span> for joining us!
+          You've earned{" "}
+          <span className="font-semibold text-blue-600">{credits} credits</span>{" "}
+          for joining us!
         </p>
         <button
           onClick={() => setShowCongrats(false)}
@@ -106,15 +133,28 @@ function Profile() {
         <div className="w-full max-w-md bg-white shadow-xl rounded-xl p-6">
           {step === 1 && (
             <div>
-              <h2 className="text-xl font-semibold text-center mb-6 text-blue-800">Set up your profile</h2>
+              <h2 className="text-xl font-semibold text-center mb-6 text-blue-800">
+                Set up your profile
+              </h2>
               <div className="flex flex-col items-center gap-4">
                 <label className="relative w-28 h-28 rounded-full overflow-hidden border-4 border-blue-500 shadow-lg cursor-pointer">
                   {profilePic ? (
-                    <img src={profilePic} alt="Profile" className="w-full h-full object-cover" />
+                    <img
+                      src={profilePic}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
                   ) : (
-                    <span className="text-sm text-center flex items-center justify-center w-full h-full text-gray-400">Upload</span>
+                    <span className="text-sm text-center flex items-center justify-center w-full h-full text-gray-400">
+                      Upload
+                    </span>
                   )}
-                  <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleProfilePicChange} />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                    onChange={handleProfilePicChange}
+                  />
                 </label>
                 <input
                   type="text"
@@ -123,14 +163,21 @@ function Profile() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                 />
-                <button onClick={() => setStep(2)} className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">Next</button>
+                <button
+                  onClick={() => setStep(2)}
+                  className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
+                >
+                  Next
+                </button>
               </div>
             </div>
           )}
 
           {step === 2 && (
             <div>
-              <h2 className="text-xl font-semibold text-center mb-4 text-blue-800">Add your top skills</h2>
+              <h2 className="text-xl font-semibold text-center mb-4 text-blue-800">
+                Add your top skills
+              </h2>
               <form onSubmit={handleAddSkill} className="flex gap-2 mb-4">
                 <input
                   type="text"
@@ -139,41 +186,64 @@ function Profile() {
                   placeholder="e.g. React"
                   className="flex-1 border rounded-lg px-3 py-2"
                 />
-                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Add</button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  Add
+                </button>
               </form>
               <div className="flex flex-wrap gap-2 mb-4">
                 {skills.map((skill, idx) => (
-                  <span key={idx} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center gap-1">
+                  <span
+                    key={idx}
+                    className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center gap-1"
+                  >
                     {skill}
-                    <button onClick={() => handleRemoveSkill(skill)} className="text-red-500 text-xs">✕</button>
+                    <button
+                      onClick={() => handleRemoveSkill(skill)}
+                      className="text-red-500 text-xs"
+                    >
+                      ✕
+                    </button>
                   </span>
                 ))}
               </div>
-              <button onClick={handleSubmit} className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">Submit & View Profile</button>
+              <button
+                onClick={handleSubmit}
+                className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700"
+              >
+                Submit & View Profile
+              </button>
             </div>
           )}
         </div>
       </div>
     );
   }
-        
-
 
   // Main Profile View + Edit
   return (
     <div className="min-h-screen bg-gray-50 p-6">
-      <br>
-        </br>
-        <br>
-        </br>
+      <br></br>
+      <br></br>
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Profile Info */}
         <div className="col-span-2 bg-white shadow-xl rounded-xl p-6 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-4">
             <label className="relative w-20 h-20 rounded-full overflow-hidden border-4 border-blue-500 shadow-md cursor-pointer">
-              <img src={profilePic || user.imageUrl} alt="Profile" className="w-full h-full object-cover" />
+              <img
+                src={profilePic || user.imageUrl}
+                alt="Profile"
+                className="w-full h-full object-cover"
+              />
               {editMode && (
-                <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleProfilePicChange} />
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="absolute inset-0 opacity-0 cursor-pointer"
+                  onChange={handleProfilePicChange}
+                />
               )}
             </label>
             <div>
@@ -189,15 +259,25 @@ function Profile() {
               <div className="flex flex-wrap gap-2 mt-2">
                 {skills.length > 0 ? (
                   skills.map((skill, idx) => (
-                    <span key={idx} className="bg-blue-100 text-blue-700 px-3 py-1 text-sm rounded-full flex items-center gap-1">
+                    <span
+                      key={idx}
+                      className="bg-blue-100 text-blue-700 px-3 py-1 text-sm rounded-full flex items-center gap-1"
+                    >
                       {skill}
                       {editMode && (
-                        <button onClick={() => handleRemoveSkill(skill)} className="text-red-500 text-xs">✕</button>
+                        <button
+                          onClick={() => handleRemoveSkill(skill)}
+                          className="text-red-500 text-xs"
+                        >
+                          ✕
+                        </button>
                       )}
                     </span>
                   ))
                 ) : (
-                  <p className="text-gray-400 italic text-sm">No skills added.</p>
+                  <p className="text-gray-400 italic text-sm">
+                    No skills added.
+                  </p>
                 )}
               </div>
               {editMode && (
@@ -209,7 +289,12 @@ function Profile() {
                     placeholder="Add Skill"
                     className="px-2 py-1 border rounded-md"
                   />
-                  <button type="submit" className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">Add</button>
+                  <button
+                    type="submit"
+                    className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                  >
+                    Add
+                  </button>
                 </form>
               )}
             </div>
@@ -219,9 +304,19 @@ function Profile() {
             <p className="text-3xl font-bold text-green-600">{credits}</p>
             <div className="mt-2">
               {!editMode ? (
-                <button onClick={() => setEditMode(true)} className="text-blue-600 underline ">Edit Profile</button>
+                <button
+                  onClick={() => setEditMode(true)}
+                  className="text-blue-600 underline "
+                >
+                  Edit Profile
+                </button>
               ) : (
-                <button onClick={handleSubmit} className="px-4 py-1 bg-green-600 text-white rounded hover:bg-green-700 mt-2">Save Changes</button>
+                <button
+                  onClick={handleSubmit}
+                  className="px-4 py-1 bg-green-600 text-white rounded hover:bg-green-700 mt-2"
+                >
+                  Save Changes
+                </button>
               )}
             </div>
           </div>
@@ -229,7 +324,9 @@ function Profile() {
 
         {/* Calendar */}
         <div className="bg-white shadow-xl rounded-xl p-6">
-          <h3 className="text-xl font-semibold mb-3 text-blue-700 flex items-center gap-2">📅 Calendar (Upcoming Sessions)</h3>
+          <h3 className="text-xl font-semibold mb-3 text-blue-700 flex items-center gap-2">
+            📅 Calendar (Upcoming Sessions)
+          </h3>
           <LocalizationProvider dateAdapter={AdapterDayjs}>
             <DateCalendar />
           </LocalizationProvider>
@@ -237,8 +334,53 @@ function Profile() {
 
         {/* Meeting UI */}
         <div className="bg-white shadow-xl rounded-xl p-6">
-          <h3 className="text-xl font-semibold mb-3 text-blue-700 flex items-center gap-2">📹 Meeting UI</h3>
-          <div className="text-gray-400 italic">No Meetings Scheduled for now.</div>
+          <h3 className="text-xl font-semibold mb-3 text-blue-700 flex items-center gap-2">
+            📹 My Services
+          </h3>
+
+          {/* Services List */}
+          <div className="space-y-4">
+            {services.length === 0 ? (
+              <p className="text-gray-400 italic">No services listed yet.</p>
+            ) : (
+              services.map((service, idx) => (
+                <div
+                  key={idx}
+                  className="border border-gray-300 rounded-xl p-4 shadow-sm"
+                >
+                  <p className="font-medium text-blue-800">{service.name}</p>
+                  <p className="text-sm text-green-600">
+                    Credits Required:{" "}
+                    <span className="font-semibold">{service.credits}</span>
+                  </p>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Add Service Inputs */}
+          <div className="mt-6">
+            <input
+              type="text"
+              placeholder="Service name"
+              value={serviceName}
+              onChange={(e) => setServiceName(e.target.value)}
+              className="border rounded-md px-3 py-2 w-full mb-2"
+            />
+            <input
+              type="number"
+              placeholder="Credit required"
+              value={serviceCredits}
+              onChange={(e) => setServiceCredits(e.target.value)}
+              className="border rounded-md px-3 py-2 w-full mb-2"
+            />
+            <button
+              onClick={handleAddService}
+              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 w-full"
+            >
+              Add Service
+            </button>
+          </div>
         </div>
       </div>
     </div>

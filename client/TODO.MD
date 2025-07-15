@@ -1,3 +1,3 @@
-FIX THE REACT CLERK Backend
-Now create the main interface that will appear after login
-
+Create a model named service
+refelect the add service function on backend 
+show on profile clicked page
