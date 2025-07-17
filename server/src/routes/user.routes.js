@@ -35,7 +35,7 @@ router.post("/sync", async (req, res) => {
       name: user.name,
       skills: user.skills || [],
       profilePic: user.profilePic || null,
-      showCongrats: !user.isSetupDone, // true only first time
+      showCongrats: !user.isSetupDone, // true only first time..
     });
   } catch (err) {
     res.status(500).json({ error: "Sync failed" });
