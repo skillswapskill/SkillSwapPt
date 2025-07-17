@@ -1,26 +1,95 @@
-// =========================
-// UPDATED user.routes.js
-// =========================
-
 import express from "express";
-import { handleClerkWebhook } from "../controllers/user.controller.js";
+import multer from "multer";
+import { v2 as cloudinary } from "cloudinary";
 import { User } from "../models/user.model.js";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const router = express.Router();
 
-// Clerk webhook endpoint
-router.post("/webhook", handleClerkWebhook);
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
-// in user.routes.js
+// Configure multer for memory storage (not saving to disk)
+const storage = multer.memoryStorage();
+const upload = multer({ 
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'), false);
+    }
+  }
+});
+
+// Upload profile picture endpoint
+router.post("/upload-profile-pic", upload.single("profilePic"), async (req, res) => {
+  try {
+    const { clerkId } = req.body;
+    
+    if (!req.file || !clerkId) {
+      return res.status(400).json({ error: "Missing file or clerkId" });
+    }
+
+    // Convert buffer to base64 string for Cloudinary
+    const base64String = req.file.buffer.toString('base64');
+    const dataURI = `data:${req.file.mimetype};base64,${base64String}`;
+
+    // Upload to Cloudinary
+    const cloudinaryResponse = await cloudinary.uploader.upload(dataURI, {
+      folder: 'profile_pictures', // Organize uploads in a folder
+      public_id: `profile_${clerkId}_${Date.now()}`, // Unique filename
+      overwrite: true,
+      resource_type: 'image',
+      transformation: [
+        { width: 300, height: 300, crop: 'fill' }, // Resize to 300x300
+        { quality: 'auto' }, // Auto optimize quality
+      ]
+    });
+
+    // Get the secure URL from Cloudinary
+    const profilePicUrl = cloudinaryResponse.secure_url;
+
+    // Update user in database
+    const updatedUser = await User.findOneAndUpdate(
+      { clerkId },
+      { $set: { profilePic: profilePicUrl } },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({ 
+      profilePic: profilePicUrl,
+      message: "Profile picture updated successfully" 
+    });
+
+  } catch (error) {
+    console.error("Upload failed:", error);
+    res.status(500).json({ error: "Upload failed: " + error.message });
+  }
+});
+
+// Sync user endpoint (existing code)
 router.post("/sync", async (req, res) => {
-  const { clerkId, name, email,profilePic } = req.body;
+  const { clerkId, name, email, profilePic } = req.body;
   if (!clerkId) {
     return res.status(400).json({ message: "Clerk ID required" });
   }
   try {
     let user = await User.findOne({ clerkId });
     if (!user) {
-      // create profile
       user = await User.create({
         clerkId, name, email,
         totalCredits: 300,
@@ -29,22 +98,22 @@ router.post("/sync", async (req, res) => {
       });
     }
     res.json({
-      _id:user._id,
+      _id: user._id,
       totalCredits: user.totalCredits,
       isSetupDone: user.isSetupDone,
       name: user.name,
       skills: user.skills || [],
       profilePic: user.profilePic || null,
-      showCongrats: !user.isSetupDone, // true only first time..
+      showCongrats: !user.isSetupDone,
     });
   } catch (err) {
     res.status(500).json({ error: "Sync failed" });
   }
 });
 
-// Mark setup complete
+// Setup complete endpoint (existing code)
 router.post("/setup-complete", async (req, res) => {
-  const { clerkId, name, skills } = req.body;
+  const { clerkId, name, skills, profilePic } = req.body;
 
   try {
     await User.updateOne(
@@ -53,6 +122,7 @@ router.post("/setup-complete", async (req, res) => {
         $set: {
           name,
           skills,
+          profilePic,
           isSetupDone: true,
         },
       }
@@ -64,6 +134,8 @@ router.post("/setup-complete", async (req, res) => {
     res.status(500).json({ error: "Failed to save setup" });
   }
 });
+
+// Other existing routes...
 router.put("/update", async (req, res) => {
   const { clerkId, name, skills, profilePic } = req.body;
 
@@ -74,7 +146,7 @@ router.put("/update", async (req, res) => {
         $set: {
           name,
           skills,
-          profilePic, // Optional: If you're storing base64 or a URL
+          profilePic,
         },
       },
       { new: true }
@@ -90,36 +162,15 @@ router.put("/update", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
-router.get("/all",async(req,res)=>{
+
+router.get("/all", async (req, res) => {
   try {
-    
     const users = await User.find({}, "name profilePic skills");
-    res.status(200).json({users})
+    res.status(200).json({ users });
   } catch (err) {
     console.error("Error fetching all users", err);
     res.status(500).json({ message: "Internal server error" });
   }
-})
-
-router.get("/setup-complete",async(req,res)=>{
-  const {clerkId}=req.query;
-  if(!clerkId) return res.status(400).json({ error: "Missing clerkId in request body" });
-  try {
-    const user=await User.findOne({clerkId})
-
-    if(!user)return res.status(404).json({message:"User not found"});
-
-    res.json({
-      name:user.name,
-      skills:user.skills,
-      
-    })
-
-
-  } catch (error) {
-    console.error("Failed to fetch setup data:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-})
+});
 
 export default router;

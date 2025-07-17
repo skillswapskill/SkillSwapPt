@@ -19,6 +19,7 @@ app.use('/api/credits', creditRoutes);
 app.use('/api/users', userRoutes);
 app.use("/api/sessions",sessionRoutes);
 app.use("/api/clerk", clerkRoutes);
+app.use('/uploads', express.static('uploads'));
 
 
 app.listen(Port, () => {

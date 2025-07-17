@@ -4,9 +4,8 @@ import axios from "axios";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DateCalendar } from "@mui/x-date-pickers/DateCalendar";
-import { set } from "mongoose";
 import { ToastContainer, toast } from 'react-toastify';
-
+import 'react-toastify/dist/ReactToastify.css';
 
 function Profile() {
   const { user, isSignedIn } = useUser();
@@ -16,22 +15,110 @@ function Profile() {
   const [skills, setSkills] = useState([]);
   const [inputSkill, setInputSkill] = useState("");
   const [profilePic, setProfilePic] = useState(null);
+  const [profilePicFile, setProfilePicFile] = useState(null);
   const [credits, setCredits] = useState(0);
   const [showCongrats, setShowCongrats] = useState(false);
   const [isSetupDone, setIsSetupDone] = useState(false);
   const [editMode, setEditMode] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const [services, setServices] = useState([]);
   const [serviceName, setServiceName] = useState("");
   const [serviceCredits, setServiceCredits] = useState("");
-
   const [mongoUserId, setMongoUserId] = useState("");
 
-  // in syncUser()
+  // Handle profile picture change
+  const handleProfilePicChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please select an image file');
+        return;
+      }
+      
+      // Validate file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('File size must be less than 5MB');
+        return;
+      }
 
+      setProfilePicFile(file);
+      setProfilePic(URL.createObjectURL(file)); // For preview
+    }
+  };
+
+  // Upload profile picture to Cloudinary
+  const uploadProfilePic = async () => {
+    if (!profilePicFile) return null;
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("profilePic", profilePicFile);
+      formData.append("clerkId", user.id);
+
+      const response = await axios.post(
+        "http://localhost:5000/api/users/upload-profile-pic",
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+          withCredentials: true,
+        }
+      );
+
+      toast.success('Profile picture uploaded successfully!');
+      return response.data.profilePic;
+    } catch (error) {
+      console.error("Upload failed:", error);
+      toast.error('Failed to upload profile picture');
+      return null;
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // Handle form submission
+  const handleSubmit = async () => {
+    try {
+      let finalProfilePic = profilePic;
+
+      // Upload new profile picture if selected
+      if (profilePicFile) {
+        const uploadedUrl = await uploadProfilePic();
+        if (uploadedUrl) {
+          finalProfilePic = uploadedUrl;
+        }
+      }
+
+      // Save profile data
+      await axios.post(
+        "http://localhost:5000/api/users/setup-complete",
+        {
+          clerkId: user.id,
+          name,
+          skills,
+          profilePic: finalProfilePic,
+        },
+        { withCredentials: true }
+      );
+
+      setIsSetupDone(true);
+      setEditMode(false);
+      setProfilePicFile(null);
+      setProfilePic(finalProfilePic);
+      toast.success('Profile updated successfully!');
+    } catch (err) {
+      console.error("Failed to save profile", err);
+      toast.error('Failed to save profile');
+    }
+  };
+
+  // Add service handler
   const handleAddService = async () => {
     if (serviceName.trim() && serviceCredits) {
-      // 1. Update frontend state
       const newService = {
         name: serviceName.trim(),
         credits: parseInt(serviceCredits),
@@ -41,31 +128,25 @@ function Profile() {
       setServiceCredits("");
 
       try {
-        // 2. Send service to backend
         await axios.post(
           "http://localhost:5000/api/sessions/offer",
           {
-            teacher: mongoUserId, // ✅ matches backend
-            skill: newService.name, // ✅ skill instead of serviceName
-            creditsUsed: newService.credits, // ✅ matches backend
+            teacher: mongoUserId,
+            skill: newService.name,
+            creditsUsed: newService.credits,
           },
-          {
-            withCredentials: true, // optional if using cookies/sessions
-          }
+          { withCredentials: true }
         );
 
-        console.log("✅ Service added to backend");
-        const notify = () => toast('Wow so easy !');
+        toast.success('Service added successfully!');
       } catch (error) {
-        console.error(
-          "❌ Failed to add service:",
-          error.response?.data || error.message
-        );
-        alert("Failed to add service. Please try again.");
+        console.error("Failed to add service:", error.response?.data || error.message);
+        toast.error('Failed to add service');
       }
     }
   };
 
+  // Sync user effect
   useEffect(() => {
     const syncUser = async () => {
       if (!isSignedIn) return;
@@ -87,33 +168,33 @@ function Profile() {
         setName(data.name);
         setSkills(data.skills);
         setProfilePic(data.profilePic);
-        setMongoUserId(res.data._id); // return it from backend
+        setMongoUserId(data._id);
 
-
-        if (data._id) fetchOfferedServices(data._id); // ✅ fetch services after syncing user
-
+        if (data._id) fetchOfferedServices(data._id);
         if (data.showCongrats) setShowCongrats(true);
       } catch (err) {
         console.error("Sync failed", err);
       }
     };
+
     const fetchOfferedServices = async (userId) => {
-    try {
-      const res = await axios.get(`http://localhost:5000/api/sessions/offered/${userId}`);
-      const sessions = res.data;
-      const formatted = sessions.map((s) => ({
-        name: s.skill,
-        credits: s.creditsUsed,
-      }));
-      setServices(formatted);
-    } catch (err) {
-      console.error("❌ Could not fetch offered services", err);
-    }
-  };
+      try {
+        const res = await axios.get(`http://localhost:5000/api/sessions/offered/${userId}`);
+        const sessions = res.data;
+        const formatted = sessions.map((s) => ({
+          name: s.skill,
+          credits: s.creditsUsed,
+        }));
+        setServices(formatted);
+      } catch (err) {
+        console.error("Could not fetch offered services", err);
+      }
+    };
 
     syncUser();
   }, [isSignedIn]);
 
+  // Add skill handler
   const handleAddSkill = (e) => {
     e.preventDefault();
     if (inputSkill.trim() && !skills.includes(inputSkill.trim())) {
@@ -122,35 +203,9 @@ function Profile() {
     }
   };
 
+  // Remove skill handler
   const handleRemoveSkill = (skill) => {
     setSkills(skills.filter((s) => s !== skill));
-  };
-
-  const handleProfilePicChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setProfilePic(URL.createObjectURL(file)); // Optional: later you can upload this to cloud
-    }
-  };
-
-  const handleSubmit = async () => {
-    try {
-      await axios.post(
-        "http://localhost:5000/api/users/setup-complete",
-        {
-          clerkId: user.id,
-          name,
-          skills,
-          profilePic,
-        },
-        { withCredentials: true }
-      );
-
-      setIsSetupDone(true);
-      setEditMode(false);
-    } catch (err) {
-      console.error("Failed to save profile", err);
-    }
   };
 
   if (!isSignedIn) return <div>Loading...</div>;
@@ -176,7 +231,7 @@ function Profile() {
     );
   }
 
-  // Show Setup Form if not yet setup
+  // Setup form (if not setup done)
   if (!isSetupDone) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-50 px-4">
@@ -196,7 +251,7 @@ function Profile() {
                     />
                   ) : (
                     <span className="text-sm text-center flex items-center justify-center w-full h-full text-gray-400">
-                      Upload
+                      Upload Photo
                     </span>
                   )}
                   <input
@@ -206,6 +261,9 @@ function Profile() {
                     onChange={handleProfilePicChange}
                   />
                 </label>
+                {uploading && (
+                  <p className="text-blue-600 text-sm">Uploading...</p>
+                )}
                 <input
                   type="text"
                   placeholder="Enter your name"
@@ -261,9 +319,14 @@ function Profile() {
               </div>
               <button
                 onClick={handleSubmit}
-                className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700"
+                disabled={uploading}
+                className={`w-full py-2 rounded-lg text-white ${
+                  uploading 
+                    ? 'bg-gray-400 cursor-not-allowed' 
+                    : 'bg-green-600 hover:bg-green-700'
+                }`}
               >
-                Submit & View Profile
+                {uploading ? 'Saving...' : 'Submit & View Profile'}
               </button>
             </div>
           )}
@@ -272,18 +335,18 @@ function Profile() {
     );
   }
 
-  // Main Profile View + Edit
+  // Main profile view
   return (
     <div className="min-h-screen bg-gray-50 p-6">
-      <br></br>
-      <br></br>
+      <br />
+      <br />
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Profile Info */}
         <div className="col-span-2 bg-white shadow-xl rounded-xl p-6 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-4">
             <label className="relative w-20 h-20 rounded-full overflow-hidden border-4 border-blue-500 shadow-md cursor-pointer">
               <img
-                src={profilePic || user.imageUrl}
+                src={profilePic || user.imageUrl || '/user.png'}
                 alt="Profile"
                 className="w-full h-full object-cover"
               />
@@ -356,16 +419,21 @@ function Profile() {
               {!editMode ? (
                 <button
                   onClick={() => setEditMode(true)}
-                  className="text-blue-600 underline "
+                  className="text-blue-600 underline"
                 >
                   Edit Profile
                 </button>
               ) : (
                 <button
                   onClick={handleSubmit}
-                  className="px-4 py-1 bg-green-600 text-white rounded hover:bg-green-700 mt-2"
+                  disabled={uploading}
+                  className={`px-4 py-1 rounded mt-2 text-white ${
+                    uploading 
+                      ? 'bg-gray-400 cursor-not-allowed' 
+                      : 'bg-green-600 hover:bg-green-700'
+                  }`}
                 >
-                  Save Changes
+                  {uploading ? 'Saving...' : 'Save Changes'}
                 </button>
               )}
             </div>
@@ -433,6 +501,18 @@ function Profile() {
           </div>
         </div>
       </div>
+      
+      <ToastContainer 
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
     </div>
   );
 }
