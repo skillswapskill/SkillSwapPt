@@ -5,6 +5,8 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DateCalendar } from "@mui/x-date-pickers/DateCalendar";
 import { set } from "mongoose";
+import { ToastContainer, toast } from 'react-toastify';
+
 
 function Profile() {
   const { user, isSignedIn } = useUser();
@@ -23,14 +25,44 @@ function Profile() {
   const [serviceName, setServiceName] = useState("");
   const [serviceCredits, setServiceCredits] = useState("");
 
-  const handleAddService = () => {
+  const [mongoUserId, setMongoUserId] = useState("");
+
+  // in syncUser()
+
+  const handleAddService = async () => {
     if (serviceName.trim() && serviceCredits) {
-      setServices([
-        ...services,
-        { name: serviceName.trim(), credits: parseInt(serviceCredits) },
-      ]);
+      // 1. Update frontend state
+      const newService = {
+        name: serviceName.trim(),
+        credits: parseInt(serviceCredits),
+      };
+      setServices((prev) => [...prev, newService]);
       setServiceName("");
       setServiceCredits("");
+
+      try {
+        // 2. Send service to backend
+        await axios.post(
+          "http://localhost:5000/api/sessions/offer",
+          {
+            teacher: mongoUserId, // ✅ matches backend
+            skill: newService.name, // ✅ skill instead of serviceName
+            creditsUsed: newService.credits, // ✅ matches backend
+          },
+          {
+            withCredentials: true, // optional if using cookies/sessions
+          }
+        );
+
+        console.log("✅ Service added to backend");
+        const notify = () => toast('Wow so easy !');
+      } catch (error) {
+        console.error(
+          "❌ Failed to add service:",
+          error.response?.data || error.message
+        );
+        alert("Failed to add service. Please try again.");
+      }
     }
   };
 
@@ -55,11 +87,29 @@ function Profile() {
         setName(data.name);
         setSkills(data.skills);
         setProfilePic(data.profilePic);
+        setMongoUserId(res.data._id); // return it from backend
+
+
+        if (data._id) fetchOfferedServices(data._id); // ✅ fetch services after syncing user
+
         if (data.showCongrats) setShowCongrats(true);
       } catch (err) {
         console.error("Sync failed", err);
       }
     };
+    const fetchOfferedServices = async (userId) => {
+    try {
+      const res = await axios.get(`http://localhost:5000/api/sessions/offered/${userId}`);
+      const sessions = res.data;
+      const formatted = sessions.map((s) => ({
+        name: s.skill,
+        credits: s.creditsUsed,
+      }));
+      setServices(formatted);
+    } catch (err) {
+      console.error("❌ Could not fetch offered services", err);
+    }
+  };
 
     syncUser();
   }, [isSignedIn]);
@@ -335,13 +385,13 @@ function Profile() {
         {/* Meeting UI */}
         <div className="bg-white shadow-xl rounded-xl p-6">
           <h3 className="text-xl font-semibold mb-3 text-blue-700 flex items-center gap-2">
-            📹 My Services
+            📹 My Session
           </h3>
 
           {/* Services List */}
           <div className="space-y-4">
             {services.length === 0 ? (
-              <p className="text-gray-400 italic">No services listed yet.</p>
+              <p className="text-gray-400 italic">No session listed yet.</p>
             ) : (
               services.map((service, idx) => (
                 <div

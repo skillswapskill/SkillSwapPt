@@ -12,6 +12,7 @@ import Business from "./components/Business"
 import Profile from "./components/Profile"
 import Dashboard from "./components/dashboard"
 import ProfileClicked from "./components/ProfileClicked";
+import Booking from "./components/Booking";
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
         <Route path="/profile" element={<Profile/>}/>
         <Route path="/dashboard" element={<Dashboard/>}/>
         <Route path="/profileclicked" element={<ProfileClicked />} />
+        <Route path="/book-session" element={<Booking />} />
       </Routes>
 
       <Footer />

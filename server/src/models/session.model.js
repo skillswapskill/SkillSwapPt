@@ -9,7 +9,10 @@ const sessionSchema = new mongoose.Schema({
     creditsUsed: Number,
     subscribed:Boolean,
     unsubscribed:{type:Boolean,default:false},
-    status: { type: String, enum: ['Scheduled', 'Completed', 'Cancelled'], default: 'Scheduled' }
+    status: { type: String, enum: ['Scheduled', 'Completed', 'Cancelled'], default: 'Scheduled' },
+    // Add this to your schema
+type: { type: String, enum: ['Service', 'Booking'], default: 'Service' }
+
 });
 
 export const Session=mongoose.model("Session",sessionSchema)

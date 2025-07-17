@@ -14,6 +14,9 @@ router.post("/webhook", handleClerkWebhook);
 // in user.routes.js
 router.post("/sync", async (req, res) => {
   const { clerkId, name, email,profilePic } = req.body;
+  if (!clerkId) {
+    return res.status(400).json({ message: "Clerk ID required" });
+  }
   try {
     let user = await User.findOne({ clerkId });
     if (!user) {
@@ -26,6 +29,7 @@ router.post("/sync", async (req, res) => {
       });
     }
     res.json({
+      _id:user._id,
       totalCredits: user.totalCredits,
       isSetupDone: user.isSetupDone,
       name: user.name,

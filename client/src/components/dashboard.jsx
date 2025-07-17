@@ -13,18 +13,46 @@ const Dashboard = () => {
   const [search, setSearch] = useState("");
   const [selectedUser, setSelectedUser] = useState(null); // 🌟 Popup state
 
+  const [selectedClerkData, setSelectedClerkData] = useState(null);
+
+  useEffect(() => {
+    const fetchClerkData = async () => {
+      if (!selectedUser?.clerkId) return;
+
+      try {
+        const res = await axios.get(
+          `http://localhost:5000/api/clerk/user/${selectedUser.clerkId}`
+        );
+        setSelectedClerkData(res.data); // this will contain profile_image_url, first_name etc.
+      } catch (err) {
+        console.error("❌ Error fetching Clerk user data:", err);
+      }
+    };
+
+    fetchClerkData();
+  }, [selectedUser]);
+
   // Helper function to extract profile pic URL from Clerk user object or DB field
   const getProfilePic = (userObj) => {
     if (!userObj) return "/user.png";
-    return (
-      userObj.profile_image_url ||
-      (userObj.external_accounts &&
-        userObj.external_accounts.length > 0 &&
-        (userObj.external_accounts[0].avatar_url || userObj.external_accounts[0].image_url)) ||
-      userObj.image_url ||
-      userObj.profilePic || // fallback to DB field profilePic
-      "/user.png"
-    );
+
+    // 1. Primary Clerk profile image (usually the most reliable)
+    if (userObj.profile_image_url) return userObj.profile_image_url;
+
+    // 2. Loop through external accounts to find the first valid avatar or image
+    if (userObj.external_accounts && Array.isArray(userObj.external_accounts)) {
+      for (const account of userObj.external_accounts) {
+        if (account.avatar_url) return account.avatar_url;
+        if (account.image_url) return account.image_url;
+      }
+    }
+
+    // 3. Other possible fields (from your DB maybe)
+    if (userObj.image_url) return userObj.image_url;
+    if (userObj.profilePic) return userObj.profilePic;
+
+    // 4. Final fallback
+    return "/user.png";
   };
 
   const syncLoggedInUser = async () => {
@@ -108,7 +136,14 @@ const Dashboard = () => {
       {/* User Avatars */}
       <div className="flex flex-wrap justify-center gap-9">
         {allUsers
-          .filter((u) => u.name.toLowerCase().includes(search.toLowerCase()))
+          .filter(
+            (u) =>
+              u.name.toLowerCase().includes(search.toLowerCase()) ||
+              (u.skills &&
+                u.skills.some((skill) =>
+                  skill.toLowerCase().includes(search.toLowerCase())
+                ))
+          )
           .map((u, idx) => (
             <div key={idx} className="flex flex-col items-center w-24">
               <div
@@ -149,6 +184,7 @@ const Dashboard = () => {
               <img
                 src={getProfilePic(selectedUser)}
                 alt={selectedUser.name}
+                
                 className="w-24 h-24 rounded-full object-cover mb-4 border-2 border-blue-500"
               />
               <h2 className="text-xl font-semibold text-blue-800 mb-2">

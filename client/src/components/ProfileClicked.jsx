@@ -1,12 +1,36 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { ToastContainer, toast } from 'react-toastify';
+
 
 const ProfileClicked = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const user = location.state?.selectedUser;; // Placeholder for user data, replace with actual user data from context or props  
-  console.log("User data in ProfileClicked:", user);
-  if (!user.name) {
+  const user = location.state?.selectedUser;
+
+  const [sessions, setSessions] = useState([]);
+
+  useEffect(() => {
+    if (user&&user?._id) {
+      fetchSessions(user._id);
+    }
+  }, [user]);
+
+  const fetchSessions = async (mongoUserId) => {
+    try {
+      const res = await axios.get(`http://localhost:5000/api/sessions/${mongoUserId}`);
+      const fetched = res.data.map((s) => ({
+        name: s.skill,
+        credits: s.creditsUsed,
+      }));
+      setSessions(fetched);
+    } catch (error) {
+      console.error("❌ Failed to fetch sessions:", error.message);
+    }
+  };
+
+  if (!user?.name) {
     return (
       <div className="min-h-screen flex items-center justify-center text-red-500 text-xl">
         No user selected. Go back and click on a user profile.
@@ -14,16 +38,11 @@ const ProfileClicked = () => {
     );
   }
 
-  const mockSessions = [
-    { title: "Intro to AI", credits: 50 },
-    { title: "Learn DSA", credits: 40 },
-    { title: "Quantum Physics Basics", credits: 60 },
-  ];
-
   return (
     <div className="min-h-screen px-6 py-8 bg-gray-50">
-      <br></br>
-      <br></br>
+      <br />
+      <br />
+
       {/* Profile Header */}
       <div className="bg-white shadow-md rounded-lg p-6 mb-8 flex items-center justify-between">
         <div className="flex items-center">
@@ -33,10 +52,9 @@ const ProfileClicked = () => {
             className="w-20 h-20 rounded-full border-4 border-blue-500 object-cover mr-6"
           />
           <div>
-            {/* {user.name} in down */}
             <h2 className="text-2xl font-bold text-blue-800">{user.name}</h2>
             <div className="flex flex-wrap gap-2 mt-2">
-              {user.skills && user.skills.length > 0 ? (
+              {user.skills?.length > 0 ? (
                 user.skills.map((skill, idx) => (
                   <span
                     key={idx}
@@ -70,24 +88,30 @@ const ProfileClicked = () => {
           📚 Sessions taught by {user.name}
         </h3>
         <div className="space-y-4">
-          {mockSessions.map((session, index) => (
-            <div
-              key={index}
-              className="flex items-center justify-between border p-4 rounded-md"
-            >
-              <div>
-                <h4 className="text-lg font-medium text-blue-900">
-                  {session.title}
-                </h4>
-                <p className="text-sm text-gray-500">
-                  Requires {session.credits} credits
-                </p>
+          {sessions.length === 0 ? (
+            <p className="text-gray-400 italic">No sessions available yet.</p>
+          ) : (
+            sessions.map((session, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between border p-4 rounded-md"
+              >
+                <div>
+                  <h4 className="text-lg font-medium text-blue-900">{session.name}</h4>
+                  <p className="text-sm text-gray-500">
+                    Requires {session.credits} credits
+                  </p>
+                </div>
+                <button className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 " onClick={()=>{
+                  // Handle booking session logic here
+                  console.log(`Booking session: ${session.name}`);
+                  navigate("/book-session", { state: { session, user } });
+                }}>
+                  Book Session
+                </button>
               </div>
-              <button className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
-                Book Session
-              </button>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
     </div>
