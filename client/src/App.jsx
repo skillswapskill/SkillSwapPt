@@ -13,11 +13,19 @@ import Profile from "./components/Profile"
 import Dashboard from "./components/dashboard"
 import ProfileClicked from "./components/ProfileClicked";
 import Booking from "./components/Booking";
+import { Toaster } from 'react-hot-toast';
+
 
 function App() {
   return (
     <Router>
       <NavBar />
+      <Toaster 
+          position="top-center" // Optional: Customize position, etc.
+          toastOptions={{
+            success: { duration: 4000 }, // Optional: Global options
+          }}
+        />
       
 
       <Routes>
@@ -35,6 +43,7 @@ function App() {
 
       <Footer />
     </Router>
+    
   );
 }
 
