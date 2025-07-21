@@ -7,6 +7,8 @@ import { debitCreditsOnSubscription } from '../../../server/src/controllers/cred
 function Booking() {
   const location = useLocation();
   const navigate = useNavigate();
+  console.log('Booking component rendered');
+  
 
   const [isLoading, setIsLoading] = useState(false); // Add this in your component
 
