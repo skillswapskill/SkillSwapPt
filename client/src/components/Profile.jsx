@@ -6,6 +6,8 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DateCalendar } from "@mui/x-date-pickers/DateCalendar";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import dayjs from 'dayjs';
 
 function Profile() {
   const { user, isSignedIn } = useUser();
@@ -26,38 +28,33 @@ function Profile() {
   const [serviceName, setServiceName] = useState("");
   const [serviceCredits, setServiceCredits] = useState("");
   const [mongoUserId, setMongoUserId] = useState("");
+  const [serviceDateTime, setServiceDateTime] = useState(dayjs());
 
   // Handle profile picture change
   const handleProfilePicChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Validate file type
       if (!file.type.startsWith('image/')) {
         toast.error('Please select an image file');
         return;
       }
-      
-      // Validate file size (5MB limit)
       if (file.size > 5 * 1024 * 1024) {
         toast.error('File size must be less than 5MB');
         return;
       }
-
       setProfilePicFile(file);
-      setProfilePic(URL.createObjectURL(file)); // For preview
+      setProfilePic(URL.createObjectURL(file));
     }
   };
 
   // Upload profile picture to Cloudinary
   const uploadProfilePic = async () => {
     if (!profilePicFile) return null;
-
     setUploading(true);
     try {
       const formData = new FormData();
       formData.append("profilePic", profilePicFile);
       formData.append("clerkId", user.id);
-
       const response = await axios.post(
         "http://localhost:5000/api/users/upload-profile-pic",
         formData,
@@ -68,7 +65,6 @@ function Profile() {
           withCredentials: true,
         }
       );
-
       toast.success('Profile picture uploaded successfully!');
       return response.data.profilePic;
     } catch (error) {
@@ -84,27 +80,17 @@ function Profile() {
   const handleSubmit = async () => {
     try {
       let finalProfilePic = profilePic;
-
-      // Upload new profile picture if selected
       if (profilePicFile) {
         const uploadedUrl = await uploadProfilePic();
         if (uploadedUrl) {
           finalProfilePic = uploadedUrl;
         }
       }
-
-      // Save profile data
       await axios.post(
         "http://localhost:5000/api/users/setup-complete",
-        {
-          clerkId: user.id,
-          name,
-          skills,
-          profilePic: finalProfilePic,
-        },
+        { clerkId: user.id, name, skills, profilePic: finalProfilePic },
         { withCredentials: true }
       );
-
       setIsSetupDone(true);
       setEditMode(false);
       setProfilePicFile(null);
@@ -122,11 +108,12 @@ function Profile() {
       const newService = {
         name: serviceName.trim(),
         credits: parseInt(serviceCredits),
+        time: serviceDateTime
       };
       setServices((prev) => [...prev, newService]);
       setServiceName("");
       setServiceCredits("");
-
+      setServiceDateTime(dayjs());
       try {
         await axios.post(
           "http://localhost:5000/api/sessions/offer",
@@ -134,10 +121,10 @@ function Profile() {
             teacher: mongoUserId,
             skill: newService.name,
             creditsUsed: newService.credits,
+            dateTime: serviceDateTime.toISOString(),
           },
           { withCredentials: true }
         );
-
         toast.success('Service added successfully!');
       } catch (error) {
         console.error("Failed to add service:", error.response?.data || error.message);
@@ -146,11 +133,29 @@ function Profile() {
     }
   };
 
+  // Delete service function
+  const handleDeleteService = async (sessionId) => {
+    console.log("Trying to delete sessionId:", sessionId);
+
+  try {
+    await axios.delete(`http://localhost:5000/api/sessions/delete/${sessionId}`, {
+      withCredentials: true,
+    });
+
+    // Remove the deleted session from UI
+    setServices((prev) => prev.filter((service) => service._id !== sessionId));
+    toast.success("Service deleted successfully!");
+  } catch (error) {
+    console.error("Failed to delete service:", error);
+    toast.error("Failed to delete service");
+  }
+};
+
+
   // Sync user effect
   useEffect(() => {
     const syncUser = async () => {
       if (!isSignedIn) return;
-
       try {
         const res = await axios.post(
           "http://localhost:5000/api/users/sync",
@@ -161,7 +166,6 @@ function Profile() {
           },
           { withCredentials: true }
         );
-
         const data = res.data;
         setCredits(data.totalCredits);
         setIsSetupDone(data.isSetupDone);
@@ -169,7 +173,6 @@ function Profile() {
         setSkills(data.skills);
         setProfilePic(data.profilePic);
         setMongoUserId(data._id);
-
         if (data._id) fetchOfferedServices(data._id);
         if (data.showCongrats) setShowCongrats(true);
       } catch (err) {
@@ -182,8 +185,10 @@ function Profile() {
         const res = await axios.get(`http://localhost:5000/api/sessions/offered/${userId}`);
         const sessions = res.data;
         const formatted = sessions.map((s) => ({
+          _id: s._id,
           name: s.skill,
           credits: s.creditsUsed,
+          time: s.dateTime
         }));
         setServices(formatted);
       } catch (err) {
@@ -192,7 +197,7 @@ function Profile() {
     };
 
     syncUser();
-  }, [isSignedIn]);
+  }, [isSignedIn, user]);
 
   // Add skill handler
   const handleAddSkill = (e) => {
@@ -213,12 +218,9 @@ function Profile() {
   if (showCongrats) {
     return (
       <div className="fixed inset-0 bg-white/90 z-50 flex flex-col items-center justify-center p-6 text-center">
-        <h2 className="text-3xl font-bold text-green-600 mb-3">
-          🎉 Congratulations!
-        </h2>
+        <h2 className="text-3xl font-bold text-green-600 mb-3">🎉 Congratulations!</h2>
         <p className="text-gray-700 mb-5">
-          You've earned{" "}
-          <span className="font-semibold text-blue-600">{credits} credits</span>{" "}
+          You've earned <span className="font-semibold text-blue-600">{credits} credits</span>{" "}
           for joining us!
         </p>
         <button
@@ -231,7 +233,6 @@ function Profile() {
     );
   }
 
-  // Setup form (if not setup done)
   if (!isSetupDone) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-50 px-4">
@@ -321,8 +322,8 @@ function Profile() {
                 onClick={handleSubmit}
                 disabled={uploading}
                 className={`w-full py-2 rounded-lg text-white ${
-                  uploading 
-                    ? 'bg-gray-400 cursor-not-allowed' 
+                  uploading
+                    ? 'bg-gray-400 cursor-not-allowed'
                     : 'bg-green-600 hover:bg-green-700'
                 }`}
               >
@@ -428,8 +429,8 @@ function Profile() {
                   onClick={handleSubmit}
                   disabled={uploading}
                   className={`px-4 py-1 rounded mt-2 text-white ${
-                    uploading 
-                      ? 'bg-gray-400 cursor-not-allowed' 
+                    uploading
+                      ? 'bg-gray-400 cursor-not-allowed'
                       : 'bg-green-600 hover:bg-green-700'
                   }`}
                 >
@@ -455,7 +456,6 @@ function Profile() {
           <h3 className="text-xl font-semibold mb-3 text-blue-700 flex items-center gap-2">
             📹 My Session
           </h3>
-
           {/* Services List */}
           <div className="space-y-4">
             {services.length === 0 ? (
@@ -464,34 +464,54 @@ function Profile() {
               services.map((service, idx) => (
                 <div
                   key={idx}
-                  className="border border-gray-300 rounded-xl p-4 shadow-sm"
+                  className="border border-gray-300 rounded-xl p-4 shadow-sm flex justify-between items-center"
                 >
-                  <p className="font-medium text-blue-800">{service.name}</p>
-                  <p className="text-sm text-green-600">
-                    Credits Required:{" "}
-                    <span className="font-semibold">{service.credits}</span>
-                  </p>
+                  <div>
+                    <p className="font-medium text-blue-800">{service.name}</p>
+                    <p className="text-sm text-green-600">
+                      Credits Required: <span className="font-semibold">{service.credits}</span>
+                    </p>
+                    {service.time && (
+                      <p className="text-sm text-gray-600">
+                        Time: {dayjs(service.time).format("DD MMM YYYY, hh:mm A")}
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => handleDeleteService(service._id)}
+                    className="text-red-600 hover:underline text-sm"
+                  >
+                    Delete
+                  </button>
                 </div>
               ))
             )}
           </div>
 
           {/* Add Service Inputs */}
-          <div className="mt-6">
+          <div className="mt-6 space-y-2">
             <input
               type="text"
               placeholder="Service name"
               value={serviceName}
               onChange={(e) => setServiceName(e.target.value)}
-              className="border rounded-md px-3 py-2 w-full mb-2"
+              className="border rounded-md px-3 py-2 w-full"
             />
             <input
               type="number"
               placeholder="Credit required"
               value={serviceCredits}
               onChange={(e) => setServiceCredits(e.target.value)}
-              className="border rounded-md px-3 py-2 w-full mb-2"
+              className="border rounded-md px-3 py-2 w-full"
             />
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <DateTimePicker
+                label="Select date and time"
+                value={serviceDateTime}
+                onChange={(newValue) => setServiceDateTime(newValue)}
+                className="w-full"
+              />
+            </LocalizationProvider>
             <button
               onClick={handleAddService}
               className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 w-full"
@@ -500,9 +520,8 @@ function Profile() {
             </button>
           </div>
         </div>
-      </div>
-      
-      <ToastContainer 
+      </div>...
+      <ToastContainer
         position="top-right"
         autoClose={3000}
         hideProgressBar={false}

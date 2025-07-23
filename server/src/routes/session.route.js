@@ -5,10 +5,10 @@ const router=express.Router();
 
 //offer sevice route
 router.post("/offer",async(req,res)=>{
-    const {teacher,skill,creditsUsed}=req.body;
+    const {teacher,skill,creditsUsed,dateTime}=req.body;
 
 
-    if(!teacher||!skill||!creditsUsed){
+    if(!teacher||!skill||!creditsUsed||!dateTime){
         return res.status(400).json({message:"Fileds not found"});
     }
 
@@ -17,6 +17,7 @@ router.post("/offer",async(req,res)=>{
             teacher,
             skill,
             creditsUsed,
+            dateTime,
             type:"Service",
             subscribed:false
         });
@@ -51,6 +52,25 @@ router.get("/my-services/:teacherId", async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
+//deleting the session
+router.delete("/delete/:sessionId",async(req,res)=>{
+  const { sessionId } = req.params;
+
+  if (!sessionId) {
+    return res.status(400).json({ message: "Session ID is required" });
+  }
+
+  try {
+    const session = await Session.findByIdAndDelete(sessionId);
+    if (!session) {
+      return res.status(404).json({ message: "Session not found" });
+    }
+    res.status(200).json({ message: "Session deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting session:", error);
+    res.status(500).json({ message: "Failed to delete session" });
+  }
+})
 
 router.get("/:teacherId",async(req,res)=>{
   const {teacherId}=req.params;

@@ -23,6 +23,7 @@ const ProfileClicked = () => {
       const fetched = res.data.map((s) => ({
         name: s.skill,
         credits: s.creditsUsed,
+        dateTime:s.dateTime,
       }));
       setSessions(fetched);
     } catch (error) {
