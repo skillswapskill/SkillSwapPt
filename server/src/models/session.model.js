@@ -1,19 +1,18 @@
 import mongoose from "mongoose"
 
 const sessionSchema = new mongoose.Schema({
-    teacher: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    learner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    skill: String,
-    scheduledAt: Date,
-    duration: Number,
-    creditsUsed: Number,
-    subscribed:Boolean,
-    unsubscribed:{type:Boolean,default:false},
-    dateTime: { type: Date, required: true }, // Assuming dateTime is a string in ISO format
-    status: { type: String, enum: ['Scheduled', 'Completed', 'Cancelled'], default: 'Scheduled' },
-    // Add this to your schema
-type: { type: String, enum: ['Service', 'Booking'], default: 'Service' }
-
+  teacher: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  learner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  skill: String,
+  scheduledAt: Date,
+  duration: Number,
+  creditsUsed: Number,
+  subscribed: Boolean,
+  unsubscribed: { type: Boolean, default: false },
+  dateTime: { type: Date, required: true },
+  status: { type: String, enum: ['Scheduled', 'Completed', 'Cancelled'], default: 'Scheduled' },
+  type: { type: String, enum: ['Service', 'Booking'], default: 'Service' }
 });
+
 
 export const Session=mongoose.model("Session",sessionSchema)

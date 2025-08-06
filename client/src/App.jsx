@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { SignedIn, SignedOut, UserButton } from "@clerk/clerk-react";
+import React, { useState, useEffect } from "react";
 
 import CareerPortal from "./components/CareerPage";
 import JobDetail from "./components/JobDetail";
@@ -14,9 +15,12 @@ import Dashboard from "./components/dashboard"
 import ProfileClicked from "./components/ProfileClicked";
 import Booking from "./components/Booking";
 import { Toaster } from 'react-hot-toast';
+import MyLearning from "./components/MyLearning";
+
 
 
 function App() {
+  
   return (
     <Router>
       <NavBar />
@@ -39,6 +43,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard/>}/>
         <Route path="/profileclicked" element={<ProfileClicked />} />
         <Route path="/book-session" element={<Booking />} />
+        <Route path="/my-learning" element={<MyLearning />} />
       </Routes>
 
       <Footer />

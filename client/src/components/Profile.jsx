@@ -191,6 +191,7 @@ function Profile() {
           time: s.dateTime
         }));
         setServices(formatted);
+        console.log("Fetched offered services:", formatted);
       } catch (err) {
         console.error("Could not fetch offered services", err);
       }

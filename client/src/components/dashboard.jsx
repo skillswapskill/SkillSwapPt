@@ -57,11 +57,16 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   const [allUsers, setAllUsers] = useState([]);
+  const [currentUserMongo, setCurrentUserMongo] = useState(null);
   const [treesPlanted, setTreesPlanted] = useState(10000);
   const [search, setSearch] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
-
   const [selectedClerkData, setSelectedClerkData] = useState(null);
+
+  // Debug logs
+  console.log("Current Clerk user:", user?.id);
+  console.log("Current Mongo user:", currentUserMongo);
+  console.log("All users:", allUsers);
 
   // Time logic: Night after 8 PM
   const getTimeOfDay = () => {
@@ -105,7 +110,7 @@ const Dashboard = () => {
     try {
       if (!user?.id) return;
       const profilePic = getProfilePic(user);
-      await axios.post(
+      const response = await axios.post(
         "http://localhost:5000/api/users/sync",
         {
           clerkId: user.id,
@@ -115,6 +120,10 @@ const Dashboard = () => {
         },
         { withCredentials: true }
       );
+      
+      // Store current user's MongoDB data
+      setCurrentUserMongo(response.data);
+      console.log("Synced current user:", response.data);
     } catch (err) {
       console.error("❌ Error syncing logged-in user:", err);
     }
@@ -125,7 +134,9 @@ const Dashboard = () => {
       const res = await axios.get("http://localhost:5000/api/users/all", {
         withCredentials: true,
       });
-      setAllUsers(res.data.users || []);
+      const users = res.data.users || [];
+      console.log("Fetched all users:", users);
+      setAllUsers(users);
     } catch (err) {
       console.error("❌ Error fetching users:", err);
     }
@@ -139,11 +150,11 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
-    if (isSignedIn) {
+    if (isSignedIn && user?.id) {
       syncLoggedInUser();
       fetchAllUsers();
     }
-  }, [isSignedIn]);
+  }, [isSignedIn, user?.id]);
 
   const getTimeGreeting = () => {
     const hour = new Date().getHours();
@@ -152,6 +163,44 @@ const Dashboard = () => {
     if (hour < 18) return "Good Afternoon 🌇";
     return "Good Evening 🌃";
   };
+
+  // Multiple filtering approaches to ensure current user is excluded
+  const getFilteredUsers = () => {
+    if (!allUsers.length) return [];
+    
+    return allUsers.filter(u => {
+      // Method 1: Compare by clerkId (most reliable)
+      if (u.clerkId && user?.id && u.clerkId === user.id) {
+        console.log("Filtering out user by clerkId:", u.clerkId);
+        return false;
+      }
+      
+      // Method 2: Compare by name (backup)
+      if (u.name && user?.fullName && u.name === user.fullName) {
+        console.log("Filtering out user by name:", u.name);
+        return false;
+      }
+      
+      // Method 3: Compare by email (backup)
+      if (u.email && user?.primaryEmailAddress?.emailAddress && 
+          u.email === user.primaryEmailAddress.emailAddress) {
+        console.log("Filtering out user by email:", u.email);
+        return false;
+      }
+
+      // Method 4: Compare by MongoDB _id if available
+      if (currentUserMongo?._id && u._id && 
+          u._id.toString() === currentUserMongo._id.toString()) {
+        console.log("Filtering out user by MongoDB _id:", u._id);
+        return false;
+      }
+      
+      return true;
+    });
+  };
+
+  const displayUsers = getFilteredUsers();
+  console.log("Users to display after filtering:", displayUsers);
 
   return (
     <div className="relative min-h-screen flex flex-col justify-between px-6 py-10 bg-gradient-to-br from-purple-100 via-white to-blue-100 overflow-hidden">
@@ -178,7 +227,7 @@ const Dashboard = () => {
       </div>
 
       <div className="flex flex-wrap justify-center gap-9 relative z-20">
-        {allUsers
+        {displayUsers
           .filter(
             (u) =>
               (u.name && u.name.toLowerCase().includes(search.toLowerCase())) ||

@@ -7,6 +7,7 @@ import userRoutes from './routes/user.routes.js';
 import sessionRoutes from "./routes/session.route.js"
 import clerkRoutes from "./routes/clerk.routes.js"
 
+
 dotenv.config();
 
 const Port = process.env.PORT || 3000;
@@ -20,6 +21,10 @@ app.use('/api/users', userRoutes);
 app.use("/api/sessions",sessionRoutes);
 app.use("/api/clerk", clerkRoutes);
 app.use('/uploads', express.static('uploads'));
+
+
+
+
 
 
 app.listen(Port, () => {

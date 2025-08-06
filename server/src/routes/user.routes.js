@@ -3,6 +3,8 @@ import multer from "multer";
 import { v2 as cloudinary } from "cloudinary";
 import { User } from "../models/user.model.js";
 import dotenv from "dotenv";
+import { syncUserMetadata } from "../controllers/user.controller.js";
+
 
 dotenv.config();
 
@@ -165,12 +167,38 @@ router.put("/update", async (req, res) => {
 
 router.get("/all", async (req, res) => {
   try {
-    const users = await User.find({}, "name profilePic skills");
+    // Include clerkId in the query so we can filter properly
+    const users = await User.find({}, "name profilePic skills clerkId _id email");
     res.status(200).json({ users });
   } catch (err) {
     console.error("Error fetching all users", err);
     res.status(500).json({ message: "Internal server error" });
   }
 });
+
+
+
+// Add this route
+router.post("/sync-metadata", syncUserMetadata);
+
+
+// Add this route to get current user's MongoDB data
+router.get("/current/:clerkId", async (req, res) => {
+  try {
+    const { clerkId } = req.params;
+    const user = await User.findOne({ clerkId }, "name profilePic skills _id");
+    
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    
+    res.status(200).json(user);
+  } catch (err) {
+    console.error("Error fetching current user", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+
 
 export default router;

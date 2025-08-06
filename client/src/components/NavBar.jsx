@@ -53,7 +53,7 @@ function NavBar() {
               Careers
             </Link>
             <Link
-              to="/mylearning"
+              to="/my-learning"
               className="hover:opacity-80 transition-all hidden sm:inline"
             >
               My Learning
@@ -87,6 +87,12 @@ function NavBar() {
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
                     Home
+                  </Link>
+                  <Link
+                  to="/my-learning"
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                  My Learning
                   </Link>
                   <Link
                     to="/settings"

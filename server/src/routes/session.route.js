@@ -1,7 +1,14 @@
 import express from "express";
 import { Session } from "../models/session.model.js";
+import { subscribeToSession,getSubscribedSessions } from "../controllers/session.controller.js";
+
 
 const router=express.Router();
+router.get('/ping', (req, res) => res.json({ status: 'alive' }));
+
+
+router.post("/subscribe", subscribeToSession);
+
 
 //offer sevice route
 router.post("/offer",async(req,res)=>{
@@ -9,7 +16,7 @@ router.post("/offer",async(req,res)=>{
 
 
     if(!teacher||!skill||!creditsUsed||!dateTime){
-        return res.status(400).json({message:"Fileds not found"});
+        return res.status(400).json({message:"Fields not found"});
     }
 
     try {
@@ -72,6 +79,24 @@ router.delete("/delete/:sessionId",async(req,res)=>{
   }
 })
 
+router.get("/subscribed/:userId", getSubscribedSessions);
+
+router.get("/subscribed/:mongoUserId", async (req, res) => {
+  const { mongoUserId } = req.params;
+  console.log("Fetching sessions for subscriber:", mongoUserId);
+
+  try {
+    const sessions = await Session.find({ subscribers: mongoUserId }).populate("teacher", "name");
+    console.log("Sessions found:", sessions);
+    res.status(200).json(sessions);
+  } catch (err) {
+    console.error("Fetch error:", err);
+    res.status(500).json({ message: "Failed to fetch subscribed sessions", error: err });
+  }
+});
+
+
+
 router.get("/:teacherId",async(req,res)=>{
   const {teacherId}=req.params;
 
@@ -83,6 +108,9 @@ router.get("/:teacherId",async(req,res)=>{
     res.status(500).json({ message: "Failed to fetch sessions" });
   }
 })
+
+
+
 
 
 
