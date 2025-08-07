@@ -116,3 +116,40 @@ export const earnCredits = async (req, res) => {
     });
   }
 };
+
+// Add to your credits.controller.js
+export const redeemCredits = async (req, res) => {
+  try {
+    const { userId, creditsToRedeem, skillCoinsToReceive } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
+    }
+
+    if (user.totalCredits < creditsToRedeem) {
+      return res.status(400).json({ message: "Insufficient credits" });
+    }
+
+    // Deduct credits and add SkillCoins
+    user.totalCredits -= creditsToRedeem;
+    user.skillCoins = (user.skillCoins || 0) + skillCoinsToReceive;
+    user.creditSpent += creditsToRedeem; // Track total spent
+
+    await user.save();
+
+    return res.status(200).json({ 
+      message: "Credits redeemed successfully", 
+      user,
+      redeemed: {
+        credits: creditsToRedeem,
+        skillCoins: skillCoinsToReceive
+      }
+    });
+
+  } catch (err) {
+    console.error("Redeem error:", err);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+

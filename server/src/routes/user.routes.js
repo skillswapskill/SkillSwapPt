@@ -96,7 +96,8 @@ router.post("/sync", async (req, res) => {
         clerkId, name, email,
         totalCredits: 300,
         isSetupDone: false,
-        profilePic: req.body.profilePic || ""
+        profilePic: req.body.profilePic || "",
+        skillCoins: 0
       });
     }
     res.json({
@@ -105,6 +106,7 @@ router.post("/sync", async (req, res) => {
       isSetupDone: user.isSetupDone,
       name: user.name,
       skills: user.skills || [],
+      skillCoins: user.skillCoins || 0, 
       profilePic: user.profilePic || null,
       showCongrats: !user.isSetupDone,
     });

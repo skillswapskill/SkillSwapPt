@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useUser } from "@clerk/clerk-react";
+import { useNavigate } from "react-router-dom"; // Add this import
 import axios from "axios";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -11,6 +12,7 @@ import dayjs from 'dayjs';
 
 function Profile() {
   const { user, isSignedIn } = useUser();
+  const navigate = useNavigate(); // Add this hook
 
   const [step, setStep] = useState(1);
   const [name, setName] = useState("");
@@ -137,20 +139,24 @@ function Profile() {
   const handleDeleteService = async (sessionId) => {
     console.log("Trying to delete sessionId:", sessionId);
 
-  try {
-    await axios.delete(`http://localhost:5000/api/sessions/delete/${sessionId}`, {
-      withCredentials: true,
-    });
+    try {
+      await axios.delete(`http://localhost:5000/api/sessions/delete/${sessionId}`, {
+        withCredentials: true,
+      });
 
-    // Remove the deleted session from UI
-    setServices((prev) => prev.filter((service) => service._id !== sessionId));
-    toast.success("Service deleted successfully!");
-  } catch (error) {
-    console.error("Failed to delete service:", error);
-    toast.error("Failed to delete service");
-  }
-};
+      // Remove the deleted session from UI
+      setServices((prev) => prev.filter((service) => service._id !== sessionId));
+      toast.success("Service deleted successfully!");
+    } catch (error) {
+      console.error("Failed to delete service:", error);
+      toast.error("Failed to delete service");
+    }
+  };
 
+  // Handle redeem navigation
+  const handleRedeemCredits = () => {
+    navigate('/redeem');
+  };
 
   // Sync user effect
   useEffect(() => {
@@ -342,9 +348,9 @@ function Profile() {
     <div className="min-h-screen bg-gray-50 p-6">
       <br />
       <br />
-      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Profile Info */}
-        <div className="col-span-2 bg-white shadow-xl rounded-xl p-6 flex flex-col md:flex-row justify-between items-center gap-4">
+      <div className="max-w-6xl mx-auto">
+        {/* Profile Info - Full width on all screens */}
+        <div className="col-span-full bg-white shadow-xl rounded-xl p-6 flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
           <div className="flex items-center gap-4">
             <label className="relative w-20 h-20 rounded-full overflow-hidden border-4 border-blue-500 shadow-md cursor-pointer">
               <img
@@ -414,14 +420,42 @@ function Profile() {
               )}
             </div>
           </div>
-          <div className="text-center">
-            <p className="text-lg font-medium text-blue-700">Credits</p>
-            <p className="text-3xl font-bold text-green-600">{credits}</p>
+          
+          {/* Enhanced Credits Section with Redeem Button */}
+          <div className="text-center min-w-[200px]">
+            <div className="bg-gradient-to-br from-blue-50 to-green-50 rounded-xl p-4 mb-3 border border-blue-100">
+              <p className="text-lg font-medium text-blue-700 mb-1">Credits</p>
+              <p className="text-3xl font-bold text-green-600 mb-3">{credits.toLocaleString()}</p>
+              
+              {/*  Redeem Button */}
+              <button
+                onClick={handleRedeemCredits}
+                className="relative overflow-hidden bg-gradient-to-r from-purple-600 via-blue-600 to-green-600 text-white font-semibold py-2.5 px-6 rounded-full shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-2xl active:scale-95 group"
+                disabled={credits < 1000}
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-400 via-blue-400 to-green-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="relative flex items-center gap-2">
+                  <span className="text-lg">🪙</span>
+                  <span>Redeem Credits</span>
+                  {/* <div className="absolute -top-1 -right-1 bg-yellow-400 text-yellow-900 text-xs font-bold px-1.5 py-0.5 rounded-full animate-pulse">
+                    NEW
+                  </div> */}
+                </div>
+              </button>
+              
+              {credits < 1000 && (
+                <p className="text-xs text-gray-500 mt-2">
+                  Minimum 1,000 credits required
+                </p>
+              )}
+            </div>
+            
+            {/* Edit Profile Section */}
             <div className="mt-2">
               {!editMode ? (
                 <button
                   onClick={() => setEditMode(true)}
-                  className="text-blue-600 underline"
+                  className="text-blue-600 underline text-sm hover:text-blue-800 transition-colors"
                 >
                   Edit Profile
                 </button>
@@ -429,10 +463,10 @@ function Profile() {
                 <button
                   onClick={handleSubmit}
                   disabled={uploading}
-                  className={`px-4 py-1 rounded mt-2 text-white ${
+                  className={`px-4 py-1 rounded mt-2 text-white text-sm transition-all ${
                     uploading
                       ? 'bg-gray-400 cursor-not-allowed'
-                      : 'bg-green-600 hover:bg-green-700'
+                      : 'bg-green-600 hover:bg-green-700 shadow-md hover:shadow-lg'
                   }`}
                 >
                   {uploading ? 'Saving...' : 'Save Changes'}
@@ -442,86 +476,91 @@ function Profile() {
           </div>
         </div>
 
-        {/* Calendar */}
-        <div className="bg-white shadow-xl rounded-xl p-6">
-          <h3 className="text-xl font-semibold mb-3 text-blue-700 flex items-center gap-2">
-            📅 Calendar (Upcoming Sessions)
-          </h3>
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <DateCalendar />
-          </LocalizationProvider>
-        </div>
-
-        {/* Meeting UI */}
-        <div className="bg-white shadow-xl rounded-xl p-6">
-          <h3 className="text-xl font-semibold mb-3 text-blue-700 flex items-center gap-2">
-            📹 My Session
-          </h3>
-          {/* Services List */}
-          <div className="space-y-4">
-            {services.length === 0 ? (
-              <p className="text-gray-400 italic">No session listed yet.</p>
-            ) : (
-              services.map((service, idx) => (
-                <div
-                  key={idx}
-                  className="border border-gray-300 rounded-xl p-4 shadow-sm flex justify-between items-center"
-                >
-                  <div>
-                    <p className="font-medium text-blue-800">{service.name}</p>
-                    <p className="text-sm text-green-600">
-                      Credits Required: <span className="font-semibold">{service.credits}</span>
-                    </p>
-                    {service.time && (
-                      <p className="text-sm text-gray-600">
-                        Time: {dayjs(service.time).format("DD MMM YYYY, hh:mm A")}
-                      </p>
-                    )}
-                  </div>
-                  <button
-                    onClick={() => handleDeleteService(service._id)}
-                    className="text-red-600 hover:underline text-sm"
-                  >
-                    Delete
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
-
-          {/* Add Service Inputs */}
-          <div className="mt-6 space-y-2">
-            <input
-              type="text"
-              placeholder="Service name"
-              value={serviceName}
-              onChange={(e) => setServiceName(e.target.value)}
-              className="border rounded-md px-3 py-2 w-full"
-            />
-            <input
-              type="number"
-              placeholder="Credit required"
-              value={serviceCredits}
-              onChange={(e) => setServiceCredits(e.target.value)}
-              className="border rounded-md px-3 py-2 w-full"
-            />
+        {/* Grid layout for Calendar and Sessions */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Calendar - Hidden on mobile (sm), visible on laptop (lg) and up */}
+          <div className="hidden lg:block bg-white shadow-xl rounded-xl p-6">
+            <h3 className="text-xl font-semibold mb-3 text-blue-700 flex items-center gap-2">
+              📅 Calendar (Upcoming Sessions)
+            </h3>
             <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <DateTimePicker
-                label="Select date and time"
-                value={serviceDateTime}
-                onChange={(newValue) => setServiceDateTime(newValue)}
-                className="w-full"
-              />
+              <DateCalendar />
             </LocalizationProvider>
-            <button
-              onClick={handleAddService}
-              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 w-full"
-            >
-              Add Service
-            </button>
+          </div>
+
+          {/* Meeting UI - Full width on mobile, half width on laptop */}
+          <div className="bg-white shadow-xl rounded-xl p-6 lg:col-span-1 col-span-1">
+            <h3 className="text-xl font-semibold mb-3 text-blue-700 flex items-center gap-2">
+              📹 My Sessions
+            </h3>
+            
+            {/* Services List */}
+            <div className="space-y-4">
+              {services.length === 0 ? (
+                <p className="text-gray-400 italic">No session listed yet.</p>
+              ) : (
+                services.map((service, idx) => (
+                  <div
+                    key={idx}
+                    className="border border-gray-300 rounded-xl p-4 shadow-sm flex justify-between items-center"
+                  >
+                    <div>
+                      <p className="font-medium text-blue-800">{service.name}</p>
+                      <p className="text-sm text-green-600">
+                        Credits Required: <span className="font-semibold">{service.credits}</span>
+                      </p>
+                      {service.time && (
+                        <p className="text-sm text-gray-600">
+                          Time: {dayjs(service.time).format("DD MMM YYYY, hh:mm A")}
+                        </p>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => handleDeleteService(service._id)}
+                      className="text-red-600 hover:underline text-sm"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Add Service Inputs */}
+            <div className="mt-6 space-y-2">
+              <input
+                type="text"
+                placeholder="Service name"
+                value={serviceName}
+                onChange={(e) => setServiceName(e.target.value)}
+                className="border rounded-md px-3 py-2 w-full"
+              />
+              <input
+                type="number"
+                placeholder="Credit required"
+                value={serviceCredits}
+                onChange={(e) => setServiceCredits(e.target.value)}
+                className="border rounded-md px-3 py-2 w-full"
+              />
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <DateTimePicker
+                  label="Select date and time"
+                  value={serviceDateTime}
+                  onChange={(newValue) => setServiceDateTime(newValue)}
+                  className="w-full"
+                />
+              </LocalizationProvider>
+              <button
+                onClick={handleAddService}
+                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 w-full"
+              >
+                Add Service
+              </button>
+            </div>
           </div>
         </div>
-      </div>...
+      </div>
+
       <ToastContainer
         position="top-right"
         autoClose={3000}

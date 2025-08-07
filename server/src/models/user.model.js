@@ -32,6 +32,9 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    // Add this to your user schema
+    skillCoins: { type: Number, default: 0 },
+
     firstLoginRewarded: { type: Boolean, default: false },
     isSetupDone: { type: Boolean, default: false },
     profilePic: String, // New field if you store image URL or base64
