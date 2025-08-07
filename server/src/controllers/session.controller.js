@@ -76,6 +76,33 @@ export const getSubscribedSessions = async (req, res) => {
   }
 };
 
+// NEW: Endpoint for instructor view
+
+export const getTeachingSessions = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: "Invalid or missing userId" });
+    }
+
+    const objId = new mongoose.Types.ObjectId(userId);
+
+    // Sessions where user is the TEACHER and session has been BOOKED (has learner)
+    const sessions = await Session.find({ 
+      teacher: objId, 
+      learner: { $exists: true, $ne: null } 
+    })
+      .populate("learner", "name email") // Populate learner details
+      .sort({ dateTime: -1 });
+
+    res.status(200).json(sessions);
+  } catch (error) {
+    console.error("Error fetching teaching sessions:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 
 
 

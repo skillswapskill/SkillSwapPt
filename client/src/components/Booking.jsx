@@ -72,9 +72,22 @@ function Booking() {
           alert(debitRes.data.message || "Failed to debit credits.");
           return;
         }
+      const teacherId = getCleanId(session.teacher); // Get teacher ID from session
+      
+      const earnRes = await axios.post("http://localhost:5000/api/credits/earn", {
+        userId: teacherId, // Teacher's ID, not learner's ID!
+        sessionId: cleanSessionId,
+      });
+
+      if (earnRes.status !== 200) {
+        console.error("Failed to credit teacher:", earnRes.data.message);
+        // You might want to handle this error differently
+      } else {
+        console.log("✅ Teacher credited successfully!");
+      }
 
         alert("Booking confirmed!");
-        navigate("/profile");
+        navigate("/my-learning");
       }
     } catch (error) {
       console.error("❌ Error confirming booking:", error);

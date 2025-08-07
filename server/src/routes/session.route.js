@@ -1,6 +1,6 @@
 import express from "express";
 import { Session } from "../models/session.model.js";
-import { subscribeToSession,getSubscribedSessions } from "../controllers/session.controller.js";
+import { subscribeToSession,getSubscribedSessions,getTeachingSessions } from "../controllers/session.controller.js";
 
 
 const router=express.Router();
@@ -95,6 +95,7 @@ router.get("/subscribed/:mongoUserId", async (req, res) => {
   }
 });
 
+router.get("/teaching/:userId", getTeachingSessions);
 
 
 router.get("/:teacherId",async(req,res)=>{

@@ -16,6 +16,8 @@ import ProfileClicked from "./components/ProfileClicked";
 import Booking from "./components/Booking";
 import { Toaster } from 'react-hot-toast';
 import MyLearning from "./components/MyLearning";
+import JoinRoom from './components/JoinRoom';
+
 
 
 
@@ -44,6 +46,7 @@ function App() {
         <Route path="/profileclicked" element={<ProfileClicked />} />
         <Route path="/book-session" element={<Booking />} />
         <Route path="/my-learning" element={<MyLearning />} />
+        <Route path="/join-room/:sessionId" element={<JoinRoom />} />
       </Routes>
 
       <Footer />
