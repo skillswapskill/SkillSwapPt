@@ -81,7 +81,7 @@ router.delete("/delete/:sessionId",async(req,res)=>{
 
 router.get("/subscribed/:userId", getSubscribedSessions);
 
-router.get("/subscribed/:mongoUserId", async (req, res) => {
+router.get("/subscribed-by-id/:mongoUserId", async (req, res) => {
   const { mongoUserId } = req.params;
   console.log("Fetching sessions for subscriber:", mongoUserId);
 
