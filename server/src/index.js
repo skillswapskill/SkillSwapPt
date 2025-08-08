@@ -6,7 +6,10 @@ import creditRoutes from './routes/credits.routes.js';
 import userRoutes from './routes/user.routes.js';
 import sessionRoutes from "./routes/session.route.js"
 import clerkRoutes from "./routes/clerk.routes.js"
+import path from 'path';
 
+
+const __dirname=path.resolve();
 
 dotenv.config();
 
@@ -23,10 +26,10 @@ app.use("/api/clerk", clerkRoutes);
 app.use('/uploads', express.static('uploads'));
 
 if(process.env.NODE_ENV==="production"){
-    app.use(express.static(path.join(__dirname,"../frontend/dist")));
+    app.use(express.static(path.join(__dirname,"../client/dist")));
 
     app.get('/{*any}',(req,res)=>{
-        res.sendFile(path.join(__dirname,"../frontend","dist","index.html"));
+        res.sendFile(path.join(__dirname,"../client","dist","index.html"));
     })
 }
 

@@ -1,0 +1,23 @@
+{
+  "name": "skillsswap",
+  "version": "1.0.0",
+  "description": "Project Name: SkillSwap – Decentralized Peer Learning Platform\r Concept:\r A platform where users can exchange skills without money – using a skill credit system. For example, someone can teach “JavaScript for 1 hour” and earn 1 skill credit, which they can use to learn “Guitar” or “Public Speaking” from someone else.",
+  "main": "index.js",
+  "scripts": {
+    "build":"npm install --prefix server && npm install --prefix client && npm run build --prefix client",
+
+
+    "start":"npm run start --prefix server"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/skillswapskill/SkillSwapPt.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/skillswapskill/SkillSwapPt/issues"
+  },
+  "homepage": "https://github.com/skillswapskill/SkillSwapPt#readme"
+}
