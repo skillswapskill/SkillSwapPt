@@ -11,9 +11,10 @@ const Login = () => {
       {!isLoaded ? (
         <p className="text-lg font-semibold">Curating your Profile Sir</p>
       ) : isSignedIn ? (
-        <p className="text-lg font-semibold text-green-600">You are already signed in</p>
+        // <p className="text-lg font-semibold text-green-600">You are already signed in</p>
+        navigate("/dashboard")
       ) : (
-        <SignIn afterSignInUrl="/profile" />
+        <SignIn afterSignInUrl="/dashboard" />
         
         
       )}

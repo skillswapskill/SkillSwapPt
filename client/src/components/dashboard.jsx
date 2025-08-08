@@ -1,53 +1,125 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { FaSearch } from "react-icons/fa";
+import { FaSearch, FaUserFriends, FaSeedling } from "react-icons/fa";
+import { HiSparkles } from "react-icons/hi";
 import { useUser } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
 
-// Sun/moon illustrations: Visible on left background, time-based
+// Enhanced Sun/Moon illustrations with improved gradients and animations
 const scenes = {
   morning: (
-    <svg width="300" height="300" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute left-0 top-1/4 z-10 pointer-events-none select-none" style={{ opacity: 0.85 }}>
+    <svg 
+      width="350" 
+      height="350" 
+      viewBox="0 0 350 350" 
+      fill="none" 
+      xmlns="http://www.w3.org/2000/svg" 
+      className="absolute left-0 top-1/4 z-10 pointer-events-none select-none animate-pulse" 
+      style={{ opacity: 0.9 }}
+    >
       <defs>
-        <radialGradient id="sunrise" cx="0.5" cy="0.5" r="0.5" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#FFD700" stopOpacity="1" />
-          <stop offset="1" stopColor="#FF8C00" stopOpacity="0.5" />
+        <radialGradient id="sunrise" cx="0.5" cy="0.5" r="0.8" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#FFE066" stopOpacity="1" />
+          <stop offset="0.5" stopColor="#FF9A56" stopOpacity="0.8" />
+          <stop offset="1" stopColor="#FF6B6B" stopOpacity="0.3" />
         </radialGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+          <feMerge> 
+            <feMergeNode in="coloredBlur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
       </defs>
-      <circle cx="150" cy="150" r="120" fill="url(#sunrise)" />
+      <circle cx="175" cy="175" r="140" fill="url(#sunrise)" filter="url(#glow)" />
+      <circle cx="175" cy="175" r="120" fill="url(#sunrise)" opacity="0.6" />
     </svg>
   ),
   afternoon: (
-    <svg width="300" height="300" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute left-0 top-1/4 z-10 pointer-events-none select-none" style={{ opacity: 0.85 }}>
+    <svg 
+      width="350" 
+      height="350" 
+      viewBox="0 0 350 350" 
+      fill="none" 
+      xmlns="http://www.w3.org/2000/svg" 
+      className="absolute left-0 top-1/4 z-10 pointer-events-none select-none animate-pulse" 
+      style={{ opacity: 0.9 }}
+    >
       <defs>
-        <radialGradient id="sun" cx="0.5" cy="0.5" r="0.5" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#FFEF8E" stopOpacity="1" />
-          <stop offset="1" stopColor="#FFCD69" stopOpacity="0.5" />
+        <radialGradient id="sun" cx="0.5" cy="0.5" r="0.8" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#FFF59D" stopOpacity="1" />
+          <stop offset="0.5" stopColor="#FFD54F" stopOpacity="0.9" />
+          <stop offset="1" stopColor="#FFCA28" stopOpacity="0.4" />
         </radialGradient>
+        <filter id="sunGlow">
+          <feGaussianBlur stdDeviation="5" result="coloredBlur"/>
+          <feMerge> 
+            <feMergeNode in="coloredBlur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
       </defs>
-      <circle cx="150" cy="150" r="120" fill="url(#sun)" />
+      <circle cx="175" cy="175" r="140" fill="url(#sun)" filter="url(#sunGlow)" />
+      <circle cx="175" cy="175" r="120" fill="url(#sun)" opacity="0.7" />
     </svg>
   ),
   evening: (
-    <svg width="300" height="300" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute left-0 top-1/4 z-10 pointer-events-none select-none" style={{ opacity: 0.85 }}>
+    <svg 
+      width="350" 
+      height="350" 
+      viewBox="0 0 350 350" 
+      fill="none" 
+      xmlns="http://www.w3.org/2000/svg" 
+      className="absolute left-0 top-1/4 z-10 pointer-events-none select-none animate-pulse" 
+      style={{ opacity: 0.9 }}
+    >
       <defs>
-        <radialGradient id="sunset" cx="0.5" cy="0.5" r="0.5" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#F9CB89" stopOpacity="1" />
-          <stop offset="1" stopColor="#F79FA5" stopOpacity="0.5" />
+        <radialGradient id="sunset" cx="0.5" cy="0.5" r="0.8" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#FFAB91" stopOpacity="1" />
+          <stop offset="0.5" stopColor="#FF8A65" stopOpacity="0.8" />
+          <stop offset="1" stopColor="#FF7043" stopOpacity="0.3" />
         </radialGradient>
+        <filter id="sunsetGlow">
+          <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
+          <feMerge> 
+            <feMergeNode in="coloredBlur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
       </defs>
-      <circle cx="150" cy="150" r="120" fill="url(#sunset)" />
+      <circle cx="175" cy="175" r="140" fill="url(#sunset)" filter="url(#sunsetGlow)" />
+      <circle cx="175" cy="175" r="120" fill="url(#sunset)" opacity="0.6" />
     </svg>
   ),
   night: (
-    <svg width="300" height="300" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute left-0 top-1/4 z-10 pointer-events-none select-none" style={{ opacity: 0.85 }}>
+    <svg 
+      width="350" 
+      height="350" 
+      viewBox="0 0 350 350" 
+      fill="none" 
+      xmlns="http://www.w3.org/2000/svg" 
+      className="absolute left-0 top-1/4 z-10 pointer-events-none select-none animate-pulse" 
+      style={{ opacity: 0.9 }}
+    >
       <defs>
-        <radialGradient id="moonGlow" cx="0.5" cy="0.5" r="0.5" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#FCEEEE" stopOpacity="1" />
-          <stop offset="1" stopColor="#EFEAF1" stopOpacity="0.5" />
+        <radialGradient id="moonGlow" cx="0.5" cy="0.5" r="0.8" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#E3F2FD" stopOpacity="1" />
+          <stop offset="0.5" stopColor="#BBDEFB" stopOpacity="0.8" />
+          <stop offset="1" stopColor="#90CAF9" stopOpacity="0.3" />
         </radialGradient>
+        <filter id="nightGlow">
+          <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+          <feMerge> 
+            <feMergeNode in="coloredBlur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
       </defs>
-      <circle cx="150" cy="150" r="120" fill="url(#moonGlow)" />
+      <circle cx="175" cy="175" r="140" fill="url(#moonGlow)" filter="url(#nightGlow)" />
+      <circle cx="175" cy="175" r="120" fill="url(#moonGlow)" opacity="0.7" />
+      <circle cx="100" cy="80" r="2" fill="#FFF" opacity="0.8" className="animate-ping" />
+      <circle cx="280" cy="120" r="1.5" fill="#FFF" opacity="0.6" className="animate-ping" style={{animationDelay: '1s'}} />
+      <circle cx="250" cy="60" r="1" fill="#FFF" opacity="0.7" className="animate-ping" style={{animationDelay: '2s'}} />
     </svg>
   ),
 };
@@ -82,11 +154,11 @@ const Dashboard = () => {
       if (!selectedUser?.clerkId) return;
       try {
         const res = await axios.get(
-          `http://localhost:5000/api/clerk/user/${selectedUser.clerkId}`
+          "http://localhost:5000/api/clerk/user/${selectedUser.clerkId}"
         );
         setSelectedClerkData(res.data);
       } catch (err) {
-        console.error("❌ Error fetching Clerk user data:", err);
+        console.error("ERROR fetching Clerk user data", err);
       }
     };
     fetchClerkData();
@@ -125,7 +197,7 @@ const Dashboard = () => {
       setCurrentUserMongo(response.data);
       console.log("Synced current user:", response.data);
     } catch (err) {
-      console.error("❌ Error syncing logged-in user:", err);
+      console.error("ERROR: Error syncing logged-in user:", err);
     }
   };
 
@@ -138,7 +210,7 @@ const Dashboard = () => {
       console.log("Fetched all users:", users);
       setAllUsers(users);
     } catch (err) {
-      console.error("❌ Error fetching users:", err);
+      console.error("ERROR: Error fetching users:", err);
     }
   };
 
@@ -203,30 +275,53 @@ const Dashboard = () => {
   console.log("Users to display after filtering:", displayUsers);
 
   return (
-    <div className="relative min-h-screen flex flex-col justify-between px-6 py-10 bg-gradient-to-br from-purple-100 via-white to-blue-100 overflow-hidden">
+    <div className="relative min-h-screen flex flex-col justify-between px-6 py-10 bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 overflow-hidden">
+      {/* Animated background particles */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-20 left-10 w-2 h-2 bg-blue-300 rounded-full animate-bounce opacity-40" style={{animationDelay: '0s'}}></div>
+        <div className="absolute top-40 right-20 w-1 h-1 bg-purple-300 rounded-full animate-bounce opacity-30" style={{animationDelay: '1s'}}></div>
+        <div className="absolute bottom-32 left-1/4 w-1.5 h-1.5 bg-pink-300 rounded-full animate-bounce opacity-50" style={{animationDelay: '2s'}}></div>
+        <div className="absolute top-60 right-1/3 w-1 h-1 bg-indigo-300 rounded-full animate-bounce opacity-35" style={{animationDelay: '3s'}}></div>
+        <div className="absolute bottom-64 right-10 w-1 h-1 bg-yellow-300 rounded-full animate-bounce opacity-40" style={{animationDelay: '4s'}}></div>
+        <div className="absolute top-32 left-1/3 w-1.5 h-1.5 bg-green-300 rounded-full animate-bounce opacity-30" style={{animationDelay: '5s'}}></div>
+      </div>
+
       {/* Dynamic Sun/Moon Background */}
       <div className="hidden md:block">{scenes[getTimeOfDay()]}</div>
 
       <br />
       <br />
-      <h1 className="text-3xl font-bold text-center mb-8 text-blue-700 relative z-20">
-        {getTimeGreeting()}, {user?.firstName || "Learner"}
-      </h1>
-
-      <div className="flex justify-center mb-12 z-20 relative">
-        <div className="flex items-center bg-white rounded-full px-4 py-2 shadow-md w-full max-w-md">
-          <FaSearch className="text-blue-700 mr-3" />
-          <input
-            type="text"
-            placeholder="Dive into your Skills"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="outline-none w-full bg-transparent text-blue-700"
-          />
+      
+      {/* Enhanced Header with glass morphism effect */}
+      <div className="text-center mb-8 relative z-20">
+        <div className="inline-flex items-center justify-center px-8 py-4 bg-white/20 backdrop-blur-sm rounded-3xl border border-white/30 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+          <HiSparkles className="text-yellow-400 text-2xl mr-3 animate-pulse" />
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+            {getTimeGreeting()}, {user?.firstName || "Learner"}
+          </h1>
+          <HiSparkles className="text-yellow-400 text-2xl ml-3 animate-pulse" />
         </div>
       </div>
 
-      <div className="flex flex-wrap justify-center gap-9 relative z-20">
+      {/* Enhanced Search Bar */}
+      <div className="flex justify-center mb-12 z-20 relative">
+        <div className="relative group">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full blur opacity-30 group-hover:opacity-50 transition duration-300"></div>
+          <div className="relative flex items-center bg-white/90 backdrop-blur-md rounded-full px-6 py-4 shadow-2xl w-full max-w-md border border-white/50 group-hover:border-white/70 transition-all duration-300">
+            <FaSearch className="text-blue-600 mr-4 text-lg group-hover:scale-110 transition-transform duration-200" />
+            <input
+              type="text"
+              placeholder="Dive into your Skills"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="outline-none w-full bg-transparent text-blue-700 placeholder-blue-400 font-medium"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Enhanced Users Grid */}
+      <div className="flex flex-wrap justify-center gap-12 relative z-20 mb-8">
         {displayUsers
           .filter(
             (u) =>
@@ -237,74 +332,124 @@ const Dashboard = () => {
                 ))
           )
           .map((u, idx) => (
-            <div key={idx} className="flex flex-col items-center w-24">
-              <div
-                className="w-20 h-20 rounded-full overflow-hidden shadow-md hover:scale-110 transition border border-blue-300"
-                title={u.name}
-              >
-                <img
-                  src={getProfilePic(u)}
-                  alt={u.name}
-                  className="w-full h-full object-cover cursor-pointer"
-                  onClick={() => setSelectedUser(u)}
-                />
+            <div key={idx} className="flex flex-col items-center w-28 group">
+              <div className="relative">
+                {/* Glowing ring effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 rounded-full blur-sm opacity-0 group-hover:opacity-75 transition-opacity duration-300 scale-110"></div>
+                <div
+                  className="relative w-24 h-24 rounded-full overflow-hidden shadow-lg hover:shadow-2xl transform hover:scale-110 transition-all duration-300 border-3 border-white cursor-pointer"
+                  title={u.name}
+                >
+                  <img
+                    src={getProfilePic(u)}
+                    alt={u.name}
+                    className="w-full h-full object-cover"
+                    onClick={() => setSelectedUser(u)}
+                  />
+                  {/* Online indicator */}
+                  <div className="absolute bottom-1 right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white shadow-sm animate-pulse"></div>
+                </div>
               </div>
-              <p className="mt-2 text-sm text-center font-medium text-blue-800 truncate max-w-[5rem]">
+              <p className="mt-3 text-sm text-center font-semibold text-blue-800 truncate max-w-[6rem] group-hover:text-purple-600 transition-colors duration-200">
                 {u.name}
               </p>
             </div>
           ))}
       </div>
 
-      <div className="text-center text-green-800 mt-12 relative z-20">
-        <p className="text-lg font-medium">Number of Trees Planted 🌱</p>
-        <p className="text-3xl font-bold">{treesPlanted.toLocaleString()}</p>
+      {/* Enhanced Trees Counter */}
+      <div className="text-center mt-12 relative z-20">
+        <div className="inline-flex flex-col items-center px-8 py-6 bg-gradient-to-br from-green-100 to-emerald-100 rounded-3xl shadow-2xl border border-green-200/50 backdrop-blur-sm hover:shadow-3xl transition-all duration-300 transform hover:scale-105">
+          <div className="flex items-center mb-2">
+            <FaSeedling className="text-green-600 text-xl mr-2 animate-pulse" />
+            <p className="text-lg font-semibold text-green-800">Number of Trees Planted</p>
+            <FaSeedling className="text-green-600 text-xl ml-2 animate-pulse" />
+          </div>
+          <div className="relative">
+            <p className="text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+              {treesPlanted.toLocaleString()}
+            </p>
+            <div className="absolute inset-0 bg-green-400 opacity-20 blur-xl rounded-lg animate-pulse"></div>
+          </div>
+        </div>
       </div>
 
+      {/* Enhanced Modal */}
       {selectedUser && (
-        <div className="fixed inset-0 z-50 backdrop-blur-sm bg-black/30 flex justify-center items-center">
-          <div className="bg-white rounded-lg p-6 shadow-xl w-[90%] max-w-sm relative">
-            <button
-              onClick={() => setSelectedUser(null)}
-              className="absolute top-2 right-3 text-2xl font-bold text-gray-500 hover:text-red-600"
-            >
-              &times;
-            </button>
-            <div className="flex flex-col items-center">
-              <img
-                src={getProfilePic(selectedUser)}
-                alt={selectedUser.name}
-                className="w-24 h-24 rounded-full object-cover mb-4 border-2 border-blue-500"
-              />
-              <h2 className="text-xl font-semibold text-blue-800 mb-2">
-                {selectedUser.name}
-              </h2>
-              <div className="flex flex-wrap gap-2 justify-center mt-2">
-                {selectedUser.skills && selectedUser.skills.length > 0 ? (
-                  selectedUser.skills.map((skill, i) => (
-                    <span
-                      key={i}
-                      className="px-3 py-1 bg-blue-100 text-blue-700 text-sm rounded-full shadow-sm"
-                    >
-                      {skill}
-                    </span>
-                  ))
-                ) : (
-                  <p className="text-gray-500 text-sm">No skills listed</p>
-                )}
-              </div>
+        <div className="fixed inset-0 z-50 backdrop-blur-md bg-black/40 flex justify-center items-center animate-fadeIn">
+          <div className="relative group">
+            {/* Glowing background */}
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-2xl blur-xl opacity-30 group-hover:opacity-40 transition duration-300"></div>
+            
+            <div className="relative bg-white/95 backdrop-blur-xl rounded-2xl p-8 shadow-2xl w-[90%] max-w-sm border border-white/50">
               <button
-                onClick={() =>
-                  navigate("/profileclicked", { state: { selectedUser } })
-                }
-                className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700"
+                onClick={() => setSelectedUser(null)}
+                className="absolute top-3 right-4 text-3xl font-bold text-gray-400 hover:text-red-500 transition-colors duration-200 hover:scale-110 transform"
               >
-                View Full Profile
+                &times;
               </button>
+              
+              <div className="flex flex-col items-center">
+                <div className="relative mb-6">
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full blur-md opacity-50"></div>
+                  <img
+                    src={getProfilePic(selectedUser)}
+                    alt={selectedUser.name}
+                    className="relative w-28 h-28 rounded-full object-cover border-4 border-white shadow-xl"
+                  />
+                  <div className="absolute bottom-0 right-0 w-6 h-6 bg-green-400 rounded-full border-2 border-white animate-pulse"></div>
+                </div>
+
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
+                  {selectedUser.name}
+                </h2>
+
+                <div className="flex flex-wrap gap-2 justify-center mt-2 mb-6">
+                  {selectedUser.skills && selectedUser.skills.length > 0 ? (
+                    selectedUser.skills.map((skill, i) => (
+                      <span
+                        key={i}
+                        className="px-4 py-2 bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 text-sm rounded-full shadow-md border border-blue-200/50 hover:scale-105 transform transition duration-200"
+                      >
+                        {skill}
+                      </span>
+                    ))
+                  ) : (
+                    <p className="text-gray-500 text-sm italic">No skills listed</p>
+                  )}
+                </div>
+
+                <button
+                  onClick={() =>
+                    navigate("/profileclicked", { state: { selectedUser } })
+                  }
+                  className="relative group mt-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl font-semibold"
+                >
+                  <FaUserFriends className="inline mr-2" />
+                  View Full Profile
+                  <div className="absolute inset-0 bg-white/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
+
+      <style jsx>{`
+        @keyframes fadeIn {
+          from { 
+            opacity: 0; 
+            transform: scale(0.9); 
+          }
+          to { 
+            opacity: 1; 
+            transform: scale(1); 
+          }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 };
