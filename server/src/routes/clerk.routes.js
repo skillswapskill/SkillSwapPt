@@ -1,6 +1,7 @@
 import express from "express"
-const router = express.Router();
 import axios from "axios"
+
+const router = express.Router();
 
 const CLERK_SECRET_KEY = process.env.CLERK_SECRET_KEY;
 
