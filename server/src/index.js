@@ -48,12 +48,12 @@ app.use("/api/clerk", clerkRoutes);
 // --- PRODUCTION-ONLY MIDDLEWARE ---
 if (process.env.NODE_ENV === "production") {
     // --- CORRECTED PATH: Goes up two directories to the project root ---
-    const clientDistPath = path.join(__dirname, "../../client/dist");
+    const clientDistPath = path.join(__dirname, "../client/dist");
     app.use(express.static(clientDistPath));
     // --------------------------------------------------------------------
 
     app.get('/{*any}', (req, res) => {
-        res.sendFile(path.resolve(__dirname, "../../client", "dist", "index.html"));
+        res.sendFile(path.resolve(__dirname, "../client", "dist", "index.html"));
     });
 }
 
