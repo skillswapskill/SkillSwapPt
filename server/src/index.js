@@ -52,7 +52,7 @@ if (process.env.NODE_ENV === "production") {
     app.use(express.static(clientDistPath));
     // --------------------------------------------------------------------
 
-    app.get('*', (req, res) => {
+    app.get('/{*any}', (req, res) => {
         res.sendFile(path.resolve(__dirname, "../../client", "dist", "index.html"));
     });
 }
