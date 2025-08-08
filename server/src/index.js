@@ -16,7 +16,24 @@ dotenv.config();
 const Port = process.env.PORT || 3000;
 const app = express();
 
-app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
+const allowedOrigins = [
+  'http://localhost:5173',          // Your local dev frontend
+  'https://skillsswap.onrender.com'  // Your production frontend URL
+];
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow requests if the origin is in our whitelist or if there's no origin (e.g., Postman)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 app.use('/api/credits', creditRoutes);
