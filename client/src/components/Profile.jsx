@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useUser } from "@clerk/clerk-react";
-import { useNavigate } from "react-router-dom"; // Add this import
-import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DateCalendar } from "@mui/x-date-pickers/DateCalendar";
@@ -10,9 +9,12 @@ import 'react-toastify/dist/ReactToastify.css';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import dayjs from 'dayjs';
 
+// ✅ Import the dynamic API client
+import { apiClient } from '../config/api';
+
 function Profile() {
   const { user, isSignedIn } = useUser();
-  const navigate = useNavigate(); // Add this hook
+  const navigate = useNavigate();
 
   const [step, setStep] = useState(1);
   const [name, setName] = useState("");
@@ -49,7 +51,7 @@ function Profile() {
     }
   };
 
-  // Upload profile picture to Cloudinary
+  // ✅ Upload profile picture using dynamic API
   const uploadProfilePic = async () => {
     if (!profilePicFile) return null;
     setUploading(true);
@@ -57,14 +59,15 @@ function Profile() {
       const formData = new FormData();
       formData.append("profilePic", profilePicFile);
       formData.append("clerkId", user.id);
-      const response = await axios.post(
-        "http://localhost:5000/api/users/upload-profile-pic",
+      
+      // ✅ Using apiClient instead of hardcoded URL
+      const response = await apiClient.post(
+        "/api/users/upload-profile-pic",
         formData,
         {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
-          withCredentials: true,
         }
       );
       toast.success('Profile picture uploaded successfully!');
@@ -78,7 +81,7 @@ function Profile() {
     }
   };
 
-  // Handle form submission
+  // ✅ Handle form submission using dynamic API
   const handleSubmit = async () => {
     try {
       let finalProfilePic = profilePic;
@@ -88,11 +91,13 @@ function Profile() {
           finalProfilePic = uploadedUrl;
         }
       }
-      await axios.post(
-        "http://localhost:5000/api/users/setup-complete",
-        { clerkId: user.id, name, skills, profilePic: finalProfilePic },
-        { withCredentials: true }
+      
+      // ✅ Using apiClient instead of hardcoded URL
+      await apiClient.post(
+        "/api/users/setup-complete",
+        { clerkId: user.id, name, skills, profilePic: finalProfilePic }
       );
+      
       setIsSetupDone(true);
       setEditMode(false);
       setProfilePicFile(null);
@@ -104,7 +109,7 @@ function Profile() {
     }
   };
 
-  // Add service handler
+  // ✅ Add service using dynamic API
   const handleAddService = async () => {
     if (serviceName.trim() && serviceCredits) {
       const newService = {
@@ -116,16 +121,17 @@ function Profile() {
       setServiceName("");
       setServiceCredits("");
       setServiceDateTime(dayjs());
+      
       try {
-        await axios.post(
-          "http://localhost:5000/api/sessions/offer",
+        // ✅ Using apiClient instead of hardcoded URL
+        await apiClient.post(
+          "/api/sessions/offer",
           {
             teacher: mongoUserId,
             skill: newService.name,
             creditsUsed: newService.credits,
             dateTime: serviceDateTime.toISOString(),
-          },
-          { withCredentials: true }
+          }
         );
         toast.success('Service added successfully!');
       } catch (error) {
@@ -135,14 +141,13 @@ function Profile() {
     }
   };
 
-  // Delete service function
+  // ✅ Delete service using dynamic API
   const handleDeleteService = async (sessionId) => {
     console.log("Trying to delete sessionId:", sessionId);
 
     try {
-      await axios.delete(`http://localhost:5000/api/sessions/delete/${sessionId}`, {
-        withCredentials: true,
-      });
+      // ✅ Using apiClient instead of hardcoded URL
+      await apiClient.delete(`/api/sessions/delete/${sessionId}`);
 
       // Remove the deleted session from UI
       setServices((prev) => prev.filter((service) => service._id !== sessionId));
@@ -158,20 +163,21 @@ function Profile() {
     navigate('/redeem');
   };
 
-  // Sync user effect
+  // ✅ Sync user using dynamic API
   useEffect(() => {
     const syncUser = async () => {
       if (!isSignedIn) return;
       try {
-        const res = await axios.post(
-          "http://localhost:5000/api/users/sync",
+        // ✅ Using apiClient instead of hardcoded URL
+        const res = await apiClient.post(
+          "/api/users/sync",
           {
             clerkId: user.id,
             name: user.fullName,
             email: user.primaryEmailAddress?.emailAddress,
-          },
-          { withCredentials: true }
+          }
         );
+        
         const data = res.data;
         setCredits(data.totalCredits);
         setIsSetupDone(data.isSetupDone);
@@ -186,9 +192,11 @@ function Profile() {
       }
     };
 
+    // ✅ Fetch offered services using dynamic API
     const fetchOfferedServices = async (userId) => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/sessions/offered/${userId}`);
+        // ✅ Using apiClient instead of hardcoded URL
+        const res = await apiClient.get(`/api/sessions/offered/${userId}`);
         const sessions = res.data;
         const formatted = sessions.map((s) => ({
           _id: s._id,
@@ -427,7 +435,7 @@ function Profile() {
               <p className="text-lg font-medium text-blue-700 mb-1">Credits</p>
               <p className="text-3xl font-bold text-green-600 mb-3">{credits.toLocaleString()}</p>
               
-              {/*  Redeem Button */}
+              {/* Redeem Button */}
               <button
                 onClick={handleRedeemCredits}
                 className="relative overflow-hidden bg-gradient-to-r from-purple-600 via-blue-600 to-green-600 text-white font-semibold py-2.5 px-6 rounded-full shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-2xl active:scale-95 group"
@@ -437,9 +445,6 @@ function Profile() {
                 <div className="relative flex items-center gap-2">
                   <span className="text-lg">🪙</span>
                   <span>Redeem Credits</span>
-                  {/* <div className="absolute -top-1 -right-1 bg-yellow-400 text-yellow-900 text-xs font-bold px-1.5 py-0.5 rounded-full animate-pulse">
-                    NEW
-                  </div> */}
                 </div>
               </button>
               
