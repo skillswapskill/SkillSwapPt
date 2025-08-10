@@ -81,12 +81,13 @@ router.delete("/delete/:sessionId",async(req,res)=>{
 
 router.get("/subscribed/:userId", getSubscribedSessions);
 
-router.get("/subscribed/:mongoUserId", async (req, res) => {
+router.get("/subscribed-by-mongo/:mongoUserId", async (req, res) => {
   const { mongoUserId } = req.params;
   console.log("Fetching sessions for subscriber:", mongoUserId);
 
   try {
-    const sessions = await Session.find({ subscribers: mongoUserId }).populate("teacher", "name");
+    // ✅ FIXED: Search 'learner' field instead of 'subscribers'
+    const sessions = await Session.find({ learner: mongoUserId }).populate("teacher", "name");
     console.log("Sessions found:", sessions);
     res.status(200).json(sessions);
   } catch (err) {
@@ -94,6 +95,7 @@ router.get("/subscribed/:mongoUserId", async (req, res) => {
     res.status(500).json({ message: "Failed to fetch subscribed sessions", error: err });
   }
 });
+
 
 router.get("/teaching/:userId", getTeachingSessions);
 

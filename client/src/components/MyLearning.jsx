@@ -48,7 +48,7 @@ const MyLearning = () => {
       
       // Fetch sessions where user is LEARNER
       const learningRes = await axios.get(
-        `http://localhost:5000/api/sessions/subscribed/${mongoUserId}`
+        `http://localhost:5000/api/sessions/subscribed-by-mongo/${mongoUserId}`
       );
       
       // Fetch sessions where user is TEACHER (and session is booked)

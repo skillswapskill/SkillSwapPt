@@ -11,6 +11,7 @@ import userRoutes from './routes/user.routes.js';
 import sessionRoutes from "./routes/session.route.js";
 import clerkRoutes from "./routes/clerk.routes.js";
 
+// __dirname for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -19,11 +20,12 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// CORS
+// Dynamic CORS Configuration
 const allowedOrigins = [
   "http://localhost:5173",
   "https://skillswappt.onrender.com"
 ];
+
 const corsOptions = {
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin)) {
@@ -34,28 +36,28 @@ const corsOptions = {
   },
   credentials: true,
 };
+
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// API routes
+// API Routes
 app.use("/api/credits", creditRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/sessions", sessionRoutes);
 app.use("/api/clerk", clerkRoutes);
 
-// Serve static files in production
+// --- PRODUCTION STATIC FILES ---
 if (process.env.NODE_ENV === "production") {
-  const clientDistPath = path.join(__dirname, "../../client/dist");
+  const clientDistPath = path.join(__dirname, "../../client/dist"); // ✅ correct relative path from server/src/index.js
   app.use(express.static(clientDistPath));
 
-  // ✅ Catch-all for SPA (must be last)
+  // Wildcard route for SPA
   app.get("*", (req, res) => {
     res.sendFile(path.join(clientDistPath, "index.html"));
   });
 }
 
-// Start server
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server is running on Port ${PORT}`);
   connectDB();
 });
