@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useUser } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
+import { apiClient } from '../config/api';
+
 
 const MyLearning = () => {
   const { user } = useUser();
@@ -28,7 +30,7 @@ const MyLearning = () => {
       setSyncing(true);
       console.log("🔄 Syncing user metadata for:", user.id);
       
-      await axios.post("http://localhost:5000/api/users/sync-metadata", {
+      await apiClient.post("/api/users/sync-metadata", {
         clerkId: user.id
       });
       
@@ -47,13 +49,13 @@ const MyLearning = () => {
       setLoading(true);
       
       // Fetch sessions where user is LEARNER
-      const learningRes = await axios.get(
-        `http://localhost:5000/api/sessions/subscribed-by-mongo/${mongoUserId}`
+      const learningRes = await apiClient.get(
+        `/api/sessions/subscribed-by-mongo/${mongoUserId}`
       );
       
       // Fetch sessions where user is TEACHER (and session is booked)
-      const teachingRes = await axios.get(
-        `http://localhost:5000/api/sessions/teaching/${mongoUserId}`
+      const teachingRes = await apiClient.get(
+        `/api/sessions/teaching/${mongoUserId}`
       );
       
       console.log("📡 Learning sessions found:", learningRes.data);
