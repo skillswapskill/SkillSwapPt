@@ -46,6 +46,13 @@ app.use("/api/users", userRoutes);
 app.use("/api/sessions", sessionRoutes);
 app.use("/api/clerk", clerkRoutes);
 
+
+
+app.listen(PORT, () => {
+  console.log(`Server is running on Port ${PORT}`);
+  connectDB();
+});
+
 // --- PRODUCTION STATIC FILES ---
 if (process.env.NODE_ENV === "production") {
   const clientDistPath = path.join(__dirname, "../../client/dist"); // ✅ correct relative path from server/src/index.js
@@ -56,8 +63,3 @@ if (process.env.NODE_ENV === "production") {
     res.sendFile(path.join(clientDistPath, "index.html"));
   });
 }
-
-app.listen(PORT, () => {
-  console.log(`Server is running on Port ${PORT}`);
-  connectDB();
-});
