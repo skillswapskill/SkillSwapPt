@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import { FaSearch, FaUserFriends, FaSeedling } from "react-icons/fa";
 import { HiSparkles } from "react-icons/hi";
 import { useUser } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
+
+// ✅ Import the dynamic API client
+import { apiClient } from '../config/api';
 
 // Enhanced Sun/Moon illustrations with improved gradients and animations
 const scenes = {
@@ -149,13 +151,13 @@ const Dashboard = () => {
     return "evening";
   };
 
+  // ✅ Fixed Clerk data fetching using dynamic API
   useEffect(() => {
     const fetchClerkData = async () => {
       if (!selectedUser?.clerkId) return;
       try {
-        const res = await axios.get(
-          "http://localhost:5000/api/clerk/user/${selectedUser.clerkId}"
-        );
+        // ✅ Fixed template literal syntax and using apiClient
+        const res = await apiClient.get(`/api/clerk/user/${selectedUser.clerkId}`);
         setSelectedClerkData(res.data);
       } catch (err) {
         console.error("ERROR fetching Clerk user data", err);
@@ -178,19 +180,21 @@ const Dashboard = () => {
     return "/user.png";
   };
 
+  // ✅ Sync user using dynamic API
   const syncLoggedInUser = async () => {
     try {
       if (!user?.id) return;
       const profilePic = getProfilePic(user);
-      const response = await axios.post(
-        "http://localhost:5000/api/users/sync",
+      
+      // ✅ Using apiClient instead of hardcoded URL
+      const response = await apiClient.post(
+        "/api/users/sync",
         {
           clerkId: user.id,
           name: user.fullName,
           email: user.primaryEmailAddress?.emailAddress,
           profilePic: profilePic,
-        },
-        { withCredentials: true }
+        }
       );
       
       // Store current user's MongoDB data
@@ -201,11 +205,11 @@ const Dashboard = () => {
     }
   };
 
+  // ✅ Fetch all users using dynamic API
   const fetchAllUsers = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/users/all", {
-        withCredentials: true,
-      });
+      // ✅ Using apiClient instead of hardcoded URL
+      const res = await apiClient.get("/api/users/all");
       const users = res.data.users || [];
       console.log("Fetched all users:", users);
       setAllUsers(users);

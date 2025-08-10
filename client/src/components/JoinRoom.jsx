@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useUser } from '@clerk/clerk-react';
-import axios from 'axios';
 import VideoCall from './VideoCall';
+
+// ✅ Import the dynamic API client
+import { apiClient } from '../config/api';
 
 const JoinRoom = () => {
   const { sessionId } = useParams();
@@ -27,9 +29,11 @@ const JoinRoom = () => {
     fetchSessionData();
   }, [user, sessionId, navigate]);
 
+  // ✅ Updated to use dynamic API client
   const fetchSessionData = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/sessions/${sessionId}`);
+      // ✅ Using apiClient instead of hardcoded localhost URL
+      const response = await apiClient.get(`/api/sessions/${sessionId}`);
       const session = response.data;
       
       // Check if meeting time is valid
@@ -93,7 +97,7 @@ const JoinRoom = () => {
           <p className="text-gray-600 mb-6">{error}</p>
           <button
             onClick={goBack}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200"
+            className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
           >
             ← Back to My Learning
           </button>
@@ -105,7 +109,8 @@ const JoinRoom = () => {
   return (
     <div className="meeting-page">
       {/* Meeting Header - Optional overlay */}
-      {/* <div className="absolute bottom-6 left-90  bg-black bg-opacity-50 text-white px-4 py-2 rounded-lg">
+      {/* Uncomment if you want to show meeting info overlay
+      <div className="absolute bottom-6 left-6 z-50 bg-black bg-opacity-50 text-white px-4 py-2 rounded-lg">
         <h3 className="font-semibold">{sessionData?.skill}</h3>
         <p className="text-sm opacity-75">
           Teacher: {sessionData?.teacher?.name || 'Unknown'}
@@ -116,13 +121,15 @@ const JoinRoom = () => {
         >
           Leave Meeting
         </button>
-      </div> */}
+      </div> 
+      */}
 
       {/* Video Call Component */}
       <VideoCall 
         sessionId={sessionId}
         userId={user.id}
         userName={user.firstName || user.username || 'Student'}
+        sessionData={sessionData} // ✅ Pass session data to VideoCall component
       />
     </div>
   );

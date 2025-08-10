@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import axios from "axios";
 import dayjs from "dayjs";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+
+// ✅ Import the dynamic API client
+import { apiClient } from '../config/api';
 
 function Booking() {
   const location = useLocation();
@@ -54,47 +56,51 @@ function Booking() {
     console.log("SUBSCRIBE PAYLOAD", { userId: cleanUserId, sessionId: cleanSessionId });
 
     try {
-      const subscribeRes = await axios.post("http://localhost:5000/api/sessions/subscribe", {
+      // ✅ Step 1: Subscribe to session using dynamic API
+      const subscribeRes = await apiClient.post("/api/sessions/subscribe", {
         userId: cleanUserId,
         sessionId: cleanSessionId,
       });
 
       if (subscribeRes.status === 200) {
-        const debitRes = await axios.post("http://localhost:5000/api/credits/debit", {
+        // ✅ Step 2: Debit credits from learner using dynamic API
+        const debitRes = await apiClient.post("/api/credits/debit", {
           userId: cleanUserId,
           sessionId: cleanSessionId,
         });
-      if(subscribeRes.status===500){
-        alert("SOMETHIG WENT WRONG");
-      }
 
         if (debitRes.status !== 200) {
-          alert(debitRes.data.message || "Failed to debit credits.");
+          toast.error(debitRes.data.message || "Failed to debit credits.");
           return;
         }
-      const teacherId = getCleanId(session.teacher); // Get teacher ID from session
-      
-      const earnRes = await axios.post("http://localhost:5000/api/credits/earn", {
-        userId: teacherId, // Teacher's ID, not learner's ID!
-        sessionId: cleanSessionId,
-      });
 
-      if (earnRes.status !== 200) {
-        console.error("Failed to credit teacher:", earnRes.data.message);
-        // You might want to handle this error differently
-      } else {
-        console.log("✅ Teacher credited successfully!");
-      }
+        // ✅ Step 3: Credit the teacher using dynamic API
+        const teacherId = getCleanId(session.teacher); // Get teacher ID from session
+        
+        const earnRes = await apiClient.post("/api/credits/earn", {
+          userId: teacherId, // Teacher's ID, not learner's ID!
+          sessionId: cleanSessionId,
+        });
 
-        alert("Booking confirmed!");
+        if (earnRes.status !== 200) {
+          console.error("Failed to credit teacher:", earnRes.data.message);
+          // You might want to handle this error differently
+        } else {
+          console.log("✅ Teacher credited successfully!");
+        }
+
+        toast.success("Booking confirmed!");
         navigate("/my-learning");
       }
     } catch (error) {
       console.error("❌ Error confirming booking:", error);
       const statusCode = error?.response?.status;
       const errorMessage = error?.response?.data?.message || "Something went wrong";
-      alert(errorMessage);
+      
+      // ✅ Use toast for better error messaging
+      toast.error(errorMessage);
 
+      // Handle specific case where booking was already confirmed
       if (statusCode === 400 && errorMessage === "Booking Confirmed") {
         navigate("/my-learning");
       }
@@ -122,15 +128,33 @@ function Booking() {
         </div>
 
         <button
-          className="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+          className={`w-full px-4 py-2 text-white rounded-md transition-colors duration-200 ${
+            isLoading 
+              ? 'bg-gray-400 cursor-not-allowed' 
+              : 'bg-green-600 hover:bg-green-700'
+          }`}
           onClick={handleConfirmBooking}
           disabled={isLoading}
         >
-          {isLoading ? "Booking..." : "Confirm Booking"}
+          {isLoading ? (
+            <span className="flex items-center justify-center">
+              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Booking...
+            </span>
+          ) : (
+            "Confirm Booking"
+          )}
         </button>
 
         <button
-          className="w-full mt-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+          className={`w-full mt-2 px-4 py-2 text-white rounded-md transition-colors duration-200 ${
+            isLoading 
+              ? 'bg-gray-400 cursor-not-allowed' 
+              : 'bg-red-600 hover:bg-red-700'
+          }`}
           onClick={() => navigate(-1)}
           disabled={isLoading}
         >
@@ -138,7 +162,17 @@ function Booking() {
         </button>
       </div>
 
-      <ToastContainer position="top-right" autoClose={3000} />
+      <ToastContainer 
+        position="top-right" 
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
     </div>
   );
 }
