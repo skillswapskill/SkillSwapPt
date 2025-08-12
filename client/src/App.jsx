@@ -18,6 +18,7 @@ import { Toaster } from 'react-hot-toast';
 import MyLearning from "./components/MyLearning";
 import JoinRoom from './components/JoinRoom';
 import Reedeem from "./components/Reedeem";
+import PaymentPage from "./components/PaymentPage";
 
 
 
@@ -49,6 +50,7 @@ function App() {
         <Route path="/my-learning" element={<MyLearning />} />
         <Route path="/join-room/:sessionId" element={<JoinRoom />} />
         <Route path="/redeem" element={<Reedeem />} />
+        <Route path="/payment" element={<PaymentPage />} />
       </Routes>
 
       <Footer />

@@ -11,6 +11,9 @@ import userRoutes from './routes/user.routes.js';
 import sessionRoutes from "./routes/session.route.js";
 import clerkRoutes from "./routes/clerk.routes.js";
 
+
+import paymentRoutes from './routes/payment.route.js';
+
 // __dirname for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -45,6 +48,10 @@ app.use("/api/credits", creditRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/sessions", sessionRoutes);
 app.use("/api/clerk", clerkRoutes);
+app.use('/api/payment', paymentRoutes);
+
+
+
 
 // --- PRODUCTION STATIC FILES ---
 if (process.env.NODE_ENV === "production") {

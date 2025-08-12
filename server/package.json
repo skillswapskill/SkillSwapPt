@@ -21,6 +21,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.14.1",
     "multer": "^2.0.1",
+    "razorpay": "^2.9.6",
     "react-router-dom": "^7.7.1",
     "skillsswap": "file:.."
   },
