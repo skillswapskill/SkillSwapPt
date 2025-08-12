@@ -163,6 +163,11 @@ function Profile() {
     navigate('/redeem');
   };
 
+  // 🔥 NEW: Handle buy credits navigation
+  const handleBuyCredits = () => {
+    navigate('/payment');
+  };
+
   // ✅ Sync user using dynamic API
   useEffect(() => {
     const syncUser = async () => {
@@ -429,20 +434,34 @@ function Profile() {
             </div>
           </div>
           
-          {/* Enhanced Credits Section with Redeem Button */}
+          {/* 🔥 ENHANCED Credits Section with Buy Credits and Redeem Button */}
           <div className="text-center min-w-[200px]">
             <div className="bg-gradient-to-br from-blue-50 to-green-50 rounded-xl p-4 mb-3 border border-blue-100">
               <p className="text-lg font-medium text-blue-700 mb-1">Credits</p>
-              <p className="text-3xl font-bold text-green-600 mb-3">{credits.toLocaleString()}</p>
+              <p className="text-3xl font-bold text-green-600 mb-4">{credits.toLocaleString()}</p>
+              
+              {/* 🔥 NEW: Buy Credits Button */}
+              <button
+                onClick={handleBuyCredits}
+                className="relative overflow-hidden bg-gradient-to-r from-orange-500 via-pink-500 to-red-500 text-white font-semibold py-2.5 px-6 rounded-full shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-2xl active:scale-95 group mb-3 w-full"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-400 via-pink-400 to-red-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+                <div className="relative flex items-center justify-center gap-2">
+                  <span className="text-lg">💳</span>
+                  <span>Buy Credits</span>
+                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-300 rounded-full animate-pulse"></div>
+                </div>
+              </button>
               
               {/* Redeem Button */}
               <button
                 onClick={handleRedeemCredits}
-                className="relative overflow-hidden bg-gradient-to-r from-purple-600 via-blue-600 to-green-600 text-white font-semibold py-2.5 px-6 rounded-full shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-2xl active:scale-95 group"
+                className="relative overflow-hidden bg-gradient-to-r from-purple-600 via-blue-600 to-green-600 text-white font-semibold py-2.5 px-6 rounded-full shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-2xl active:scale-95 group w-full"
                 disabled={credits < 1000}
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-purple-400 via-blue-400 to-green-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="relative flex items-center gap-2">
+                <div className="relative flex items-center justify-center gap-2">
                   <span className="text-lg">🪙</span>
                   <span>Redeem Credits</span>
                 </div>
@@ -450,7 +469,7 @@ function Profile() {
               
               {credits < 1000 && (
                 <p className="text-xs text-gray-500 mt-2">
-                  Minimum 1,000 credits required
+                  Minimum 1,000 credits required to redeem
                 </p>
               )}
             </div>
