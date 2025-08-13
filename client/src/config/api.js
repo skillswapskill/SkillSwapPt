@@ -11,7 +11,7 @@ const getApiBaseUrl = () => {
   }
   
   // Production default - your Render URL
-  return 'https://skillswappt.onrender.com';
+  return 'https://skillswap.company';
 };
 
 export const API_BASE_URL = getApiBaseUrl();
