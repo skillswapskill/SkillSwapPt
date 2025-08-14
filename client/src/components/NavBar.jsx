@@ -86,10 +86,10 @@ function NavBar() {
           {/* Right: Nav Links */}
           <div className="flex items-center gap-6 text-blue-800 relative">
             <Link
-              to="/business"
+              to="/dashboard"
               className="hover:opacity-80 transition-all hidden sm:inline"
             >
-              Business
+              Dashboard
             </Link>
             <Link
               to="/careers"

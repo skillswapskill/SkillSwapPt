@@ -8,7 +8,7 @@ const Login = () => {
 
   useEffect(() => {
     if (isLoaded && isSignedIn) {
-      navigate("/dashboard");
+      navigate("/profile");
     }
   }, [isLoaded, isSignedIn, navigate]);
 

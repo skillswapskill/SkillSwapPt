@@ -5,7 +5,7 @@ const Footer = () => {
     {
       label: "Company",
       items: [
-        { href: "#", name: "Partners" },
+        { href: "/business", name: "Business" },
         { href: "#", name: "Blog" },
         { href: "#", name: "Team" },
         { href: "/careers", name: "Careers" },
@@ -17,7 +17,7 @@ const Footer = () => {
         { href: "#", name: "Contact" },
         { href: "#", name: "Support" },
         { href: "#", name: "Docs" },
-        { href: "#", name: "Pricing" },
+        { href: "/payment", name: "Pricing" },
       ],
     },
     {
