@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { FaSearch, FaUserFriends, FaSeedling } from "react-icons/fa";
+import { FaSearch, FaUserFriends, FaSeedling, FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { HiSparkles } from "react-icons/hi";
 import { useUser } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
@@ -136,6 +136,7 @@ const Dashboard = () => {
   const [search, setSearch] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedClerkData, setSelectedClerkData] = useState(null);
+  const [showAllUsers, setShowAllUsers] = useState(false);
 
   // Debug logs
   console.log("Current Clerk user:", user?.id);
@@ -275,7 +276,37 @@ const Dashboard = () => {
     });
   };
 
-  const displayUsers = getFilteredUsers();
+  // Enhanced user display logic with search and pagination
+  const getDisplayUsers = () => {
+    const filteredUsers = getFilteredUsers();
+    
+    // Apply search filter
+    const searchFiltered = filteredUsers.filter(
+      (u) =>
+        (u.name && u.name.toLowerCase().includes(search.toLowerCase())) ||
+        (u.skills &&
+          u.skills.some((skill) =>
+            skill.toLowerCase().includes(search.toLowerCase())
+          ))
+    );
+
+    // If searching, show all matching results
+    if (search.trim()) {
+      return searchFiltered;
+    }
+
+    // If not searching, limit to 6 users (2 rows × 3 users) unless "Show All" is clicked
+    if (!showAllUsers) {
+      return searchFiltered.slice(0, 6);
+    }
+
+    return searchFiltered;
+  };
+
+  const displayUsers = getDisplayUsers();
+  const totalFilteredUsers = getFilteredUsers().length;
+  const hasMoreUsers = !search.trim() && !showAllUsers && totalFilteredUsers > 6;
+
   console.log("Users to display after filtering:", displayUsers);
 
   return (
@@ -317,26 +348,25 @@ const Dashboard = () => {
               type="text"
               placeholder="Dive into your Skills"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                // Reset show all when searching
+                if (e.target.value.trim()) {
+                  setShowAllUsers(false);
+                }
+              }}
               className="outline-none w-full bg-transparent text-blue-700 placeholder-blue-400 font-medium"
             />
           </div>
         </div>
       </div>
 
-      {/* Enhanced Users Grid */}
-      <div className="flex flex-wrap justify-center gap-12 relative z-20 mb-8">
-        {displayUsers
-          .filter(
-            (u) =>
-              (u.name && u.name.toLowerCase().includes(search.toLowerCase())) ||
-              (u.skills &&
-                u.skills.some((skill) =>
-                  skill.toLowerCase().includes(search.toLowerCase())
-                ))
-          )
-          .map((u, idx) => (
-            <div key={idx} className="flex flex-col items-center w-28 group">
+      {/* Enhanced Users Grid - Scaled for Thousands */}
+      <div className="relative z-20 mb-8">
+        {/* Users Grid Container */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center max-w-4xl mx-auto">
+          {displayUsers.map((u, idx) => (
+            <div key={`${u._id || u.clerkId || idx}`} className="flex flex-col items-center w-28 group">
               <div className="relative">
                 {/* Glowing ring effect */}
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 rounded-full blur-sm opacity-0 group-hover:opacity-75 transition-opacity duration-300 scale-110"></div>
@@ -359,6 +389,44 @@ const Dashboard = () => {
               </p>
             </div>
           ))}
+        </div>
+
+        {/* Show More / Show Less Button */}
+        {!search.trim() && totalFilteredUsers > 6 && (
+          <div className="flex justify-center mt-8">
+            <button
+              onClick={() => setShowAllUsers(!showAllUsers)}
+              className="group relative inline-flex items-center px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl font-semibold"
+            >
+              <div className="absolute inset-0 bg-white/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <span className="relative flex items-center">
+                {showAllUsers ? (
+                  <>
+                    <FaChevronUp className="mr-2" />
+                    Show Less Users
+                  </>
+                ) : (
+                  <>
+                    <FaChevronDown className="mr-2" />
+                    Show All {totalFilteredUsers} Users
+                  </>
+                )}
+              </span>
+            </button>
+          </div>
+        )}
+
+        {/* Search Results Counter */}
+        {search.trim() && (
+          <div className="text-center mt-6">
+            <div className="inline-flex items-center px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full border border-blue-200/50 shadow-lg">
+              <FaSearch className="text-blue-600 mr-2 text-sm" />
+              <span className="text-sm font-medium text-blue-700">
+                {displayUsers.length} result{displayUsers.length !== 1 ? 's' : ''} found for "{search}"
+              </span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Enhanced Trees Counter */}

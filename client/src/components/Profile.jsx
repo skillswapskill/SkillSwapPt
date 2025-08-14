@@ -4,13 +4,13 @@ import { useNavigate } from "react-router-dom";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DateCalendar } from "@mui/x-date-pickers/DateCalendar";
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
-import dayjs from 'dayjs';
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
+import dayjs from "dayjs";
 
 // ✅ Import the dynamic API client
-import { apiClient } from '../config/api';
+import { apiClient } from "../config/api";
 
 function Profile() {
   const { user, isSignedIn } = useUser();
@@ -38,12 +38,12 @@ function Profile() {
   const handleProfilePicChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (!file.type.startsWith('image/')) {
-        toast.error('Please select an image file');
+      if (!file.type.startsWith("image/")) {
+        toast.error("Please select an image file");
         return;
       }
       if (file.size > 5 * 1024 * 1024) {
-        toast.error('File size must be less than 5MB');
+        toast.error("File size must be less than 5MB");
         return;
       }
       setProfilePicFile(file);
@@ -59,22 +59,22 @@ function Profile() {
       const formData = new FormData();
       formData.append("profilePic", profilePicFile);
       formData.append("clerkId", user.id);
-      
+
       // ✅ Using apiClient instead of hardcoded URL
       const response = await apiClient.post(
         "/api/users/upload-profile-pic",
         formData,
         {
           headers: {
-            'Content-Type': 'multipart/form-data',
+            "Content-Type": "multipart/form-data",
           },
         }
       );
-      toast.success('Profile picture uploaded successfully!');
+      toast.success("Profile picture uploaded successfully!");
       return response.data.profilePic;
     } catch (error) {
       console.error("Upload failed:", error);
-      toast.error('Failed to upload profile picture');
+      toast.error("Failed to upload profile picture");
       return null;
     } finally {
       setUploading(false);
@@ -91,53 +91,62 @@ function Profile() {
           finalProfilePic = uploadedUrl;
         }
       }
-      
+
       // ✅ Using apiClient instead of hardcoded URL
-      await apiClient.post(
-        "/api/users/setup-complete",
-        { clerkId: user.id, name, skills, profilePic: finalProfilePic }
-      );
-      
+      await apiClient.post("/api/users/setup-complete", {
+        clerkId: user.id,
+        name,
+        skills,
+        profilePic: finalProfilePic,
+      });
+
       setIsSetupDone(true);
       setEditMode(false);
       setProfilePicFile(null);
       setProfilePic(finalProfilePic);
-      toast.success('Profile updated successfully!');
+      toast.success("Profile updated successfully!");
     } catch (err) {
       console.error("Failed to save profile", err);
-      toast.error('Failed to save profile');
+      toast.error("Failed to save profile");
     }
   };
 
   // ✅ Add service using dynamic API
   const handleAddService = async () => {
-    if (serviceName.trim() && serviceCredits) {
-      const newService = {
-        name: serviceName.trim(),
-        credits: parseInt(serviceCredits),
-        time: serviceDateTime
-      };
-      setServices((prev) => [...prev, newService]);
-      setServiceName("");
-      setServiceCredits("");
-      setServiceDateTime(dayjs());
-      
-      try {
-        // ✅ Using apiClient instead of hardcoded URL
-        await apiClient.post(
-          "/api/sessions/offer",
-          {
+    if (serviceName.trim() === skills) {
+      if (serviceName.trim() && serviceCredits) {
+        const newService = {
+          name: serviceName.trim(),
+          credits: parseInt(serviceCredits),
+          time: serviceDateTime,
+        };
+        setServices((prev) => [...prev, newService]);
+        setServiceName("");
+        setServiceCredits("");
+        setServiceDateTime(dayjs());
+
+        try {
+          // ✅ Using apiClient instead of hardcoded URL
+          await apiClient.post("/api/sessions/offer", {
             teacher: mongoUserId,
             skill: newService.name,
             creditsUsed: newService.credits,
             dateTime: serviceDateTime.toISOString(),
-          }
-        );
-        toast.success('Service added successfully!');
-      } catch (error) {
-        console.error("Failed to add service:", error.response?.data || error.message);
-        toast.error('Failed to add service');
+          });
+          toast.success("Service added successfully!");
+        } catch (error) {
+          console.error(
+            "Failed to add service:",
+            error.response?.data || error.message
+          );
+          toast.error("Failed to add service");
+        }
       }
+    }else{
+      toast.error("Service name must match one of your skills");
+      setServiceName(""); // Clear input if skill doesn't match
+      setServiceCredits(""); // Clear credits input as well
+      setServiceDateTime(dayjs()); // Reset date/time to current
     }
   };
 
@@ -150,7 +159,9 @@ function Profile() {
       await apiClient.delete(`/api/sessions/delete/${sessionId}`);
 
       // Remove the deleted session from UI
-      setServices((prev) => prev.filter((service) => service._id !== sessionId));
+      setServices((prev) =>
+        prev.filter((service) => service._id !== sessionId)
+      );
       toast.success("Service deleted successfully!");
     } catch (error) {
       console.error("Failed to delete service:", error);
@@ -160,12 +171,12 @@ function Profile() {
 
   // Handle redeem navigation
   const handleRedeemCredits = () => {
-    navigate('/redeem');
+    navigate("/redeem");
   };
 
   // 🔥 NEW: Handle buy credits navigation
   const handleBuyCredits = () => {
-    navigate('/payment');
+    navigate("/payment");
   };
 
   // ✅ Sync user using dynamic API
@@ -174,15 +185,12 @@ function Profile() {
       if (!isSignedIn) return;
       try {
         // ✅ Using apiClient instead of hardcoded URL
-        const res = await apiClient.post(
-          "/api/users/sync",
-          {
-            clerkId: user.id,
-            name: user.fullName,
-            email: user.primaryEmailAddress?.emailAddress,
-          }
-        );
-        
+        const res = await apiClient.post("/api/users/sync", {
+          clerkId: user.id,
+          name: user.fullName,
+          email: user.primaryEmailAddress?.emailAddress,
+        });
+
         const data = res.data;
         setCredits(data.totalCredits);
         setIsSetupDone(data.isSetupDone);
@@ -207,7 +215,7 @@ function Profile() {
           _id: s._id,
           name: s.skill,
           credits: s.creditsUsed,
-          time: s.dateTime
+          time: s.dateTime,
         }));
         setServices(formatted);
         console.log("Fetched offered services:", formatted);
@@ -238,9 +246,12 @@ function Profile() {
   if (showCongrats) {
     return (
       <div className="fixed inset-0 bg-white/90 z-50 flex flex-col items-center justify-center p-6 text-center">
-        <h2 className="text-3xl font-bold text-green-600 mb-3">🎉 Congratulations!</h2>
+        <h2 className="text-3xl font-bold text-green-600 mb-3">
+          🎉 Congratulations!
+        </h2>
         <p className="text-gray-700 mb-5">
-          You've earned <span className="font-semibold text-blue-600">{credits} credits</span>{" "}
+          You've earned{" "}
+          <span className="font-semibold text-blue-600">{credits} credits</span>{" "}
           for joining us!
         </p>
         <button
@@ -343,11 +354,11 @@ function Profile() {
                 disabled={uploading}
                 className={`w-full py-2 rounded-lg text-white ${
                   uploading
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-green-600 hover:bg-green-700'
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-green-600 hover:bg-green-700"
                 }`}
               >
-                {uploading ? 'Saving...' : 'Submit & View Profile'}
+                {uploading ? "Saving..." : "Submit & View Profile"}
               </button>
             </div>
           )}
@@ -367,7 +378,7 @@ function Profile() {
           <div className="flex items-center gap-4">
             <label className="relative w-20 h-20 rounded-full overflow-hidden border-4 border-blue-500 shadow-md cursor-pointer">
               <img
-                src={profilePic || user.imageUrl || '/user.png'}
+                src={profilePic || user.imageUrl || "/user.png"}
                 alt="Profile"
                 className="w-full h-full object-cover"
               />
@@ -433,13 +444,15 @@ function Profile() {
               )}
             </div>
           </div>
-          
+
           {/* 🔥 ENHANCED Credits Section with Buy Credits and Redeem Button */}
           <div className="text-center min-w-[200px]">
             <div className="bg-gradient-to-br from-blue-50 to-green-50 rounded-xl p-4 mb-3 border border-blue-100">
               <p className="text-lg font-medium text-blue-700 mb-1">Credits</p>
-              <p className="text-3xl font-bold text-green-600 mb-4">{credits.toLocaleString()}</p>
-              
+              <p className="text-3xl font-bold text-green-600 mb-4">
+                {credits.toLocaleString()}
+              </p>
+
               {/* 🔥 NEW: Buy Credits Button */}
               <button
                 onClick={handleBuyCredits}
@@ -453,7 +466,7 @@ function Profile() {
                   <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-300 rounded-full animate-pulse"></div>
                 </div>
               </button>
-              
+
               {/* Redeem Button */}
               <button
                 onClick={handleRedeemCredits}
@@ -466,14 +479,14 @@ function Profile() {
                   <span>Redeem Credits</span>
                 </div>
               </button>
-              
+
               {credits < 1000 && (
                 <p className="text-xs text-gray-500 mt-2">
                   Minimum 1,000 credits required to redeem
                 </p>
               )}
             </div>
-            
+
             {/* Edit Profile Section */}
             <div className="mt-2">
               {!editMode ? (
@@ -489,11 +502,11 @@ function Profile() {
                   disabled={uploading}
                   className={`px-4 py-1 rounded mt-2 text-white text-sm transition-all ${
                     uploading
-                      ? 'bg-gray-400 cursor-not-allowed'
-                      : 'bg-green-600 hover:bg-green-700 shadow-md hover:shadow-lg'
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-green-600 hover:bg-green-700 shadow-md hover:shadow-lg"
                   }`}
                 >
-                  {uploading ? 'Saving...' : 'Save Changes'}
+                  {uploading ? "Saving..." : "Save Changes"}
                 </button>
               )}
             </div>
@@ -517,7 +530,7 @@ function Profile() {
             <h3 className="text-xl font-semibold mb-3 text-blue-700 flex items-center gap-2">
               📹 My Sessions
             </h3>
-            
+
             {/* Services List */}
             <div className="space-y-4">
               {services.length === 0 ? (
@@ -529,13 +542,17 @@ function Profile() {
                     className="border border-gray-300 rounded-xl p-4 shadow-sm flex justify-between items-center"
                   >
                     <div>
-                      <p className="font-medium text-blue-800">{service.name}</p>
+                      <p className="font-medium text-blue-800">
+                        {service.name}
+                      </p>
                       <p className="text-sm text-green-600">
-                        Credits Required: <span className="font-semibold">{service.credits}</span>
+                        Credits Required:{" "}
+                        <span className="font-semibold">{service.credits}</span>
                       </p>
                       {service.time && (
                         <p className="text-sm text-gray-600">
-                          Time: {dayjs(service.time).format("DD MMM YYYY, hh:mm A")}
+                          Time:{" "}
+                          {dayjs(service.time).format("DD MMM YYYY, hh:mm A")}
                         </p>
                       )}
                     </div>
