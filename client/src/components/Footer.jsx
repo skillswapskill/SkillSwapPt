@@ -7,7 +7,7 @@ const Footer = () => {
       items: [
         { href: "/business", name: "Business" },
         { href: "#", name: "Blog" },
-        { href: "#", name: "Team" },
+        { href: "/team", name: "Team" },
         { href: "/careers", name: "Careers" },
       ],
     },

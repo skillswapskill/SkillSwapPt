@@ -19,7 +19,7 @@ import MyLearning from "./components/MyLearning";
 import JoinRoom from './components/JoinRoom';
 import Reedeem from "./components/Reedeem";
 import PaymentPage from "./components/PaymentPage";
-
+import Team from "./components/Team";
 
 
 
@@ -51,6 +51,7 @@ function App() {
         <Route path="/join-room/:sessionId" element={<JoinRoom />} />
         <Route path="/redeem" element={<Reedeem />} />
         <Route path="/payment" element={<PaymentPage />} />
+        <Route path="/team" element={<Team />} />
       </Routes>
 
       <Footer />
