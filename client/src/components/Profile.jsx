@@ -113,7 +113,7 @@ function Profile() {
 
   // ✅ Add service using dynamic API
   const handleAddService = async () => {
-    if (skills.includes(serviceName.trim())) {
+    if (skills.some(skill => skill.toLowerCase().trim() === serviceName.toLowerCase().trim())) {
       if (serviceName.trim() && serviceCredits) {
         const newService = {
           name: serviceName.trim(),
