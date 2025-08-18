@@ -32,6 +32,22 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    notifications: {
+      type: [
+        {
+          message:   { type: String,  required: true },
+          isRead:    { type: Boolean, default: false },
+          createdAt: { type: Date,    default: Date.now },
+          type:      { type: String,
+                       enum: ['welcome', 'credit', 'course'],
+                       default: 'welcome' }
+        }
+      ],
+      // Each new user starts with a single unread welcome message
+      default: () => [
+        { message: 'Welcome to SkillSwap 😊', type: 'welcome' }
+      ]
+    },
     // Add this to your user schema
     skillCoins: { type: Number, default: 0 },
 
