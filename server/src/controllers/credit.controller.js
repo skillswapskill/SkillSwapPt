@@ -85,6 +85,14 @@ export const earnCredits = async (req, res) => {
       user.creditEarned += session.creditsUsed;
       user.totalCredits += session.creditsUsed;
 
+      user.notifications.push({
+        message: `You have earned ${session.creditsUsed} credits `,
+        type:"credit",
+        isRead: false,
+        createdAt: new Date()
+
+      })
+
       console.log("📈 Credit changes:", {
         creditsToAdd: session.creditsUsed,
         creditEarned: `${oldEarned} → ${user.creditEarned}`,
@@ -143,6 +151,14 @@ export const redeemCredits = async (req, res) => {
     user.totalCredits -= creditsToRedeem;
     user.skillCoins = (user.skillCoins || 0) + skillCoinsToReceive;
     user.creditSpent += creditsToRedeem; // Track total spent
+
+    user.notifications.push({
+        message: `You have redeemed ${creditsToRedeem} credits for ${skillCoinsToReceive} SkillCoins.`,
+        type:"credit",
+        isRead: false,
+        createdAt: new Date()
+
+      })
 
     await user.save();
 

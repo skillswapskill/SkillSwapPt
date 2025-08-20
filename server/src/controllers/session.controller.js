@@ -31,14 +31,50 @@ export const subscribeToSession = async (req, res) => {
       return res.status(400).json({ message: "Booking Confirmed" });
     }
 
+
+    const learner = await User.findById(userId);
+    if (!learner) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
     // ✅ Step 5: Subscribe the user
     session.learner = userId;
     session.subscribed = true;
     session.type = "Booking"; // Optional but recommended
     await session.save();
 
-    // ✅ Step 6: Respond success
-    res.status(200).json({ message: "Subscribed successfully" });
+    // ✅ Step 7: Prepare email data
+    const emailData = {
+      learnerEmail: learner.email,
+      learnerName: learner.name,
+      teacherEmail: session.teacher.email,
+      teacherName: session.teacher.name,
+      sessionTitle: session.title,
+      sessionDate: session.date ? session.date.toLocaleDateString() : 'TBD',
+      sessionTime: session.time || 'TBD',
+      sessionDateTime: session.date ? new Date(session.date) : new Date(Date.now() + 24 * 60 * 60 * 1000) // Default to tomorrow if no date
+    };
+
+    // ✅ Step 8: Send booking confirmation emails
+    try {
+      await sendBookingConfirmationEmails(emailData);
+      console.log('✅ Booking confirmation emails sent successfully');
+    } catch (emailError) {
+      console.error('❌ Error sending emails:', emailError);
+      // Don't fail the booking if email fails
+    }
+
+    // ✅ Step 9: Respond success
+    res.status(200).json({ 
+      message: "Subscribed successfully",
+      emailsSent: true,
+      sessionDetails: {
+        title: session.title,
+        teacher: session.teacher.name,
+        date: session.date,
+        time: session.time
+      }
+    });
   } catch (error) {
     console.error("❌ Subscribe error:", error);
     res.status(500).json({ message: "Server error" });
