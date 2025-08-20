@@ -50,7 +50,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/sessions", sessionRoutes);
 app.use("/api/clerk", clerkRoutes);
 app.use('/api/payment', paymentRoutes);
-app.use('/api/notification', notificationRoutes); // ✅ Use the notification route
+app.use('/api', notificationRoutes); // ✅ Use the notification route
 
 
 
