@@ -39,7 +39,7 @@ const userSchema = new mongoose.Schema(
           isRead:    { type: Boolean, default: false },
           createdAt: { type: Date,    default: Date.now },
           type:      { type: String,
-                       enum: ['welcome', 'credit', 'course'],
+                       enum: ['welcome', 'credit', 'course','debit'],
                        default: 'welcome' }
         }
       ],

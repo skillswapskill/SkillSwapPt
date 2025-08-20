@@ -1,9 +1,11 @@
-import React, { useState, useRef, useEffect, useMemo } from "react";
+import React, { useState, useRef, useEffect, useMemo, use } from "react";
 import { Link } from "react-router-dom";
 import { UserIcon, BellIcon } from "@heroicons/react/24/outline";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
 import { SignOutButton } from "@clerk/clerk-react";
 import { useUser } from "@clerk/clerk-react";
+import { apiClient } from "../config/api";
+import { set } from "mongoose";
 
 function NavBar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -12,16 +14,56 @@ function NavBar() {
 
   /* ─── NOTIFICATION STATE ─────────────────────────────── */
   const [panelOpen, setPanelOpen] = useState(false);
-  const panelRef = useRef(null);        // ← add this
+  const panelRef = useRef(null);        // ← add
+  
+  const [notifications, setNotifications] = useState([]);
 
-  const [notifications, setNotifications] = useState([
-    {
-      _id: "1",
-      message: "Welcome to SkillSwap 😊",
-      isRead: false,
-      createdAt: new Date(),
-    },
-  ]);
+
+useEffect(() => {
+  const fetchNotifications = async () => {
+    // Only fetch if user is loaded and authenticated
+    if (!isLoaded || !user) {
+      console.log("User not ready for notification fetch");
+      return;
+    }
+
+    try {
+      console.log("Fetching notifications..."); // Debug log
+      const response = await apiClient.get('/notification');
+      console.log("Notifications response:", response.data); // Debug log
+      
+      setNotifications(response.data.notification || []);
+    } catch (error) {
+      console.error("Error fetching notifications:", error.response?.data || error);
+      setNotifications([]);
+    }
+  };
+
+  fetchNotifications();
+}, [isLoaded, user]); // ✅ Add proper dependencies
+
+
+
+  // const [notifications, setNotifications] = useState([
+  //   {
+  //     _id: "1",
+  //     message: "Welcome to SkillSwap! Check out our latest features.",
+  //     isRead: false,
+  //     createdAt: new Date("2023-10-01T10:00:00Z"),
+  //   },
+  //   {
+  //     _id: "2",
+  //     message: "Your session on React Basics starts tomorrow!",
+  //     isRead: false,
+  //     createdAt: new Date("2023-10-02T12:30:00Z"),
+  //   },
+  //   {
+  //     _id: "3",
+  //     message: "New courses available in your dashboard.",
+  //     isRead: true,
+  //     createdAt: new Date("2023-10-03T08:15:00Z"),
+  //   },
+  // ]);
   const unreadCount = useMemo(
     () => notifications.filter((n) => !n.isRead).length,
     [notifications]
@@ -75,6 +117,10 @@ function NavBar() {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setDropdownOpen(false);
+      }
+
+      if(panelRef.current && !panelRef.current.contains(e.target)){
+        setPanelOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);

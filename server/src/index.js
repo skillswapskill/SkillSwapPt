@@ -10,6 +10,7 @@ import creditRoutes from './routes/credits.routes.js';
 import userRoutes from './routes/user.routes.js';
 import sessionRoutes from "./routes/session.route.js";
 import clerkRoutes from "./routes/clerk.routes.js";
+import notificationRoutes from './routes/notification.route.js'; // ✅ Import the notification route
 
 
 import paymentRoutes from './routes/payment.route.js';
@@ -49,6 +50,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/sessions", sessionRoutes);
 app.use("/api/clerk", clerkRoutes);
 app.use('/api/payment', paymentRoutes);
+app.use('/api/notification', notificationRoutes); // ✅ Use the notification route
 
 
 

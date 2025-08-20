@@ -24,6 +24,14 @@ export const debitCreditsOnSubscription = async (req, res) => {
       user.creditSpent += session.creditsUsed;
       user.totalCredits -= session.creditsUsed;
 
+      user.notifications.push({
+        message: `You have been debited ${session.creditsUsed} credits for subscribing to the session "${session.title}".`,
+        type:"debit",
+        isRead: false,
+        createdAt: new Date()
+
+      })
+
       await user.save();
       return res.status(200).json({ message: "Credits debited successfully", user });
     } else {
