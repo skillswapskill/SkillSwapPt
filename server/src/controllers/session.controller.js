@@ -1,18 +1,18 @@
 import {Session} from "../models/session.model.js";
 import {User} from "../models/user.model.js"
 import mongoose from "mongoose";
+import { sendBookingConfirmationEmails } from "../services/emailService.js"; 
 
 
 export const subscribeToSession = async (req, res) => {
   try {
     const { userId, sessionId } = req.body;
 
-    // ✅ Step 1: Validate input
+    // Validation
     if (!userId || !sessionId) {
       return res.status(400).json({ message: "Missing userId or sessionId" });
     }
 
-    // ✅ Step 2: Validate ObjectIds
     if (
       !mongoose.Types.ObjectId.isValid(userId) ||
       !mongoose.Types.ObjectId.isValid(sessionId)
@@ -20,43 +20,81 @@ export const subscribeToSession = async (req, res) => {
       return res.status(400).json({ message: "Invalid userId or sessionId" });
     }
 
-    // ✅ Step 3: Find session
-    const session = await Session.findById(sessionId);
+    // Find session and populate teacher
+    const session = await Session.findById(sessionId).populate('teacher');
     if (!session) {
       return res.status(404).json({ message: "Session not found" });
     }
 
-    // ✅ Step 4: Prevent duplicate subscription
+    // Prevent duplicate subscription
     if (session.learner?.toString() === userId) {
       return res.status(400).json({ message: "Booking Confirmed" });
     }
 
-
+    // Find learner details
     const learner = await User.findById(userId);
     if (!learner) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // ✅ Step 5: Subscribe the user
+    // Subscribe the user
     session.learner = userId;
     session.subscribed = true;
-    session.type = "Booking"; // Optional but recommended
+    session.type = "Booking";
     await session.save();
 
-    // ✅ Step 7: Prepare email data
-    const emailData = {
-      learnerEmail: learner.email,
-      learnerName: learner.name,
-      teacherEmail: session.teacher.email,
-      teacherName: session.teacher.name,
-      sessionTitle: session.title,
-      sessionDate: session.date ? session.date.toLocaleDateString() : 'TBD',
-      sessionTime: session.time || 'TBD',
-      sessionDateTime: session.date ? new Date(session.date) : new Date(Date.now() + 24 * 60 * 60 * 1000) // Default to tomorrow if no date
-    };
-
-    // ✅ Step 8: Send booking confirmation emails
+    // ✅ NEW: Correct email data preparation
     try {
+      // Extract date and time from dateTime field
+      const getFormattedDateTime = (session) => {
+        let sessionDate = 'Date not set';
+        let sessionTime = 'Time not set';
+        let sessionDateTime = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+        if (session.dateTime) {
+          let dateValue;
+          
+          // Handle MongoDB date format
+          if (session.dateTime.$date && session.dateTime.$date.$numberLong) {
+            dateValue = new Date(Number(session.dateTime.$date.$numberLong));
+          } else {
+            dateValue = new Date(session.dateTime);
+          }
+          
+          if (!isNaN(dateValue)) {
+            sessionDate = dateValue.toLocaleDateString('en-US', { 
+              day: '2-digit', 
+              month: 'short', 
+              year: 'numeric' 
+            });
+            sessionTime = dateValue.toLocaleTimeString('en-US', { 
+              hour: '2-digit', 
+              minute: '2-digit', 
+              hour12: true 
+            });
+            sessionDateTime = dateValue;
+          }
+        }
+
+        return { sessionDate, sessionTime, sessionDateTime };
+      };
+
+      const { sessionDate, sessionTime, sessionDateTime } = getFormattedDateTime(session);
+      
+      const emailData = {
+        learnerEmail: learner.email,
+        learnerName: learner.name,
+        teacherEmail: session.teacher.email,
+        teacherName: session.teacher.name,
+        sessionTitle: session.name || 'Your Booked Session 🪙🪙', // ✅ Use session.name
+        sessionDate: sessionDate, // ✅ Properly formatted date
+        sessionTime: sessionTime, // ✅ Properly formatted time
+        sessionDateTime: sessionDateTime // ✅ Full datetime object
+      };
+
+      console.log('📧 Sending booking confirmation emails...');
+      console.log('📦 Email data:', emailData);
+      
       await sendBookingConfirmationEmails(emailData);
       console.log('✅ Booking confirmation emails sent successfully');
     } catch (emailError) {
@@ -64,15 +102,14 @@ export const subscribeToSession = async (req, res) => {
       // Don't fail the booking if email fails
     }
 
-    // ✅ Step 9: Respond success
+    // Response
     res.status(200).json({ 
       message: "Subscribed successfully",
       emailsSent: true,
       sessionDetails: {
-        title: session.title,
+        name: session.name,
         teacher: session.teacher.name,
-        date: session.date,
-        time: session.time
+        dateTime: session.dateTime
       }
     });
   } catch (error) {
@@ -80,6 +117,7 @@ export const subscribeToSession = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 
 
