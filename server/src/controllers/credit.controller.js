@@ -25,7 +25,7 @@ export const debitCreditsOnSubscription = async (req, res) => {
       user.totalCredits -= session.creditsUsed;
 
       user.notifications.push({
-        message: `You have been debited ${session.creditsUsed} credits for subscribing to the session "${session.title}".`,
+        message: `You have been debited ${session.creditsUsed} credits for subscribing to the session "${session.name}".`,
         type:"debit",
         isRead: false,
         createdAt: new Date()
