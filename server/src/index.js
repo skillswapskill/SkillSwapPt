@@ -11,6 +11,8 @@ import userRoutes from './routes/user.routes.js';
 import sessionRoutes from "./routes/session.route.js";
 import clerkRoutes from "./routes/clerk.routes.js";
 import notificationRoutes from './routes/notification.route.js'; // ✅ Import the notification route
+import challengeRoutes from './routes/challenge.routes.js';
+
 
 
 import paymentRoutes from './routes/payment.route.js';
@@ -51,6 +53,7 @@ app.use("/api/sessions", sessionRoutes);
 app.use("/api/clerk", clerkRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api', notificationRoutes); // ✅ Use the notification route
+app.use('/api/challenges', challengeRoutes);
 
 
 

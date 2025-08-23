@@ -35,18 +35,18 @@ const userSchema = new mongoose.Schema(
     notifications: {
       type: [
         {
-          message:   { type: String,  required: true },
-          isRead:    { type: Boolean, default: false },
-          createdAt: { type: Date,    default: Date.now },
-          type:      { type: String,
-                       enum: ['welcome', 'credit', 'course','debit'],
-                       default: 'welcome' }
-        }
+          message: { type: String, required: true },
+          isRead: { type: Boolean, default: false },
+          createdAt: { type: Date, default: Date.now },
+          type: {
+            type: String,
+            enum: ["welcome", "credit", "course", "debit"],
+            default: "welcome",
+          },
+        },
       ],
       // Each new user starts with a single unread welcome message
-      default: () => [
-        { message: 'Welcome to SkillSwap 😊', type: 'welcome' }
-      ]
+      default: () => [{ message: "Welcome to SkillSwap 😊", type: "welcome" }],
     },
     // Add this to your user schema
     skillCoins: { type: Number, default: 0 },
@@ -56,6 +56,18 @@ const userSchema = new mongoose.Schema(
     profilePic: String, // New field if you store image URL or base64
     skills: [String],
 
+    // Add this to your existing User schema
+    challenges: {
+      type: Map,
+      of: {
+        challengeId: String,
+        answer: String,
+        creditsEarned: Number,
+        completedAt: Date,
+        challengeTitle: String,
+      },
+      default: new Map(),
+    },
   },
   { timestamps: true }
 );
