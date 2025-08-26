@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import { useUser } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
 import { apiClient } from '../config/api';
-
 
 const MyLearning = () => {
   const { user } = useUser();
@@ -11,9 +9,10 @@ const MyLearning = () => {
   
   const [learningSessions, setLearningSessions] = useState([]);
   const [teachingSessions, setTeachingSessions] = useState([]);
-  const [activeTab, setActiveTab] = useState("learning"); // "learning" or "teaching"
+  const [activeTab, setActiveTab] = useState("learning");
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     if (!user) return;
@@ -37,45 +36,80 @@ const MyLearning = () => {
       window.location.reload();
     } catch (error) {
       console.error("❌ Metadata sync failed:", error);
+      setError("Failed to sync user metadata");
       setLoading(false);
       setSyncing(false);
     }
   };
 
-  // Fetch both learning and teaching sessions
+  // Enhanced fetch function with better error handling and logging
   const fetchAllSessions = async (mongoUserId) => {
     try {
       console.log("✅ Fetching all sessions for Mongo ID:", mongoUserId);
       setLoading(true);
+      setError(null);
       
-      // Fetch sessions where user is LEARNER
-      const learningRes = await apiClient.get(
-        `/api/sessions/subscribed-by-mongo/${mongoUserId}`
-      );
-      
-      // Fetch sessions where user is TEACHER (and session is booked)
-      const teachingRes = await apiClient.get(
-        `/api/sessions/teaching/${mongoUserId}`
-      );
-      
-      console.log("📡 Learning sessions found:", learningRes.data);
-      console.log("📡 Teaching sessions found:", teachingRes.data);
-      
-      // Sort both arrays by newest first
-      const sortedLearning = Array.isArray(learningRes.data) 
-        ? learningRes.data.sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime))
-        : [];
+      // Fetch learning sessions
+      try {
+        console.log("📚 Fetching learning sessions...");
+        const learningRes = await apiClient.get(`/api/sessions/subscribed-by-mongo/${mongoUserId}`);
         
-      const sortedTeaching = Array.isArray(teachingRes.data) 
-        ? teachingRes.data.sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime))
-        : [];
+        console.log("📚 Learning sessions response:", learningRes.data);
+        
+        // Handle both array and object responses
+        let learningData = [];
+        if (Array.isArray(learningRes.data)) {
+          learningData = learningRes.data;
+        } else if (learningRes.data?.sessions && Array.isArray(learningRes.data.sessions)) {
+          learningData = learningRes.data.sessions;
+        } else if (learningRes.data?.success && Array.isArray(learningRes.data?.data)) {
+          learningData = learningRes.data.data;
+        }
+        
+        const sortedLearning = learningData.sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
+        setLearningSessions(sortedLearning);
+        console.log("✅ Learning sessions set:", sortedLearning.length);
+      } catch (learningError) {
+        console.error("❌ Failed to fetch learning sessions:", learningError);
+        setLearningSessions([]);
+      }
       
-      setLearningSessions(sortedLearning);
-      setTeachingSessions(sortedTeaching);
+      // Fetch teaching sessions with enhanced error handling
+      try {
+        console.log("🎯 Fetching teaching sessions...");
+        const teachingRes = await apiClient.get(`/api/sessions/teaching/${mongoUserId}`);
+        
+        console.log("🎯 Teaching sessions response:", teachingRes);
+        console.log("🎯 Teaching sessions data:", teachingRes.data);
+        
+        // Handle both array and object responses
+        let teachingData = [];
+        if (Array.isArray(teachingRes.data)) {
+          teachingData = teachingRes.data;
+        } else if (teachingRes.data?.sessions && Array.isArray(teachingRes.data.sessions)) {
+          teachingData = teachingRes.data.sessions;
+        } else if (teachingRes.data?.success && Array.isArray(teachingRes.data?.data)) {
+          teachingData = teachingRes.data.data;
+        }
+        
+        const sortedTeaching = teachingData.sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
+        setTeachingSessions(sortedTeaching);
+        console.log("✅ Teaching sessions set:", sortedTeaching.length);
+      } catch (teachingError) {
+        console.error("❌ Failed to fetch teaching sessions:", teachingError);
+        console.error("Teaching error details:", {
+          status: teachingError.response?.status,
+          statusText: teachingError.response?.statusText,
+          data: teachingError.response?.data,
+          url: teachingError.config?.url,
+          message: teachingError.message
+        });
+        setTeachingSessions([]);
+      }
+      
     } catch (error) {
       console.error("❌ Failed to load sessions:", error);
-      setLearningSessions([]);
-      setTeachingSessions([]);
+      setError("Failed to load sessions");
     } finally {
       setLoading(false);
     }
@@ -133,8 +167,8 @@ const MyLearning = () => {
   if (!user) {
     return (
       <div className="min-h-screen p-6 bg-gray-50">
-        <br></br>
-        <br></br>
+        <br />
+        <br />
         <h1 className="text-2xl font-bold mb-4 text-center text-blue-600">📘 My Sessions</h1>
         <p className="text-center text-gray-500">Loading user...</p>
       </div>
@@ -144,6 +178,8 @@ const MyLearning = () => {
   if (syncing) {
     return (
       <div className="min-h-screen p-6 bg-gray-50">
+        <br />
+        <br />
         <h1 className="text-2xl font-bold mb-4 text-center text-blue-600">📘 My Sessions</h1>
         <p className="text-center text-blue-500">🔄 Syncing user profile...</p>
       </div>
@@ -154,9 +190,48 @@ const MyLearning = () => {
 
   return (
     <div className="min-h-screen p-6 bg-gray-50">
-      <br></br>
-      <br></br>
+      <br />
+      <br />
       <h1 className="text-2xl font-bold mb-8 text-center text-blue-600">📘 My Sessions</h1>
+
+      {/* Debug Info (for development) */}
+      {/* {process.env.NODE_ENV === 'development' && (
+        <div className="mb-6 p-4 bg-yellow-100 border border-yellow-300 rounded-lg max-w-4xl mx-auto">
+          <h3 className="font-bold text-yellow-800 mb-2">🔍 Debug Info:</h3>
+          <div className="text-sm text-yellow-700 space-y-1">
+            <p>User MongoDB ID: {user.publicMetadata?.mongoId || 'Not set'}</p>
+            <p>Learning Sessions: {learningSessions.length}</p>
+            <p>Teaching Sessions: {teachingSessions.length}</p>
+            <p>Active Tab: {activeTab}</p>
+            <p>Loading: {loading ? 'Yes' : 'No'}</p>
+            <p>Error: {error || 'None'}</p>
+          </div>
+          <button 
+            onClick={() => fetchAllSessions(user.publicMetadata?.mongoId)}
+            className="mt-2 px-3 py-1 bg-yellow-600 text-white rounded text-xs hover:bg-yellow-700"
+          >
+            🔄 Refetch Sessions
+          </button>
+        </div>
+      )} */}
+
+      {/* Error Message */}
+      {error && (
+        <div className="mb-6 p-4 bg-red-100 border border-red-300 rounded-lg text-red-700 max-w-4xl mx-auto">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-bold">⚠️ Error Loading Sessions</h3>
+              <p className="text-sm">{error}</p>
+            </div>
+            <button 
+              onClick={() => fetchAllSessions(user.publicMetadata?.mongoId)}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Tab Navigation */}
       <div className="flex justify-center mb-8">
@@ -215,7 +290,7 @@ const MyLearning = () => {
                 {/* Session Header */}
                 <div className="mb-4">
                   <h2 className="text-xl font-bold text-blue-900 mb-2">
-                    {session.skill}
+                    {session.skill || session.name || 'Unknown Session'}
                   </h2>
                   <div className={`w-full h-1 rounded-full ${
                     activeTab === "learning" 
@@ -246,6 +321,15 @@ const MyLearning = () => {
                       {participantInfo.label}: {participantInfo.name}
                     </span>
                   </div>
+
+                  {session.creditsUsed && (
+                    <div className="flex items-center text-gray-600">
+                      <span className="text-orange-500 mr-2">💰</span>
+                      <span className="text-sm">
+                        Credits: {session.creditsUsed}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Status Badge */}
@@ -257,7 +341,7 @@ const MyLearning = () => {
                       ? 'bg-blue-100 text-blue-800'
                       : 'bg-red-100 text-red-800'
                   }`}>
-                    {session.status}
+                    {session.status || 'Scheduled'}
                   </span>
                   
                   {/* Role indicator */}

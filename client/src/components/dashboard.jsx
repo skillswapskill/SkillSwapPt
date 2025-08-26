@@ -703,8 +703,8 @@ const Dashboard = () => {
 
   const handleChallengeComplete = async (challenge, answer) => {
     try {
-      console.log('🎯 Completing challenge:', challenge.title);
-      console.log('👤 User ID:', user?.id);
+      // console.log('🎯 Completing challenge:', challenge.title);
+      // console.log('👤 User ID:', user?.id);
       
       const response = await apiClient.post('/api/challenges/complete', {
         clerkId: user.id,
@@ -712,7 +712,7 @@ const Dashboard = () => {
         answer: answer
       });
 
-      console.log('📊 Challenge completion response:', response.data);
+      // console.log('📊 Challenge completion response:', response.data);
 
       if (response.data.success) {
         // Update local state
@@ -722,8 +722,8 @@ const Dashboard = () => {
         setCompletedChallenges(newCompletions);
         setChallengeAnswers(newAnswers);
 
-        console.log(`🎉 Challenge completed! Earned ${response.data.creditsEarned} credits`);
-        console.log(`💰 New total credits: ${response.data.newTotalCredits}`);
+        // console.log(`🎉 Challenge completed! Earned ${response.data.creditsEarned} credits`);
+        // console.log(`💰 New total credits: ${response.data.newTotalCredits}`);
         
         return { success: true, creditsEarned: response.data.creditsEarned };
       } else {
@@ -780,7 +780,7 @@ const Dashboard = () => {
       });
 
       setCurrentUserMongo(response.data);
-      console.log("Synced current user:", response.data);
+      // console.log("Synced current user:", response.data);
     } catch (err) {
       console.error("ERROR: Error syncing logged-in user:", err);
     }
@@ -791,7 +791,7 @@ const Dashboard = () => {
     try {
       const res = await apiClient.get("/api/users/all");
       const users = res.data.users || [];
-      console.log("Fetched all users:", users);
+      // console.log("Fetched all users:", users);
       setAllUsers(users);
     } catch (err) {
       console.error("ERROR: Error fetching users:", err);

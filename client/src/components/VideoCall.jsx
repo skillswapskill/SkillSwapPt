@@ -49,17 +49,17 @@ const VideoCall = ({ sessionId, userId, userName }) => {
         
         // Event handlers
         onJoinRoom: () => {
-          console.log('✅ Successfully joined the meeting:', sessionId);
+          // console.log('✅ Successfully joined the meeting:', sessionId);
         },
         onLeaveRoom: () => {
-          console.log('👋 Left the meeting');
+          // console.log('👋 Left the meeting');
           window.history.back();
         },
         onUserJoin: (users) => {
-          console.log('👤 New users joined:', users.length);
+          // console.log('👤 New users joined:', users.length);
         },
         onUserLeave: (users) => {
-          console.log('👋 Users left, remaining:', users.length);
+          // console.log('👋 Users left, remaining:', users.length);
         },
         onError: (error) => {
           console.error('❌ Meeting error:', error);

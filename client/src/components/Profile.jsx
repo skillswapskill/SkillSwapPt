@@ -152,7 +152,7 @@ function Profile() {
 
   // ✅ Delete service using dynamic API
   const handleDeleteService = async (sessionId) => {
-    console.log("Trying to delete sessionId:", sessionId);
+    // console.log("Trying to delete sessionId:", sessionId);
 
     try {
       // ✅ Using apiClient instead of hardcoded URL
@@ -218,7 +218,7 @@ function Profile() {
           time: s.dateTime,
         }));
         setServices(formatted);
-        console.log("Fetched offered services:", formatted);
+        // console.log("Fetched offered services:", formatted);
       } catch (err) {
         console.error("Could not fetch offered services", err);
       }

@@ -5,10 +5,10 @@ import { User } from '../models/user.model.js'; // Import your User model
 
 const router = express.Router();
 
-console.log('🔥 Payment route loading...');
-console.log('🔍 Environment Variables Check:');
-console.log('RAZORPAY_KEY_ID:', process.env.RAZORPAY_KEY_ID);
-console.log('RAZORPAY_KEY_SECRET:', process.env.RAZORPAY_KEY_SECRET ? 'SET (length: ' + process.env.RAZORPAY_KEY_SECRET.length + ')' : 'MISSING');
+// console.log('🔥 Payment route loading...');
+// console.log('🔍 Environment Variables Check:');
+// console.log('RAZORPAY_KEY_ID:', process.env.RAZORPAY_KEY_ID);
+// console.log('RAZORPAY_KEY_SECRET:', process.env.RAZORPAY_KEY_SECRET ? 'SET (length: ' + process.env.RAZORPAY_KEY_SECRET.length + ')' : 'MISSING');
 
 // Initialize Razorpay
 const razorpay = new Razorpay({
@@ -28,8 +28,8 @@ router.get('/test', (req, res) => {
 
 // Create Razorpay order
 router.post('/order', async (req, res) => {
-  console.log('📝 Creating payment order...');
-  console.log('Request body:', req.body);
+  // console.log('📝 Creating payment order...');
+  // console.log('Request body:', req.body);
   
   try {
     const { amount } = req.body;
@@ -45,7 +45,7 @@ router.post('/order', async (req, res) => {
       return res.status(500).json({ error: "Payment service not configured" });
     }
 
-    console.log('🔑 Using Key ID:', process.env.RAZORPAY_KEY_ID.substring(0, 8) + '...');
+    // console.log('🔑 Using Key ID:', process.env.RAZORPAY_KEY_ID.substring(0, 8) + '...');
 
     const options = {
       amount: amount * 100, // Convert to paise
@@ -54,10 +54,10 @@ router.post('/order', async (req, res) => {
       payment_capture: 1
     };
 
-    console.log('🔄 Creating order with options:', options);
+    // console.log('🔄 Creating order with options:', options);
     
     const order = await razorpay.orders.create(options);
-    console.log('✅ Order created successfully:', order.id);
+    // console.log('✅ Order created successfully:', order.id);
     
     res.json({
       id: order.id,
@@ -94,8 +94,8 @@ router.post('/update-credits', async (req, res) => {
       razorpay_signature 
     } = req.body;
 
-    console.log('💳 Processing credit update...');
-    console.log('Details:', { clerkId, creditsToAdd, paymentId });
+    // console.log('💳 Processing credit update...');
+    // console.log('Details:', { clerkId, creditsToAdd, paymentId });
 
     // Validate required fields
     if (!clerkId || !creditsToAdd || !paymentId) {
@@ -125,11 +125,11 @@ router.post('/update-credits', async (req, res) => {
           verified: false 
         });
       }
-      console.log('✅ Payment signature verified');
+      // console.log('✅ Payment signature verified');
     }
 
     // 🔥 ACTUAL DATABASE UPDATE using your User model
-    console.log('🔄 Updating user credits in database...');
+    // console.log('🔄 Updating user credits in database...');
     
     const updatedUser = await User.findOneAndUpdate(
       { clerkId: clerkId },
@@ -153,22 +153,22 @@ router.post('/update-credits', async (req, res) => {
       });
     }
 
-    console.log('✅ CREDITS UPDATED SUCCESSFULLY IN DATABASE!');
-    console.log('User:', updatedUser.name);
-    console.log('Previous credits:', updatedUser.totalCredits - creditsToAdd);
-    console.log('Credits added:', creditsToAdd);
-    console.log('NEW TOTAL CREDITS:', updatedUser.totalCredits);
-    console.log('NEW CREDIT EARNED:', updatedUser.creditEarned);
+    // console.log('✅ CREDITS UPDATED SUCCESSFULLY IN DATABASE!');
+    // console.log('User:', updatedUser.name);
+    // console.log('Previous credits:', updatedUser.totalCredits - creditsToAdd);
+    // console.log('Credits added:', creditsToAdd);
+    // console.log('NEW TOTAL CREDITS:', updatedUser.totalCredits);
+    // console.log('NEW CREDIT EARNED:', updatedUser.creditEarned);
 
     // Log payment transaction for audit
-    console.log('📋 Payment Transaction Log:', {
-      userId: updatedUser._id,
-      clerkId: updatedUser.clerkId,
-      paymentId: paymentId,
-      creditsAdded: creditsToAdd,
-      newBalance: updatedUser.totalCredits,
-      timestamp: new Date().toISOString()
-    });
+    // console.log('📋 Payment Transaction Log:', {
+    //   userId: updatedUser._id,
+    //   clerkId: updatedUser.clerkId,
+    //   paymentId: paymentId,
+    //   creditsAdded: creditsToAdd,
+    //   newBalance: updatedUser.totalCredits,
+    //   timestamp: new Date().toISOString()
+    // });
 
     res.json({
       success: true,

@@ -21,17 +21,17 @@ function NavBar() {
   useEffect(() => {
     const fetchNotifications = async () => {
       if (!isLoaded || !user) {
-        console.log("❌ User not ready for notification fetch:", { isLoaded, user: !!user });
+        // console.log("❌ User not ready for notification fetch:", { isLoaded, user: !!user });
         return;
       }
 
       setIsLoadingNotifications(true);
       try {
-        console.log("🚀 Fetching notifications...");
+        // console.log("🚀 Fetching notifications...");
         
         // ✅ Get auth token from Clerk
         const token = await getToken();
-        console.log("🔑 Auth token obtained:", !!token);
+        // console.log("🔑 Auth token obtained:", !!token);
         
         if (!token) {
           console.error("❌ No auth token available");
@@ -45,13 +45,13 @@ function NavBar() {
           },
         });
         
-        console.log("✅ Raw API Response:", response);
-        console.log("📊 Response data:", response.data);
-        console.log("📋 Notifications array:", response.data.notification);
-        console.log("🔢 Notifications count:", response.data.notification?.length || 0);
+        // console.log("✅ Raw API Response:", response);
+        // console.log("📊 Response data:", response.data);
+        // console.log("📋 Notifications array:", response.data.notification);
+        // console.log("🔢 Notifications count:", response.data.notification?.length || 0);
         
         const notificationsData = response.data.notification || [];
-        console.log("💾 Setting notifications:", notificationsData);
+        // console.log("💾 Setting notifications:", notificationsData);
         
         setNotifications(notificationsData);
       } catch (error) {
@@ -71,7 +71,7 @@ function NavBar() {
 
   const unreadCount = useMemo(() => {
     const count = notifications.filter((n) => !n.isRead).length;
-    console.log("🔔 Unread count:", count, "from", notifications.length, "total notifications");
+    // console.log("🔔 Unread count:", count, "from", notifications.length, "total notifications");
     return count;
   }, [notifications]);
 
@@ -120,14 +120,14 @@ function NavBar() {
 
   // Mark notification as read
   const markAsRead = (notificationId) => {
-    console.log("📖 Marking notification as read:", notificationId);
+    // console.log("📖 Marking notification as read:", notificationId);
     setNotifications((prev) =>
       prev.map((n) => {
         const currentId = n._id?.$oid || n._id;
         const targetId = notificationId?.$oid || notificationId;
         
         if (currentId === targetId) {
-          console.log("✅ Found matching notification to mark as read");
+          // console.log("✅ Found matching notification to mark as read");
           return { ...n, isRead: true };
         }
         return n;
@@ -137,7 +137,7 @@ function NavBar() {
 
   // Mark all as read
   const markAllAsRead = () => {
-    console.log("📖 Marking all notifications as read");
+    // console.log("📖 Marking all notifications as read");
     setNotifications((prev) =>
       prev.map((n) => ({ ...n, isRead: true }))
     );
@@ -149,7 +149,7 @@ function NavBar() {
     
     setIsLoadingNotifications(true);
     try {
-      console.log("🔄 Manually refreshing notifications...");
+      // console.log("🔄 Manually refreshing notifications...");
       
       const token = await getToken();
       if (!token) {
@@ -324,7 +324,7 @@ function NavBar() {
                         </div>
                         {notifications.map((n, index) => {
                           const notificationId = getNotificationId(n);
-                          console.log(`🔍 Rendering notification ${index}:`, n);
+                          // console.log(`🔍 Rendering notification ${index}:`, n);
                           
                           return (
                             <button

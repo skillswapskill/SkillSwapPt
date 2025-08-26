@@ -90,17 +90,17 @@ const PaymentPage = () => {
     
     try {
       // Load Razorpay script
-      console.log('📦 Loading Razorpay SDK...');
+      // console.log('📦 Loading Razorpay SDK...');
       const scriptLoaded = await loadRazorpayScript();
       if (!scriptLoaded) {
         toast.error("Payment system could not be loaded. Please check your internet connection.");
         setLoading(false);
         return;
       }
-      console.log('✅ Razorpay SDK loaded');
+      // console.log('✅ Razorpay SDK loaded');
 
       // ✅ Create order using apiClient (same pattern as your Booking component)
-      console.log('📝 Creating payment order...');
+      // console.log('📝 Creating payment order...');
       const orderResponse = await apiClient.post('/api/payment/order', {
         amount: selectedPackage.amount
       });
@@ -112,7 +112,7 @@ const PaymentPage = () => {
       }
 
       const orderData = orderResponse.data;
-      console.log('✅ Order created:', orderData);
+      // console.log('✅ Order created:', orderData);
 
       // Razorpay checkout options
       const options = {
@@ -123,11 +123,11 @@ const PaymentPage = () => {
         description: `Purchase ${selectedPackage.credits} Credits - ${selectedPackage.bestFor}`,
         order_id: orderData.id,
         handler: async function (response) {
-          console.log('🎉 Payment successful:', response);
+          // console.log('🎉 Payment successful:', response);
           
           try {
             // ✅ Update credits using apiClient (same pattern as your Booking component)
-            console.log('💳 Updating user credits...');
+            // console.log('💳 Updating user credits...');
             
             const updateResponse = await apiClient.post('/api/payment/update-credits', {
               clerkId: user.id,
@@ -143,7 +143,7 @@ const PaymentPage = () => {
             }
 
             const creditUpdate = updateResponse.data;
-            console.log('✅ Credits updated:', creditUpdate);
+            // console.log('✅ Credits updated:', creditUpdate);
 
             // Show success toast
             toast.success(
@@ -171,7 +171,7 @@ const PaymentPage = () => {
         },
         modal: {
           ondismiss: function() {
-            console.log('Payment cancelled by user');
+            // console.log('Payment cancelled by user');
             setLoading(false);
           }
         }

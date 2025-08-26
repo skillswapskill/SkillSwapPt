@@ -211,7 +211,7 @@ export const subscribeToSession = async (req, res) => {
       message: "Session booked successfully",
       sessionDetails: {
         id: session._id,
-        name: session.name,
+        name: session.name || session.skill,
         teacher: session.teacher.name,
         dateTime: session.dateTime,
         learnerName: learner.name,
@@ -239,59 +239,8 @@ export const subscribeToSession = async (req, res) => {
 export const getSubscribedSessions = async (req, res) => {
   try {
     const { userId } = req.params;
-    console.log("API called with userId:", userId);
+    console.log("📚 API called with userId:", userId);
 
-    if (!userId) {
-      return res.status(400).json({ 
-        message: "Missing userId"
-      });
-    }
-
-    let actualUserId = userId;
-    let objId;
-
-    // Handle Clerk IDs
-    if (userId.startsWith("user_") || userId === "temp_id") {
-      const user = await User.findOne({ clerkId: userId });
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      actualUserId = user._id.toString();
-    }
-
-    if (!mongoose.Types.ObjectId.isValid(actualUserId)) {
-      return res.status(400).json({ 
-        message: "Invalid userId format"
-      });
-    }
-
-    objId = new mongoose.Types.ObjectId(actualUserId);
-
-    const sessions = await Session.find({ learner: objId })
-      .populate("teacher", "name email")
-      .sort({ dateTime: 1 });
-
-    console.log(`Found ${sessions.length} sessions for learner ${userId}`);
-    
-    res.status(200).json({
-      success: true,
-      count: sessions.length,
-      sessions: sessions
-    });
-
-  } catch (error) {
-    console.error("Error fetching subscribed sessions:", error);
-    res.status(500).json({ 
-      message: "Server error", 
-      details: error.message 
-    });
-  }
-};
-
-export const getTeachingSessions = async (req, res) => {
-  try {
-    const { userId } = req.params;
-    
     if (!userId) {
       return res.status(400).json({ 
         message: "Missing userId"
@@ -317,24 +266,114 @@ export const getTeachingSessions = async (req, res) => {
 
     const objId = new mongoose.Types.ObjectId(actualUserId);
 
-    const sessions = await Session.find({ 
-      teacher: objId, 
-      learner: { $exists: true, $ne: null } 
-    })
-      .populate("learner", "name email")
+    const sessions = await Session.find({ learner: objId })
+      .populate("teacher", "name email")
       .sort({ dateTime: -1 });
 
-    res.status(200).json({
-      success: true,
-      count: sessions.length,
-      sessions: sessions
-    });
+    console.log(`📚 Found ${sessions.length} learning sessions for user ${userId}`);
+    
+    // Transform sessions to ensure consistent field names
+    const transformedSessions = sessions.map(session => ({
+      _id: session._id,
+      skill: session.skill || session.name, // Ensure 'skill' field exists
+      name: session.name || session.skill,
+      dateTime: session.dateTime,
+      teacher: session.teacher,
+      learner: session.learner,
+      creditsUsed: session.creditsUsed,
+      subscribed: session.subscribed,
+      status: session.status || 'Scheduled'
+    }));
+    
+    res.status(200).json(transformedSessions); // Return direct array
 
   } catch (error) {
-    console.error("Error fetching teaching sessions:", error);
+    console.error("Error fetching subscribed sessions:", error);
     res.status(500).json({ 
       message: "Server error", 
       details: error.message 
+    });
+  }
+};
+
+export const getTeachingSessions = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    console.log("🎯 Teaching sessions request for userId:", userId);
+    
+    if (!userId) {
+      return res.status(400).json({ 
+        message: "Missing userId parameter"
+      });
+    }
+
+    let actualUserId = userId;
+
+    // Handle Clerk IDs - convert to MongoDB ObjectId if needed
+    if (userId.startsWith("user_") || userId === "temp_id") {
+      console.log("🔍 Converting Clerk ID to MongoDB ID:", userId);
+      const user = await User.findOne({ clerkId: userId });
+      if (!user) {
+        console.log("❌ No user found with clerkId:", userId);
+        return res.status(404).json({ 
+          message: "User not found",
+          clerkId: userId 
+        });
+      }
+      actualUserId = user._id.toString();
+      console.log("✅ Converted clerkId to mongoId:", actualUserId);
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(actualUserId)) {
+      console.error("❌ Invalid userId format:", actualUserId);
+      return res.status(400).json({ 
+        message: "Invalid userId format",
+        received: actualUserId
+      });
+    }
+
+    const objId = new mongoose.Types.ObjectId(actualUserId);
+
+    // Find sessions where:
+    // 1. User is the TEACHER
+    // 2. Session has been BOOKED (has a learner)
+    // 3. Populate both learner and teacher details
+    const sessions = await Session.find({ 
+      teacher: objId, 
+      learner: { $exists: true, $ne: null },
+      subscribed: true // Make sure it's actually booked
+    })
+      .populate("learner", "name email profilePic")
+      .populate("teacher", "name email profilePic") 
+      .sort({ dateTime: -1 });
+
+    console.log(`🎯 Found ${sessions.length} teaching sessions for user ${actualUserId}`);
+    
+    // Transform data to match frontend expectations
+    const transformedSessions = sessions.map(session => ({
+      _id: session._id,
+      skill: session.skill || session.name, // Ensure 'skill' field exists
+      name: session.name || session.skill,
+      dateTime: session.dateTime,
+      description: session.description,
+      creditsUsed: session.creditsUsed,
+      teacher: session.teacher,
+      learner: session.learner,
+      subscribed: session.subscribed,
+      status: session.status || 'Scheduled' // Default status
+    }));
+
+    console.log("🎯 Transformed teaching sessions:", transformedSessions);
+
+    res.status(200).json(transformedSessions); // Return direct array
+
+  } catch (error) {
+    console.error("❌ Error fetching teaching sessions:", error);
+    res.status(500).json({ 
+      message: "Server error", 
+      details: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 };

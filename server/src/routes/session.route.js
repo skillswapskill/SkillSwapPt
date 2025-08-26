@@ -83,12 +83,12 @@ router.get("/subscribed/:userId", getSubscribedSessions);
 
 router.get("/subscribed-by-mongo/:mongoUserId", async (req, res) => {
   const { mongoUserId } = req.params;
-  console.log("Fetching sessions for subscriber:", mongoUserId);
+  // console.log("Fetching sessions for subscriber:", mongoUserId);
 
   try {
     // ✅ FIXED: Search 'learner' field instead of 'subscribers'
     const sessions = await Session.find({ learner: mongoUserId }).populate("teacher", "name");
-    console.log("Sessions found:", sessions);
+    // console.log("Sessions found:", sessions);
     res.status(200).json(sessions);
   } catch (err) {
     console.error("Fetch error:", err);

@@ -36,15 +36,15 @@ function Booking() {
   const userId = getUserId();
 
   // Debug logging
-  useEffect(() => {
-    console.log("=== BOOKING COMPONENT DEBUG ===");
-    console.log("Location state:", location.state);
-    console.log("User from state:", user);
-    console.log("Clerk user:", clerkUser);
-    console.log("Extracted userId:", userId);
-    console.log("Session:", session);
-    console.log("=== END DEBUG ===");
-  }, []);
+  // useEffect(() => {
+  //   console.log("=== BOOKING COMPONENT DEBUG ===");
+  //   console.log("Location state:", location.state);
+  //   console.log("User from state:", user);
+  //   console.log("Clerk user:", clerkUser);
+  //   console.log("Extracted userId:", userId);
+  //   console.log("Session:", session);
+  //   console.log("=== END DEBUG ===");
+  // }, []);
 
   if (!session || !user || !userId) {
     return (
@@ -83,7 +83,7 @@ function Booking() {
     // Get session ID
     const sessionId = session._id || session.id;
 
-    console.log("🔍 Booking with IDs:", { userId, sessionId });
+    // console.log("🔍 Booking with IDs:", { userId, sessionId });
 
     if (!userId) {
       toast.error("User ID not found. Please try logging out and logging back in.");
@@ -99,14 +99,14 @@ function Booking() {
     setRetryCount(attemptNumber);
 
     try {
-      console.log(`🔄 Booking attempt ${attemptNumber}:`, { userId, sessionId });
+      // console.log(`🔄 Booking attempt ${attemptNumber}:`, { userId, sessionId });
       
       const response = await apiClient.post("/api/sessions/subscribe", {
         userId: userId, // This can be either MongoDB ObjectId or ClerkId
         sessionId: sessionId,
       });
 
-      console.log("✅ Booking successful:", response.data);
+      // console.log("✅ Booking successful:", response.data);
       toast.success("Session booked successfully! 🎉");
 
       // Handle credit operations (non-blocking)

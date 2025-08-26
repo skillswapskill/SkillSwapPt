@@ -104,8 +104,8 @@ export const sendBookingConfirmationEmails = async (bookingData) => {
   } = bookingData;
 
   try {
-    console.log('📧 Sending booking confirmation emails...');
-    console.log('Data:', bookingData);
+    // console.log('📧 Sending booking confirmation emails...');
+    // console.log('Data:', bookingData);
     
     const transporter = createTransporter();
     
@@ -126,7 +126,7 @@ export const sendBookingConfirmationEmails = async (bookingData) => {
       html: templates.learner.html
     });
 
-    console.log('✅ Learner confirmation email sent to:', learnerEmail);
+    // console.log('✅ Learner confirmation email sent to:', learnerEmail);
 
     // Send confirmation email to teacher
     await transporter.sendMail({
@@ -136,7 +136,7 @@ export const sendBookingConfirmationEmails = async (bookingData) => {
       html: templates.teacher.html
     });
 
-    console.log('✅ Teacher confirmation email sent to:', teacherEmail);
+    // console.log('✅ Teacher confirmation email sent to:', teacherEmail);
 
     // Schedule reminder emails for 10 minutes before session
     scheduleReminderEmails(bookingData);
@@ -170,12 +170,12 @@ const scheduleReminderEmails = (bookingData) => {
     // Convert to cron format
     const cronTime = `${reminderTime.getMinutes()} ${reminderTime.getHours()} ${reminderTime.getDate()} ${reminderTime.getMonth() + 1} *`;
     
-    console.log(`📅 Scheduling reminder emails for: ${reminderTime.toLocaleString()}`);
+    // console.log(`📅 Scheduling reminder emails for: ${reminderTime.toLocaleString()}`);
 
     // Schedule reminder email task
     cron.schedule(cronTime, async () => {
       try {
-        console.log('⏰ Sending 10-minute reminder emails...');
+        // console.log('⏰ Sending 10-minute reminder emails...');
 
         const transporter = createTransporter();
 
@@ -204,13 +204,13 @@ const scheduleReminderEmails = (bookingData) => {
           html: teacherTemplate.html
         });
 
-        console.log('✅ Reminder emails sent successfully');
+        // console.log('✅ Reminder emails sent successfully');
       } catch (error) {
         console.error('❌ Error sending reminder emails:', error);
       }
     });
 
-    console.log('✅ Reminder emails scheduled successfully');
+    // console.log('✅ Reminder emails scheduled successfully');
   } else {
     console.log('⚠️ Session is too soon - no reminder scheduled');
   }

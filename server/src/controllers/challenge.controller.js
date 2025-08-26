@@ -151,15 +151,15 @@ export const completeChallenge = async (req, res) => {
     // Find user by Clerk ID
     const user = await User.findOne({ clerkId });
     if (!user) {
-      console.log('❌ User not found');
+      // console.log('❌ User not found');
       return res.status(404).json({ 
         success: false,
         message: "User not found" 
       });
     }
 
-    console.log('👤 User found:', user.name);
-    console.log('💰 Current credits:', user.totalCredits);
+    // console.log('👤 User found:', user.name);
+    // console.log('💰 Current credits:', user.totalCredits);
 
     // Find the challenge template
     const challenge = challengeTemplates.find(c => c.id === challengeId);
@@ -170,7 +170,7 @@ export const completeChallenge = async (req, res) => {
       });
     }
 
-    console.log('🎮 Challenge found:', challenge.title);
+    // console.log('🎮 Challenge found:', challenge.title);
 
     // Check if already completed today
     const today = new Date().toDateString();
@@ -182,7 +182,7 @@ export const completeChallenge = async (req, res) => {
     }
 
     if (user.challenges.has(challengeKey)) {
-      console.log('⚠️ Challenge already completed today');
+      // console.log('⚠️ Challenge already completed today');
       return res.json({
         success: false,
         message: "You have already completed today's challenge!"
@@ -191,10 +191,10 @@ export const completeChallenge = async (req, res) => {
 
     // Validate answer
     const isCorrect = challenge.validateAnswer(answer, user.name);
-    console.log('✅ Answer validation:', isCorrect);
+    // console.log('✅ Answer validation:', isCorrect);
 
     if (!isCorrect) {
-      console.log('❌ Incorrect answer provided');
+      // console.log('❌ Incorrect answer provided');
       return res.json({
         success: false,
         message: "Incorrect answer. Try again!"
@@ -225,19 +225,19 @@ export const completeChallenge = async (req, res) => {
       createdAt: new Date()
     });
 
-    console.log('📈 Credit changes:', {
-      creditsAwarded: challenge.credits,
-      totalCredits: `${oldTotal} → ${user.totalCredits}`,
-      creditEarned: `${oldEarned} → ${user.creditEarned}`
-    });
+    // console.log('📈 Credit changes:', {
+    //   creditsAwarded: challenge.credits,
+    //   totalCredits: `${oldTotal} → ${user.totalCredits}`,
+    //   creditEarned: `${oldEarned} → ${user.creditEarned}`
+    // });
 
     // Save user
     const savedUser = await user.save();
-    console.log('💾 User saved successfully');
-    console.log('🎉 Final user state:', {
-      totalCredits: savedUser.totalCredits,
-      creditEarned: savedUser.creditEarned
-    });
+    // console.log('💾 User saved successfully');
+    // console.log('🎉 Final user state:', {
+    //   totalCredits: savedUser.totalCredits,
+    //   creditEarned: savedUser.creditEarned
+    // });
 
     res.json({
       success: true,
