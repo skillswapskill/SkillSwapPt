@@ -6,7 +6,7 @@ const Footer = () => {
       label: "Company",
       items: [
         { href: "/business", name: "Business" },
-        { href: "#", name: "Blog" },
+        // { href: "#", name: "Blog" },
         { href: "/team", name: "Team" },
         { href: "/careers", name: "Careers" },
       ],
@@ -14,19 +14,19 @@ const Footer = () => {
     {
       label: "Resources",
       items: [
-        { href: "#", name: "Contact" },
-        { href: "#", name: "Support" },
-        { href: "#", name: "Docs" },
+        { href: "/contact", name: "Contact" },
+        { href: "/support", name: "Support" },
+        // { href: "/docs", name: "Docs" },
         { href: "/payment", name: "Pricing" },
       ],
     },
     {
       label: "About",
       items: [
-        { href: "#", name: "Terms" },
-        { href: "#", name: "License" },
-        { href: "#", name: "Privacy" },
-        { href: "#", name: "About Us" },
+        { href: "/terms", name: "Terms" },
+        // { href: "#", name: "License" },
+        { href: "/privacy", name: "Privacy" },
+        { href: "/aboutus", name: "About Us" },
       ],
     },
   ];

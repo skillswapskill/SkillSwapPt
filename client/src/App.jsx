@@ -20,6 +20,12 @@ import JoinRoom from './components/JoinRoom';
 import Reedeem from "./components/Reedeem";
 import PaymentPage from "./components/PaymentPage";
 import Team from "./components/Team";
+import Terms from "./components/Terms";
+import Privacy from "./components/Privacy";
+import Support from "./components/Support";
+import Contact from "./components/Contact";
+import AboutUs from "./components/AboutUs";
+
 
 
 
@@ -52,6 +58,12 @@ function App() {
         <Route path="/redeem" element={<Reedeem />} />
         <Route path="/payment" element={<PaymentPage />} />
         <Route path="/team" element={<Team />} />
+        <Route path="/terms" element={<Terms />} /> 
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/support" element={<Support />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/aboutus" element={<AboutUs />} />
+
       </Routes>
 
       <Footer />
