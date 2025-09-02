@@ -25,6 +25,7 @@ import Privacy from "./components/Privacy";
 import Support from "./components/Support";
 import Contact from "./components/Contact";
 import AboutUs from "./components/AboutUs";
+import Sam from "./components/Sam";
 
 
 
@@ -41,7 +42,7 @@ function App() {
           }}
         />
       
-
+      <Sam/>
       <Routes>
         <Route path="/" element={<Hero/>} />
         <Route path="/sign-in" element={<Login />} />
