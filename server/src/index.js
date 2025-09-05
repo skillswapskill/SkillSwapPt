@@ -29,7 +29,9 @@ const PORT = process.env.PORT || 5000;
 // Dynamic CORS Configuration
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://skillswap.company"
+  "https://skillswap.company",
+  "http://localhost:8081",
+  "http://172.16.75.25:8081"
 ];
 
 const corsOptions = {
