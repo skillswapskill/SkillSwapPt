@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
-// ✅ Device detection helper
+// Device detection helper
 function isWindowsDesktop() {
   const ua = navigator.userAgent;
   // Check Windows, exclude Android/iPad/iPhone/Mobile
@@ -11,7 +11,7 @@ function isWindowsDesktop() {
   );
 }
 
-// ✅ Animated AI Logo Component
+// Animated AI Logo Component
 const AnimatedAiLogo = ({ isActive }) => {
   const svgStyle = {
     width: "50px",
@@ -90,7 +90,6 @@ export default function Sam() {
 
   useEffect(() => {
     aiActiveRef.current = aiActive;
-    // Logging used for development/debug purposes
   }, [aiActive]);
 
   const commandMap = {
@@ -194,7 +193,7 @@ export default function Sam() {
     ]
   };
 
-  // ✅ Command matching function
+  // Command matching function
   const matchCommand = (transcript) => {
     const cleaned = transcript.replace(/sam,?\s*/gi, '').trim();
 
@@ -211,7 +210,7 @@ export default function Sam() {
   const navigateTo = (path, message) => {
     navigate(path);
     setStatus(message);
-    setTimeout(() => setStatus("✅ Sam is listening..."), 2000);
+    setTimeout(() => setStatus("Sam is listening..."), 2000);
   };
 
   const safeStartRecognition = (recognition) => {
@@ -220,7 +219,7 @@ export default function Sam() {
         recognition.start();
         isRecognitionRunning.current = true;
       } catch (error) {
-        // Already running or failed
+        console.log("Recognition start error:", error.message);
       }
     }
   };
@@ -230,7 +229,7 @@ export default function Sam() {
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      setStatus("❌ Speech recognition not supported on this device");
+      setStatus("Speech recognition not supported on this device");
       return;
     }
 
@@ -240,7 +239,9 @@ export default function Sam() {
         echoCancellation: true,
         autoGainControl: true,
       }
-    }).catch(err => {});
+    }).catch(err => {
+      console.error("Microphone error:", err);
+    });
 
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
@@ -250,12 +251,15 @@ export default function Sam() {
     recognition.onstart = () => {
       isRecognitionRunning.current = true;
       setIsListening(true);
-      setStatus("🎤 Sam ready - Say 'sam on' to activate");
+      setStatus("Sam ready - Say 'sam on' to activate");
+      console.log("Recognition started");
     };
 
     recognition.onend = () => {
       isRecognitionRunning.current = false;
       setIsListening(false);
+      console.log("Recognition ended, restarting...");
+      
       setTimeout(() => {
         if (recognitionRef.current) {
           safeStartRecognition(recognition);
@@ -265,8 +269,10 @@ export default function Sam() {
 
     recognition.onerror = (event) => {
       isRecognitionRunning.current = false;
+      console.error("Recognition error:", event.error);
+      
       if (event.error === 'not-allowed') {
-        setStatus("🚫 Microphone permission required");
+        setStatus("Microphone permission required");
       } else if (event.error !== 'aborted') {
         setTimeout(() => safeStartRecognition(recognition), 1000);
       }
@@ -274,30 +280,43 @@ export default function Sam() {
 
     recognition.onresult = (event) => {
       const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
+      console.log("Heard:", transcript);
 
       // Activation
       if (transcript.includes("sam on") || transcript.includes("sam activate")) {
+        console.log("ACTIVATING SAM");
         setAiActive(true);
         aiActiveRef.current = true;
-        setStatus("✅ Sam activated! Try: 'sam, go to dashboard'");
+        setStatus("Sam activated! Try: 'sam, go to dashboard'");
         return;
       }
+
       // Deactivation
       if (transcript.includes("sam off") || transcript.includes("sam deactivate")) {
+        console.log("DEACTIVATING SAM");
         setAiActive(false);
         aiActiveRef.current = false;
-        setStatus("🎤 Sam ready - Say 'sam on' to activate");
+        setStatus("Sam ready - Say 'sam on' to activate");
         return;
       }
-      if (!aiActiveRef.current) return;
+
+      if (!aiActiveRef.current) {
+        console.log("Sam not active, ignoring command");
+        return;
+      }
+
+      console.log("Sam is ACTIVE, processing command:", transcript);
 
       const matchedPath = matchCommand(transcript);
+      
       if (matchedPath) {
+        console.log("NAVIGATING TO:", matchedPath);
         const pageName = matchedPath === "/" ? "Home" : matchedPath.replace("/", "").replace("-", " ");
-        navigateTo(matchedPath, ✅ Going to ${pageName});
+        navigateTo(matchedPath, "Going to " + pageName);
       } else {
-        setStatus(🤔 Try: "sam, go to dashboard" or "sam, go to career");
-        setTimeout(() => setStatus("✅ Sam is listening..."), 3000);
+        console.log("NO MATCH FOUND for:", transcript);
+        setStatus("Try: 'sam, go to dashboard' or 'sam, go to career'");
+        setTimeout(() => setStatus("Sam is listening..."), 3000);
       }
     };
 
@@ -313,7 +332,7 @@ export default function Sam() {
     };
   }, [navigate, isWindows]);
 
-  // ✅ Only show Sam if Windows browser detected
+  // Only show Sam if Windows browser detected
   if (!isWindows) return null;
 
   return (
@@ -340,6 +359,7 @@ export default function Sam() {
       maxWidth: "380px"
     }}>
       <AnimatedAiLogo isActive={aiActive} />
+      
       <div style={{ display: "flex", flexDirection: "column", gap: "4px", flex: 1 }}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <p style={{ margin: 0, fontWeight: 600, fontSize: "14px" }}>{status}</p>
@@ -353,6 +373,7 @@ export default function Sam() {
             }} />
           )}
         </div>
+        
         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
           <p style={{ 
             margin: 0, 
@@ -360,7 +381,7 @@ export default function Sam() {
             color: "#666",
             fontStyle: "italic"
           }}>
-            🎧 Enhanced noise cancellation
+            Enhanced noise cancellation
           </p>
           {aiActive && (
             <span style={{
