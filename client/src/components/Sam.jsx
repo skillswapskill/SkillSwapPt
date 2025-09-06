@@ -1,6 +1,16 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
+// ✅ Device detection helper
+function isWindowsDesktop() {
+  const ua = navigator.userAgent;
+  // Check Windows, exclude Android/iPad/iPhone/Mobile
+  return (
+    ua.includes("Windows") &&
+    !/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|Tablet/i.test(ua)
+  );
+}
+
 // ✅ Animated AI Logo Component
 const AnimatedAiLogo = ({ isActive }) => {
   const svgStyle = {
@@ -66,145 +76,131 @@ export default function Sam() {
   const [aiActive, setAiActive] = useState(false);
   const [status, setStatus] = useState("Initializing Sam...");
   const [isListening, setIsListening] = useState(false);
+  const [isWindows, setIsWindows] = useState(true);
   const navigate = useNavigate();
   
   const recognitionRef = useRef(null);
   const isRecognitionRunning = useRef(false);
-  const aiActiveRef = useRef(false); // ✅ Use ref to track state immediately
+  const aiActiveRef = useRef(false);
 
-  // ✅ Update ref whenever state changes
+  useEffect(() => {
+    // Check on mount
+    setIsWindows(isWindowsDesktop());
+  }, []);
+
   useEffect(() => {
     aiActiveRef.current = aiActive;
-    console.log("🔄 aiActive state changed to:", aiActive);
+    // Logging used for development/debug purposes
   }, [aiActive]);
 
-  // ✅ Command map
   const commandMap = {
-  "/": [
-    "home", "homepage", "main page", "go home", "take me home", "navigate home", 
-    "open home", "back to home", "go to home", "main", "landing page", "start page", 
-    "front page", "beginning", "index", "root", "base"
-  ],
-  
-  "/dashboard": [
-    "dashboard", "dash", "main dashboard", "go to dashboard", "open dashboard", 
-    "navigate dashboard", "user dashboard", "my dashboard", "control panel", 
-    "admin panel", "overview", "summary", "hub"
-  ],
-  
-  "/profile": [
-    "profile", "my profile", "user profile", "go to profile", "open profile", 
-    "navigate profile", "account", "my account", "personal profile", "edit profile", 
-    "profile settings", "user info", "personal info", "account settings", 
-    "my info", "account details"
-  ],
-  
-  "/careers": [
-    "career", "careers", "jobs", "job opportunities", "go to careers", "open careers", 
-    "navigate careers", "job portal", "career portal", "job board", "employment", 
-    "hiring", "work", "find jobs", "job search", "opportunities", "vacancies", 
-    "positions", "openings", "job listings", "apply for jobs","couriers"
-  ],
-  
-  "/my-learning": [
-    "learning", "my learning", "go to learning", "open my learning", "navigate learning", 
-    "courses", "my courses", "education", "training", "lessons", "study", "learn", 
-    "coursework", "classes", "tutorials", "learning materials", "educational content", 
-    "skills training", "online courses", "progress", "learning progress"
-  ],
-  
-  "/team": [
-    "team", "our team", "go to team", "open team", "navigate team", "show team", 
-    "team members", "staff", "people", "meet the team", "team page", "about team", 
-    "employees", "crew", "personnel", "members", "who we are", "our people"
-  ],
-  
-  "/contact": [
-    "contact", "contact us", "go to contact", "open contact", "navigate contact", 
-    "get in touch", "reach out", "help", "support", "customer service", 
-    "assistance", "contact page", "contact info", "get help", "talk to us", 
-    "customer support", "technical support", "reach us", "contact details"
-  ],
-  
-  "/aboutus": [
-    "about", "about us", "go to about", "open about", "navigate about", 
-    "who we are", "company info", "our story", "learn more", "information", 
-    "company", "organization", "mission", "vision", "history", "background", 
-    "what we do", "company profile", "overview"
-  ],
-  
-  "/support": [
-    "support", "help", "customer support", "get help", "need help", "assistance", 
-    "go to support", "open support", "navigate support", "help desk", "help center", 
-    "technical support", "troubleshoot", "faq", "frequently asked questions", 
-    "help page", "support center", "customer help", "service desk"
-  ],
-  
-  "/terms": [
-    "terms", "terms and conditions", "go to terms", "open terms", "navigate terms", 
-    "legal", "agreement", "user agreement", "tos", "terms of service", 
-    "terms of use", "legal terms", "conditions", "user terms", "service terms"
-  ],
-  
-  "/privacy": [
-    "privacy", "privacy policy", "go to privacy", "open privacy", "navigate privacy", 
-    "data policy", "privacy terms", "data protection", "privacy settings", 
-    "data privacy", "privacy statement", "data usage", "privacy notice"
-  ],
-  
-  "/sign-in": [
-    "sign in", "login", "log in", "go to sign in", "open sign in", "navigate sign in", 
-    "sign me in", "authenticate", "enter account", "access account", "log into account", 
-    "signin", "member login", "user login", "account login", "get in", "enter"
-  ],
-  
-  "/sign-up": [
-    "sign up", "register", "create account", "go to sign up", "open sign up", 
-    "navigate sign up", "join", "signup", "new account", "registration", 
-    "create profile", "join us", "become member", "new user", "register account", 
-    "create new account", "open account", "start account"
-  ],
-  
-  "/business": [
-    "business", "for business", "go to business", "open business", "navigate business", 
-    "enterprise", "corporate", "business solutions", "business page", "b2b", 
-    "business services", "enterprise solutions", "commercial", "business portal", 
-    "company services", "business offerings"
-  ],
-  
-  "/book-session": [
-    "book session", "book a session", "schedule session", "go to book session", 
-    "open book session", "navigate book session", "schedule", "appointment", 
-    "book appointment", "reserve", "booking", "make appointment", "set appointment", 
-    "schedule meeting", "book meeting", "reserve session", "session booking", 
-    "appointment booking", "schedule time", "book time"
-  ],
-  
-  "/redeem": [
-    "redeem", "redeem code", "go to redeem", "open redeem", "navigate redeem", 
-    "apply code", "coupon", "voucher", "promo code", "discount code", "gift code", 
-    "referral code", "promotional code", "use code", "enter code", "claim code", 
-    "activate code", "code redemption", "apply coupon", "use voucher"
-  ],
-  
-  "/payment": [
-    "payment", "pay", "go to payment", "open payment", "navigate payment", 
-    "billing", "checkout", "purchase", "buy", "transaction", "payment page", 
-    "make payment", "process payment", "complete payment", "pay now", "billing info", 
-    "payment method", "credit card", "payment details", "financial", "money", 
-    "subscription", "upgrade", "premium"
-  ]
-};
+    "/": [
+      "home", "homepage", "main page", "go home", "take me home", "navigate home", 
+      "open home", "back to home", "go to home", "main", "landing page", "start page", 
+      "front page", "beginning", "index", "root", "base"
+    ],
+    "/dashboard": [
+      "dashboard", "dash", "main dashboard", "go to dashboard", "open dashboard", 
+      "navigate dashboard", "user dashboard", "my dashboard", "control panel", 
+      "admin panel", "overview", "summary", "hub"
+    ],
+    "/profile": [
+      "profile", "my profile", "user profile", "go to profile", "open profile", 
+      "navigate profile", "account", "my account", "personal profile", "edit profile", 
+      "profile settings", "user info", "personal info", "account settings", 
+      "my info", "account details"
+    ],
+    "/careers": [
+      "career", "careers", "jobs", "job opportunities", "go to careers", "open careers", 
+      "navigate careers", "job portal", "career portal", "job board", "employment", 
+      "hiring", "work", "find jobs", "job search", "opportunities", "vacancies", 
+      "positions", "openings", "job listings", "apply for jobs"
+    ],
+    "/my-learning": [
+      "learning", "my learning", "go to learning", "open my learning", "navigate learning", 
+      "courses", "my courses", "education", "training", "lessons", "study", "learn", 
+      "coursework", "classes", "tutorials", "learning materials", "educational content", 
+      "skills training", "online courses", "progress", "learning progress"
+    ],
+    "/team": [
+      "team", "our team", "go to team", "open team", "navigate team", "show team", 
+      "team members", "staff", "people", "meet the team", "team page", "about team", 
+      "employees", "crew", "personnel", "members", "who we are", "our people"
+    ],
+    "/contact": [
+      "contact", "contact us", "go to contact", "open contact", "navigate contact", 
+      "get in touch", "reach out", "help", "support", "customer service", 
+      "assistance", "contact page", "contact info", "get help", "talk to us", 
+      "customer support", "technical support", "reach us", "contact details"
+    ],
+    "/aboutus": [
+      "about", "about us", "go to about", "open about", "navigate about", 
+      "who we are", "company info", "our story", "learn more", "information", 
+      "company", "organization", "mission", "vision", "history", "background", 
+      "what we do", "company profile", "overview"
+    ],
+    "/support": [
+      "support", "help", "customer support", "get help", "need help", "assistance", 
+      "go to support", "open support", "navigate support", "help desk", "help center", 
+      "technical support", "troubleshoot", "faq", "frequently asked questions", 
+      "help page", "support center", "customer help", "service desk"
+    ],
+    "/terms": [
+      "terms", "terms and conditions", "go to terms", "open terms", "navigate terms", 
+      "legal", "agreement", "user agreement", "tos", "terms of service", 
+      "terms of use", "legal terms", "conditions", "user terms", "service terms"
+    ],
+    "/privacy": [
+      "privacy", "privacy policy", "go to privacy", "open privacy", "navigate privacy", 
+      "data policy", "privacy terms", "data protection", "privacy settings", 
+      "data privacy", "privacy statement", "data usage", "privacy notice"
+    ],
+    "/sign-in": [
+      "sign in", "login", "log in", "go to sign in", "open sign in", "navigate sign in", 
+      "sign me in", "authenticate", "enter account", "access account", "log into account", 
+      "signin", "member login", "user login", "account login", "get in", "enter"
+    ],
+    "/sign-up": [
+      "sign up", "register", "create account", "go to sign up", "open sign up", 
+      "navigate sign up", "join", "signup", "new account", "registration", 
+      "create profile", "join us", "become member", "new user", "register account", 
+      "create new account", "open account", "start account"
+    ],
+    "/business": [
+      "business", "for business", "go to business", "open business", "navigate business", 
+      "enterprise", "corporate", "business solutions", "business page", "b2b", 
+      "business services", "enterprise solutions", "commercial", "business portal", 
+      "company services", "business offerings"
+    ],
+    "/book-session": [
+      "book session", "book a session", "schedule session", "go to book session", 
+      "open book session", "navigate book session", "schedule", "appointment", 
+      "book appointment", "reserve", "booking", "make appointment", "set appointment", 
+      "schedule meeting", "book meeting", "reserve session", "session booking", 
+      "appointment booking", "schedule time", "book time"
+    ],
+    "/redeem": [
+      "redeem", "redeem code", "go to redeem", "open redeem", "navigate redeem", 
+      "apply code", "coupon", "voucher", "promo code", "discount code", "gift code", 
+      "referral code", "promotional code", "use code", "enter code", "claim code", 
+      "activate code", "code redemption", "apply coupon", "use voucher"
+    ],
+    "/payment": [
+      "payment", "pay", "go to payment", "open payment", "navigate payment", 
+      "billing", "checkout", "purchase", "buy", "transaction", "payment page", 
+      "make payment", "process payment", "complete payment", "pay now", "billing info", 
+      "payment method", "credit card", "payment details", "financial", "money", 
+      "subscription", "upgrade", "premium"
+    ]
+  };
 
   // ✅ Command matching function
   const matchCommand = (transcript) => {
     const cleaned = transcript.replace(/sam,?\s*/gi, '').trim();
-    console.log("🧹 Cleaned command:", cleaned);
 
     for (const [path, phrases] of Object.entries(commandMap)) {
       for (const phrase of phrases) {
         if (cleaned.includes(phrase)) {
-          console.log("✅ MATCHED:", phrase, "->", path);
           return path;
         }
       }
@@ -212,42 +208,39 @@ export default function Sam() {
     return null;
   };
 
-  // ✅ Navigation helper
   const navigateTo = (path, message) => {
-    console.log("🚀 Navigating to:", path);
     navigate(path);
     setStatus(message);
     setTimeout(() => setStatus("✅ Sam is listening..."), 2000);
   };
 
-  // ✅ Safe recognition start
   const safeStartRecognition = (recognition) => {
     if (!isRecognitionRunning.current) {
       try {
         recognition.start();
         isRecognitionRunning.current = true;
       } catch (error) {
-        console.log("Recognition start error:", error.message);
+        // Already running or failed
       }
     }
   };
 
   useEffect(() => {
+    if (!isWindows) return; // Do not run on non-Windows devices
+
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    
     if (!SpeechRecognition) {
-      setStatus("❌ Speech recognition not supported");
+      setStatus("❌ Speech recognition not supported on this device");
       return;
     }
 
-    // Enhanced audio setup
     navigator.mediaDevices.getUserMedia({
       audio: {
         noiseSuppression: true,
         echoCancellation: true,
         autoGainControl: true,
       }
-    }).catch(err => console.error("Mic error:", err));
+    }).catch(err => {});
 
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
@@ -258,14 +251,11 @@ export default function Sam() {
       isRecognitionRunning.current = true;
       setIsListening(true);
       setStatus("🎤 Sam ready - Say 'sam on' to activate");
-      console.log("✅ Recognition started");
     };
 
     recognition.onend = () => {
       isRecognitionRunning.current = false;
       setIsListening(false);
-      console.log("🔄 Recognition ended, restarting...");
-      
       setTimeout(() => {
         if (recognitionRef.current) {
           safeStartRecognition(recognition);
@@ -275,8 +265,6 @@ export default function Sam() {
 
     recognition.onerror = (event) => {
       isRecognitionRunning.current = false;
-      console.error("❌ Recognition error:", event.error);
-      
       if (event.error === 'not-allowed') {
         setStatus("🚫 Microphone permission required");
       } else if (event.error !== 'aborted') {
@@ -286,45 +274,29 @@ export default function Sam() {
 
     recognition.onresult = (event) => {
       const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
-      console.log("🎤 RAW Heard:", transcript);
-      console.log("🔍 Current aiActive state:", aiActiveRef.current);
 
-      // ✅ Activation - use callback to ensure state updates
+      // Activation
       if (transcript.includes("sam on") || transcript.includes("sam activate")) {
-        console.log("🟢 ACTIVATING SAM");
         setAiActive(true);
-        aiActiveRef.current = true; // ✅ Immediately update ref
+        aiActiveRef.current = true;
         setStatus("✅ Sam activated! Try: 'sam, go to dashboard'");
         return;
       }
-
-      // ✅ Deactivation
+      // Deactivation
       if (transcript.includes("sam off") || transcript.includes("sam deactivate")) {
-        console.log("🔴 DEACTIVATING SAM");
         setAiActive(false);
-        aiActiveRef.current = false; // ✅ Immediately update ref
+        aiActiveRef.current = false;
         setStatus("🎤 Sam ready - Say 'sam on' to activate");
         return;
       }
+      if (!aiActiveRef.current) return;
 
-      // ✅ Check active state using ref (immediate)
-      if (!aiActiveRef.current) {
-        console.log("⚠️ Sam not active, ignoring command");
-        return;
-      }
-
-      console.log("✅ Sam is ACTIVE, processing command:", transcript);
-
-      // ✅ Try to match navigation command
       const matchedPath = matchCommand(transcript);
-      
       if (matchedPath) {
-        console.log("🎯 NAVIGATING TO:", matchedPath);
         const pageName = matchedPath === "/" ? "Home" : matchedPath.replace("/", "").replace("-", " ");
-        navigateTo(matchedPath, `✅ Going to ${pageName}`);
+        navigateTo(matchedPath, ✅ Going to ${pageName});
       } else {
-        console.log("❌ NO MATCH FOUND for:", transcript);
-        setStatus(`🤔 Try: "sam, go to dashboard" or "sam, go to career"`);
+        setStatus(🤔 Try: "sam, go to dashboard" or "sam, go to career");
         setTimeout(() => setStatus("✅ Sam is listening..."), 3000);
       }
     };
@@ -339,7 +311,10 @@ export default function Sam() {
         recognitionRef.current = null;
       }
     };
-  }, [navigate]);
+  }, [navigate, isWindows]);
+
+  // ✅ Only show Sam if Windows browser detected
+  if (!isWindows) return null;
 
   return (
     <div style={{
@@ -365,7 +340,6 @@ export default function Sam() {
       maxWidth: "380px"
     }}>
       <AnimatedAiLogo isActive={aiActive} />
-      
       <div style={{ display: "flex", flexDirection: "column", gap: "4px", flex: 1 }}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <p style={{ margin: 0, fontWeight: 600, fontSize: "14px" }}>{status}</p>
@@ -379,7 +353,6 @@ export default function Sam() {
             }} />
           )}
         </div>
-        
         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
           <p style={{ 
             margin: 0, 
