@@ -7,6 +7,7 @@ import { DateCalendar } from "@mui/x-date-pickers/DateCalendar";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
+import { PickersDay } from "@mui/x-date-pickers/PickersDay";
 import dayjs from "dayjs";
 
 // ✅ Import the dynamic API client
@@ -179,6 +180,40 @@ function Profile() {
     navigate("/payment");
   };
 
+  // 🎨 Custom Day Component for Calendar with Session Highlighting (NO BADGE)
+  const CustomDay = (props) => {
+    const { day, outsideCurrentMonth, ...other } = props;
+    
+    // Check if this date has any sessions
+    const hasSession = services.some(service => 
+      dayjs(service.time).format('YYYY-MM-DD') === day.format('YYYY-MM-DD')
+    );
+
+    if (hasSession && !outsideCurrentMonth) {
+      return (
+        <PickersDay 
+          {...other} 
+          day={day} 
+          outsideCurrentMonth={outsideCurrentMonth}
+          sx={{
+            backgroundColor: '#dcfce7',
+            color: '#166534',
+            fontWeight: 'bold',
+            '&:hover': {
+              backgroundColor: '#bbf7d0',
+            },
+            '&.Mui-selected': {
+              backgroundColor: '#10b981',
+              color: 'white',
+            }
+          }}
+        />
+      );
+    }
+
+    return <PickersDay {...other} day={day} outsideCurrentMonth={outsideCurrentMonth} />;
+  };
+
   // ✅ Sync user using dynamic API
   useEffect(() => {
     const syncUser = async () => {
@@ -243,23 +278,66 @@ function Profile() {
 
   if (!isSignedIn) return <div>Loading...</div>;
 
+  // 🎨 SIMPLIFIED Congratulations Screen - Clean & Minimal
   if (showCongrats) {
     return (
-      <div className="fixed inset-0 bg-white/90 z-50 flex flex-col items-center justify-center p-6 text-center">
-        <h2 className="text-3xl font-bold text-green-600 mb-3">
-          🎉 Congratulations!
-        </h2>
-        <p className="text-gray-700 mb-5">
-          You've earned{" "}
-          <span className="font-semibold text-blue-600">{credits} credits</span>{" "}
-          for joining us!
-        </p>
-        <button
-          onClick={() => setShowCongrats(false)}
-          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        >
-          Continue to Dashboard
-        </button>
+      <div className="fixed inset-0 bg-gray-50 z-50 flex flex-col items-center justify-center p-6">
+        <div className="w-full max-w-lg bg-white shadow-xl rounded-xl p-8 text-center">
+          {/* Success Icon */}
+          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <span className="text-4xl">🎉</span>
+          </div>
+
+          {/* Welcome Message */}
+          <h2 className="text-3xl font-bold text-blue-800 mb-4">
+            Welcome to SkillSwap!
+          </h2>
+          
+          <p className="text-gray-600 mb-6">
+            Congratulations! Your account has been created successfully.
+          </p>
+
+          {/* Credits Display */}
+          <div className="bg-blue-50 rounded-xl p-6 mb-6">
+            <p className="text-blue-700 font-medium mb-2">Welcome Bonus</p>
+            <div className="flex items-center justify-center gap-2">
+              <span className="text-3xl font-bold text-green-600">
+                {credits}
+              </span>
+              <span className="text-lg font-semibold text-blue-700">Credits</span>
+            </div>
+            <p className="text-sm text-gray-600 mt-2">
+              Start learning or teaching skills with your bonus credits!
+            </p>
+          </div>
+
+          {/* Quick Tips */}
+          <div className="text-left mb-6">
+            <h3 className="font-semibold text-blue-800 mb-3">Quick Start:</h3>
+            <div className="space-y-2">
+              <div className="flex items-center gap-3 text-sm text-gray-600">
+                <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
+                <span>Browse skills and book sessions to learn</span>
+              </div>
+              <div className="flex items-center gap-3 text-sm text-gray-600">
+                <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
+                <span>Offer your skills to earn more credits</span>
+              </div>
+              <div className="flex items-center gap-3 text-sm text-gray-600">
+                <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
+                <span>Redeem credits when you reach 1,000</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Continue Button */}
+          <button
+            onClick={() => setShowCongrats(false)}
+            className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-semibold transition-colors"
+          >
+            Get Started
+          </button>
+        </div>
       </div>
     );
   }
@@ -515,13 +593,28 @@ function Profile() {
 
         {/* Grid layout for Calendar and Sessions */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Calendar - Hidden on mobile (sm), visible on laptop (lg) and up */}
+          {/* 🎨 Enhanced Calendar with Session Highlighting (NO GREEN BADGES) */}
           <div className="hidden lg:block bg-white shadow-xl rounded-xl p-6">
             <h3 className="text-xl font-semibold mb-3 text-blue-700 flex items-center gap-2">
-              📅 Calendar (Upcoming Sessions)
+              📅 Calendar 
+              {services.length > 0 && (
+                <span className="text-sm text-green-600 font-normal">
+                  ({services.length} session{services.length !== 1 ? 's' : ''})
+                </span>
+              )}
             </h3>
+            {services.length > 0 && (
+              <p className="text-xs text-gray-600 mb-3 flex items-center gap-1">
+                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                Sessions highlighted in green
+              </p>
+            )}
             <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <DateCalendar />
+              <DateCalendar 
+                slots={{
+                  day: CustomDay,
+                }}
+              />
             </LocalizationProvider>
           </div>
 
