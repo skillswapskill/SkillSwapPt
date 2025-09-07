@@ -3,8 +3,48 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useUser } from '@clerk/clerk-react';
 import VideoCall from './VideoCall';
 
-// ✅ Import the dynamic API client
+// Import the dynamic API client
 import { apiClient } from '../config/api';
+
+// Error Boundary Component
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('Error caught by ErrorBoundary:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="text-center max-w-md mx-auto p-6">
+            <div className="text-red-500 text-6xl mb-4">⚠️</div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">Something went wrong</h2>
+            <p className="text-gray-600 mb-6">
+              {this.state.error?.message || 'An unexpected error occurred'}
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg"
+            >
+              Reload Page
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 const JoinRoom = () => {
   const { sessionId } = useParams();
@@ -29,12 +69,16 @@ const JoinRoom = () => {
     fetchSessionData();
   }, [user, sessionId, navigate]);
 
-  // ✅ Updated to use dynamic API client
   const fetchSessionData = async () => {
     try {
-      // ✅ Using apiClient instead of hardcoded localhost URL
+      setLoading(true);
+      console.log('🔍 Fetching session data for:', sessionId);
+      
+      // Using apiClient instead of hardcoded localhost URL
       const response = await apiClient.get(`/api/sessions/${sessionId}`);
       const session = response.data;
+      
+      console.log('✅ Session data loaded:', session);
       
       // Check if meeting time is valid
       const now = new Date();
@@ -57,7 +101,7 @@ const JoinRoom = () => {
       setLoading(false);
     } catch (error) {
       console.error('❌ Failed to fetch session data:', error);
-      setError('Failed to load meeting data. Please try again.');
+      setError(`Failed to load meeting data: ${error.message || 'Please try again.'}`);
       setLoading(false);
     }
   };
@@ -95,43 +139,45 @@ const JoinRoom = () => {
           <div className="text-red-500 text-6xl mb-4">⚠️</div>
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Unable to Join Meeting</h2>
           <p className="text-gray-600 mb-6">{error}</p>
-          <button
-            onClick={goBack}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
-          >
-            ← Back to My Learning
-          </button>
+          <div className="flex space-x-4 justify-center">
+            <button
+              onClick={fetchSessionData}
+              className="bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200"
+            >
+              🔄 Retry
+            </button>
+            <button
+              onClick={goBack}
+              className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200"
+            >
+              ← Back to My Learning
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="meeting-page">
-      {/* Meeting Header - Optional overlay */}
-      {/* Uncomment if you want to show meeting info overlay
-      <div className="absolute bottom-6 left-6 z-50 bg-black bg-opacity-50 text-white px-4 py-2 rounded-lg">
-        <h3 className="font-semibold">{sessionData?.skill}</h3>
-        <p className="text-sm opacity-75">
-          Teacher: {sessionData?.teacher?.name || 'Unknown'}
-        </p>
-        <button
-          onClick={goBack}
-          className="mt-2 text-xs bg-red-500 hover:bg-red-600 px-2 py-1 rounded transition-colors"
-        >
-          Leave Meeting
-        </button>
-      </div> 
-      */}
+    <ErrorBoundary>
+      <div className="meeting-page">
+        {/* Optional: Meeting Header */}
+        {/* <div className="absolute top-6 left-6 z-50 bg-black bg-opacity-50 text-white px-4 py-2 rounded-lg">
+          <h3 className="font-semibold">{sessionData?.skill}</h3>
+          <p className="text-sm opacity-75">
+            Teacher: {sessionData?.teacher?.name || 'Unknown'}
+          </p>
+        </div> */}
 
-      {/* Video Call Component */}
-      <VideoCall 
-        sessionId={sessionId}
-        userId={user.id}
-        userName={user.firstName || user.username || 'Student'}
-        sessionData={sessionData} // ✅ Pass session data to VideoCall component
-      />
-    </div>
+        {/* Video Call Component */}
+        <VideoCall 
+          sessionId={sessionId}
+          userId={user.id}
+          userName={user.firstName || user.username || 'Student'}
+          sessionData={sessionData}
+        />
+      </div>
+    </ErrorBoundary>
   );
 };
 

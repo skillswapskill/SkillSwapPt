@@ -38,6 +38,7 @@
     "react-router-dom": "^7.6.1",
     "react-toastify": "^11.0.5",
     "skillsswap": "file:..",
+    "socket.io-client": "^4.8.1",
     "tailwindcss": "^4.1.8",
     "three": "^0.176.0"
   },

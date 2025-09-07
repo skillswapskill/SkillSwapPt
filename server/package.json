@@ -25,7 +25,9 @@
     "nodemailer": "^7.0.5",
     "razorpay": "^2.9.6",
     "react-router-dom": "^7.7.1",
-    "skillsswap": "file:.."
+    "sharp": "^0.34.3",
+    "skillsswap": "file:..",
+    "socket.io": "^4.8.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

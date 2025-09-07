@@ -219,7 +219,7 @@ export default function Sam() {
         recognition.start();
         isRecognitionRunning.current = true;
       } catch (error) {
-        console.log("Recognition start error:", error.message);
+        // console.log("Recognition start error:", error.message);
       }
     }
   };
@@ -252,13 +252,13 @@ export default function Sam() {
       isRecognitionRunning.current = true;
       setIsListening(true);
       setStatus("Sam ready - Say 'sam on' to activate");
-      console.log("Recognition started");
+      // console.log("Recognition started");
     };
 
     recognition.onend = () => {
       isRecognitionRunning.current = false;
       setIsListening(false);
-      console.log("Recognition ended, restarting...");
+      // console.log("Recognition ended, restarting...");
       
       setTimeout(() => {
         if (recognitionRef.current) {
@@ -280,11 +280,11 @@ export default function Sam() {
 
     recognition.onresult = (event) => {
       const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
-      console.log("Heard:", transcript);
+      // console.log("Heard:", transcript);
 
       // Activation
       if (transcript.includes("sam on") || transcript.includes("sam activate")) {
-        console.log("ACTIVATING SAM");
+        // console.log("ACTIVATING SAM");
         setAiActive(true);
         aiActiveRef.current = true;
         setStatus("Sam activated! Try: 'sam, go to dashboard'");
@@ -293,7 +293,7 @@ export default function Sam() {
 
       // Deactivation
       if (transcript.includes("sam off") || transcript.includes("sam deactivate")) {
-        console.log("DEACTIVATING SAM");
+        // console.log("DEACTIVATING SAM");
         setAiActive(false);
         aiActiveRef.current = false;
         setStatus("Sam ready - Say 'sam on' to activate");
@@ -301,20 +301,20 @@ export default function Sam() {
       }
 
       if (!aiActiveRef.current) {
-        console.log("Sam not active, ignoring command");
+        // console.log("Sam not active, ignoring command");
         return;
       }
 
-      console.log("Sam is ACTIVE, processing command:", transcript);
+      // console.log("Sam is ACTIVE, processing command:", transcript);
 
       const matchedPath = matchCommand(transcript);
       
       if (matchedPath) {
-        console.log("NAVIGATING TO:", matchedPath);
+        // console.log("NAVIGATING TO:", matchedPath);
         const pageName = matchedPath === "/" ? "Home" : matchedPath.replace("/", "").replace("-", " ");
         navigateTo(matchedPath, "Going to " + pageName);
       } else {
-        console.log("NO MATCH FOUND for:", transcript);
+        // console.log("NO MATCH FOUND for:", transcript);
         setStatus("Try: 'sam, go to dashboard' or 'sam, go to career'");
         setTimeout(() => setStatus("Sam is listening..."), 3000);
       }
