@@ -12,14 +12,40 @@ const ProfileClicked = () => {
 
   const [sessions, setSessions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedUser, setSelectedUser] = useState(null);
+
 
   useEffect(() => {
+    console.log("👤 Current user object:", user);
+    console.log("🆔 User ID being used:", user?._id);
     if (user && user?._id) {
       fetchSessions(user._id);
+      fetchselectedUser(user.clerkId); // Pass clerkId here
     } else {
       setIsLoading(false);
     }
   }, [user]);
+  const fetchselectedUser = async (clerkId) => { // Change parameter name
+  try {
+    console.log("🔍 Fetching user with clerkId:", clerkId);
+    const res = await apiClient.get(`/api/users/current/${clerkId}`); // Use existing route
+    
+    console.log("📊 Response data:", res.data);
+    
+    const userData = {
+      ...res.data,
+      totalCredits: res.data.totalCredits || 300
+    };
+    
+    console.log("✅ Final userData:", userData);
+    setSelectedUser(userData);
+    return userData;
+    
+  } catch (error) {
+    console.error("❌ Failed to fetch user:", error);
+    toast.error("Failed to load user. Please try again.");
+  }
+};
 
   const fetchSessions = async (mongoUserId) => {
     try {
@@ -142,7 +168,7 @@ const ProfileClicked = () => {
                 {/* Credits */}
                 <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/20">
                   <p className="text-white/80 text-xs mb-1">Available Credits</p>
-                  <p className="text-2xl font-bold text-white">{user.totalCredits || 300}</p>
+                  <p className="text-2xl font-bold text-white">{selectedUser?.totalCredits || 0}</p>
                   <p className="text-green-300 text-xs">+50 this week</p>
                 </div>
               </div>

@@ -188,7 +188,7 @@ router.post("/sync-metadata", syncUserMetadata);
 router.get("/current/:clerkId", async (req, res) => {
   try {
     const { clerkId } = req.params;
-    const user = await User.findOne({ clerkId }, "name profilePic skills _id");
+    const user = await User.findOne({ clerkId }, "name profilePic skills _id totalCredits");
     
     if (!user) {
       return res.status(404).json({ error: "User not found" });
@@ -200,6 +200,24 @@ router.get("/current/:clerkId", async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 });
+
+// Add this route to get user by MongoDB _id
+router.get("/:mongoId", async (req, res) => {
+  try {
+    const { mongoId } = req.params;
+    const user = await User.findById(mongoId);
+    
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    
+    res.status(200).json(user);
+  } catch (err) {
+    console.error("Error fetching user by MongoDB ID", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
 
 
 
