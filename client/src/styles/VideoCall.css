@@ -1183,3 +1183,57 @@
   box-shadow: 0 10px 30px rgba(245, 158, 11, 0.2);
 }
 
+.ai-monitoring-production {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 999;
+}
+
+.monitoring-indicator-production {
+  display: flex;
+  align-items: center;
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  backdrop-filter: blur(5px);
+  animation: production-pulse 3s infinite;
+}
+
+.status-dot-production {
+  width: 8px;
+  height: 8px;
+  background: #22c55e;
+  border-radius: 50%;
+  margin-right: 8px;
+  animation: production-blink 2s infinite;
+}
+
+.status-text-production {
+  font-size: 11px;
+}
+
+.warning-badge-production {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 700;
+  margin-left: 8px;
+}
+
+@keyframes production-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.02); opacity: 1; }
+}
+
+@keyframes production-blink {
+  0%, 80% { opacity: 1; }
+  81%, 100% { opacity: 0.6; }
+}

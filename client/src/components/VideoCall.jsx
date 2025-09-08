@@ -3,8 +3,6 @@ import { ZegoUIKitPrebuilt } from '@zegocloud/zego-uikit-prebuilt';
 import io from 'socket.io-client';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import SuspiciousActivityDetector from './SuspiciousActivityDetector';
-import WarningModal from './WarningModal';
 import '../styles/VideoCall.css';
 
 const VideoCall = ({ sessionId, userId, userName, sessionData }) => {
@@ -15,7 +13,6 @@ const VideoCall = ({ sessionId, userId, userName, sessionData }) => {
   const [detectionEnabled, setDetectionEnabled] = useState(true);
   const [connectionStatus, setConnectionStatus] = useState('connecting');
   const [warningCount, setWarningCount] = useState(0);
-  const [debugMode, setDebugMode] = useState(true);
 
   // Refs
   const videoRef = useRef();
@@ -33,7 +30,7 @@ const VideoCall = ({ sessionId, userId, userName, sessionData }) => {
 
   useEffect(() => {
     initializeSocket();
-    startAdvancedNudityDetection();
+    startCustomNudityDetection();
     
     return () => {
       if (socketRef.current) {
@@ -94,292 +91,224 @@ const VideoCall = ({ sessionId, userId, userName, sessionData }) => {
     socketRef.current.on('error', handleSocketError);
   };
 
-  // ADVANCED CUSTOM NUDITY DETECTION ALGORITHM
-  const startAdvancedNudityDetection = () => {
+  // PRODUCTION-READY CUSTOM NUDITY DETECTION
+  const startCustomNudityDetection = () => {
     if (detectionIntervalRef.current) {
       clearInterval(detectionIntervalRef.current);
     }
 
-    // Analyze every 2 seconds for responsive detection
     detectionIntervalRef.current = setInterval(() => {
       if (detectionEnabled && meetingActive && videoRef.current) {
-        analyzeVideoForNudity();
+        performCustomNudityAnalysis();
       }
-    }, 2000);
+    }, 3000);
     
-    console.log('🔍 Advanced custom nudity detection started');
+    console.log('🔍 Production-ready nudity detection started');
   };
 
-  const analyzeVideoForNudity = async () => {
-    if (!videoRef.current || !canvasRef.current) {
-      return;
-    }
+  const performCustomNudityAnalysis = async () => {
+    if (!videoRef.current || !canvasRef.current) return;
 
     try {
       const canvas = canvasRef.current;
       const ctx = canvas.getContext('2d');
       const video = videoRef.current;
 
-      // Ensure video is ready
       if (video.readyState < 2 || video.videoWidth === 0 || video.videoHeight === 0) {
-        if (debugMode) console.log('📹 Video not ready for analysis');
         return;
       }
 
-      // Set canvas size and capture frame
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      // Get image data for analysis
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      
-      // Run advanced nudity detection
-      const detectionResult = await advancedNudityDetection(imageData, canvas.width, canvas.height);
-      
-      if (debugMode) {
-        console.log('🔍 Nudity Analysis Result:', {
-          isNudity: detectionResult.isNudity,
-          confidence: detectionResult.confidence.toFixed(3),
-          skinRatio: detectionResult.skinRatio.toFixed(3),
-          suspiciousRatio: detectionResult.suspiciousRatio.toFixed(3),
-          bodyRegionScore: detectionResult.bodyRegionScore.toFixed(3)
-        });
+      const analysisResult = analyzeForInappropriateContent(imageData, canvas.width, canvas.height);
+
+      // console.log('🔍 Content Analysis:', {
+      //   inappropriate: analysisResult.isInappropriate,
+      //   confidence: analysisResult.confidence.toFixed(2),
+      //   skinRatio: analysisResult.skinRatio.toFixed(2),
+      //   exposureLevel: analysisResult.exposureLevel
+      // });
+
+      if (analysisResult.isInappropriate) {
+        await triggerContentWarning(analysisResult);
       }
 
-      await processDetectionResult(detectionResult);
-
     } catch (error) {
-      console.error('❌ Video analysis error:', error);
+      console.error('❌ Content analysis error:', error);
     }
   };
 
-  // ADVANCED NUDITY DETECTION ALGORITHM
-  const advancedNudityDetection = async (imageData, width, height) => {
+  // CUSTOM INAPPROPRIATE CONTENT DETECTION ALGORITHM
+  const analyzeForInappropriateContent = (imageData, width, height) => {
     const pixels = imageData.data;
     let skinPixels = 0;
-    let clothedSkinPixels = 0;
-    let exposedSkinPixels = 0;
     let totalPixels = 0;
-    let bodyRegionPixels = 0;
-    let faceRegionPixels = 0;
+    let suspiciousRegionPixels = 0;
+    let clothedRegionPixels = 0;
 
-    // Sample every 3rd pixel for performance (can adjust for accuracy)
-    const step = 3;
+    // Sample every 4th pixel for performance
+    for (let i = 0; i < pixels.length; i += 16) {
+      const r = pixels[i];
+      const g = pixels[i + 1];
+      const b = pixels[i + 2];
+      
+      totalPixels++;
 
-    for (let y = 0; y < height; y += step) {
-      for (let x = 0; x < width; x += step) {
-        const i = (y * width + x) * 4;
-        const r = pixels[i];
-        const g = pixels[i + 1];
-        const b = pixels[i + 2];
+      if (isLikelySkinColor(r, g, b)) {
+        skinPixels++;
         
-        totalPixels++;
-
-        if (isAdvancedSkinColor(r, g, b)) {
-          skinPixels++;
-          
-          const region = getBodyRegion(x, y, width, height);
-          
-          switch (region) {
-            case 'face':
-              faceRegionPixels++;
-              clothedSkinPixels++;
-              break;
-            case 'hands':
-              clothedSkinPixels++;
-              break;
-            case 'torso':
-            case 'private':
-              exposedSkinPixels++;
-              bodyRegionPixels++;
-              break;
-            default:
-              break;
-          }
+        const pixelIndex = i / 4;
+        const x = pixelIndex % width;
+        const y = Math.floor(pixelIndex / width);
+        
+        const region = classifyBodyRegion(x, y, width, height);
+        
+        if (region === 'suspicious') {
+          suspiciousRegionPixels++;
+        } else if (region === 'clothed') {
+          clothedRegionPixels++;
         }
       }
     }
 
-    // Calculate ratios
     const skinRatio = skinPixels / totalPixels;
-    const exposedRatio = exposedSkinPixels / Math.max(skinPixels, 1);
-    const clothedRatio = clothedSkinPixels / Math.max(skinPixels, 1);
-    const bodyRegionRatio = bodyRegionPixels / totalPixels;
+    const suspiciousRatio = suspiciousRegionPixels / Math.max(skinPixels, 1);
+    const clothedRatio = clothedRegionPixels / Math.max(skinPixels, 1);
 
-    // Advanced scoring algorithm
-    let nudityScore = 0;
-    
-    // High exposed skin in body regions
-    if (exposedRatio > 0.3 && bodyRegionRatio > 0.05) {
-      nudityScore += 0.4;
+    // Calculate inappropriate content score
+    let inappropriateScore = 0;
+
+    // High skin exposure in private areas
+    if (suspiciousRatio > 0.15 && skinRatio > 0.25) {
+      inappropriateScore += 0.6;
     }
-    
+
     // Very high overall skin exposure
-    if (skinRatio > 0.4) {
-      nudityScore += 0.3;
-    }
-    
-    // Low clothed skin ratio (indicates lack of clothing)
-    if (clothedRatio < 0.4 && skinPixels > totalPixels * 0.1) {
-      nudityScore += 0.3;
-    }
-    
-    // Extreme body region exposure
-    if (bodyRegionRatio > 0.15) {
-      nudityScore += 0.5;
+    if (skinRatio > 0.5) {
+      inappropriateScore += 0.4;
     }
 
-    // Face detection modifier (reduces false positives)
-    if (faceRegionPixels > 0) {
-      nudityScore = Math.max(0, nudityScore - 0.1);
+    // Low clothed skin ratio
+    if (clothedRatio < 0.3 && skinPixels > totalPixels * 0.2) {
+      inappropriateScore += 0.3;
     }
 
-    const confidence = Math.min(nudityScore, 1.0);
-    const isNudity = confidence > 0.6; // Threshold for nudity detection
+    const confidence = Math.min(inappropriateScore, 1.0);
+    const exposureLevel = skinRatio > 0.6 ? 'high' : skinRatio > 0.4 ? 'medium' : 'low';
 
     return {
-      isNudity,
+      isInappropriate: confidence > 0.7, // Conservative threshold
       confidence,
       skinRatio,
-      suspiciousRatio: exposedRatio,
-      bodyRegionScore: bodyRegionRatio,
+      suspiciousRatio,
+      clothedRatio,
+      exposureLevel,
       details: {
-        totalSkinPixels: skinPixels,
-        exposedSkinPixels,
-        clothedSkinPixels,
-        faceRegionPixels,
-        bodyRegionPixels
+        totalPixels,
+        skinPixels,
+        suspiciousRegionPixels,
+        clothedRegionPixels
       }
     };
   };
 
-  // ADVANCED SKIN COLOR DETECTION using multiple color spaces
-  const isAdvancedSkinColor = (r, g, b) => {
-    // Method 1: RGB-based detection
+  // ADVANCED SKIN COLOR DETECTION
+  const isLikelySkinColor = (r, g, b) => {
+    // YCbCr color space for better skin detection
+    const y = 0.299 * r + 0.587 * g + 0.114 * b;
+    const cb = 128 - 0.168736 * r - 0.331264 * g + 0.5 * b;
+    const cr = 128 + 0.5 * r - 0.418688 * g - 0.081312 * b;
+
+    // Skin color thresholds in YCbCr space
+    if (y >= 80 && cb >= 77 && cb <= 127 && cr >= 133 && cr <= 173) {
+      return true;
+    }
+
+    // Additional RGB-based detection for different lighting
     if (r > 95 && g > 40 && b > 20 && 
         Math.max(r, g, b) - Math.min(r, g, b) > 15 &&
         Math.abs(r - g) > 15 && r > g && r > b) {
       return true;
     }
 
-    // Method 2: YCbCr color space detection (more accurate)
-    const y = 0.299 * r + 0.587 * g + 0.114 * b;
-    const cb = 128 - 0.168736 * r - 0.331264 * g + 0.5 * b;
-    const cr = 128 + 0.5 * r - 0.418688 * g - 0.081312 * b;
-    
-    if (y >= 80 && cb >= 77 && cb <= 127 && cr >= 133 && cr <= 173) {
-      return true;
-    }
-
-    // Method 3: HSV-based detection for different lighting
-    const max = Math.max(r, g, b);
-    const min = Math.min(r, g, b);
-    const diff = max - min;
-    
-    if (max > 0) {
-      const saturation = diff / max;
-      const value = max / 255;
-      
-      if (value > 0.4 && saturation > 0.15 && saturation < 0.8) {
-        let hue = 0;
-        if (max === r) hue = ((g - b) / diff) % 6;
-        else if (max === g) hue = (b - r) / diff + 2;
-        else hue = (r - g) / diff + 4;
-        hue = (hue * 60 + 360) % 360;
-        
-        // Skin tone hue ranges
-        if ((hue >= 0 && hue <= 50) || (hue >= 340 && hue <= 360)) {
-          return true;
-        }
-      }
-    }
-
     return false;
   };
 
   // BODY REGION CLASSIFICATION
-  const getBodyRegion = (x, y, width, height) => {
-    const centerX = width / 2;
-    const centerY = height / 2;
-    const relativeX = x / width;
-    const relativeY = y / height;
+  const classifyBodyRegion = (x, y, width, height) => {
+    const relX = x / width;
+    const relY = y / height;
 
-    // Face region (top 25% of frame, center)
-    if (relativeY < 0.25 && relativeX > 0.3 && relativeX < 0.7) {
-      return 'face';
+    // Face/neck region (typically clothed/acceptable)
+    if (relY < 0.3 && relX > 0.25 && relX < 0.75) {
+      return 'clothed';
     }
 
-    // Hands region (sides of frame)
-    if ((relativeX < 0.15 || relativeX > 0.85) && relativeY > 0.3 && relativeY < 0.8) {
-      return 'hands';
+    // Hands/arms (typically exposed/acceptable)
+    if ((relX < 0.2 || relX > 0.8) && relY > 0.3 && relY < 0.8) {
+      return 'clothed';
     }
 
-    // Torso region (center, middle section)
-    if (relativeY > 0.3 && relativeY < 0.7 && relativeX > 0.25 && relativeX < 0.75) {
-      return 'torso';
+    // Private/torso regions (should be covered)
+    if (relY > 0.4 && relY < 0.9 && relX > 0.3 && relX < 0.7) {
+      return 'suspicious';
     }
 
-    // Private region (lower center)
-    if (relativeY > 0.65 && relativeX > 0.35 && relativeX < 0.65) {
-      return 'private';
-    }
-
-    return 'other';
+    return 'neutral';
   };
 
-  // PROCESS DETECTION RESULTS with temporal filtering
-  const processDetectionResult = async (result) => {
+  // TRIGGER CONTENT WARNING with temporal filtering
+  const triggerContentWarning = async (analysisResult) => {
     const now = Date.now();
-    
-    // Add to detection history for temporal filtering
+
+    // Add to history
     detectionHistory.current.push({
       timestamp: now,
-      isNudity: result.isNudity,
-      confidence: result.confidence
+      confidence: analysisResult.confidence,
+      isInappropriate: analysisResult.isInappropriate
     });
 
-    // Keep only last 10 detections
-    if (detectionHistory.current.length > 10) {
+    // Keep last 5 detections
+    if (detectionHistory.current.length > 5) {
       detectionHistory.current.shift();
     }
 
-    // Temporal filtering: require consistent detection
-    const recentDetections = detectionHistory.current.filter(d => now - d.timestamp < 10000);
-    const positiveDetections = recentDetections.filter(d => d.isNudity);
+    // Require consistent detection over time
+    const recentDetections = detectionHistory.current.filter(d => now - d.timestamp < 15000);
+    const positiveDetections = recentDetections.filter(d => d.isInappropriate);
     const avgConfidence = positiveDetections.length > 0 ? 
       positiveDetections.reduce((sum, d) => sum + d.confidence, 0) / positiveDetections.length : 0;
 
-    // Require at least 2 positive detections in last 10 seconds
-    const shouldWarn = positiveDetections.length >= 2 && avgConfidence > 0.6;
-
-    // Prevent spam (minimum 8 seconds between warnings)
-    if (shouldWarn && now - lastDetectionTime.current > 8000) {
+    // Require multiple positive detections and prevent spam
+    if (positiveDetections.length >= 2 && 
+        avgConfidence > 0.7 && 
+        now - lastDetectionTime.current > 10000) {
+      
       lastDetectionTime.current = now;
-      
-      let severity = 'medium';
-      let warningMessage = '👕 Dress Code Violation';
-      let reason = `Inappropriate exposure detected with ${(avgConfidence * 100).toFixed(1)}% confidence over ${positiveDetections.length} recent frames.`;
 
-      if (avgConfidence > 0.8) {
-        severity = 'high';
-        warningMessage = '🔞 Nudity Detected';
-        reason = `Explicit nudity detected with ${(avgConfidence * 100).toFixed(1)}% confidence. This violates educational session policies.`;
-      }
-
-      console.log(`🚨 NUDITY DETECTION TRIGGERED: ${reason}`);
+      const severity = avgConfidence > 0.85 ? 'high' : 'medium';
+      const warningMessage = severity === 'high' ? 
+        '🔞 Explicit Content Detected' : 
+        '👕 Inappropriate Content Warning';
       
-      // Create detailed toast notification
+      const reason = `Inappropriate content detected with ${(avgConfidence * 100).toFixed(1)}% confidence over ${positiveDetections.length} recent frames. Please ensure appropriate attire during the educational session.`;
+
+      console.log(`🚨 CONTENT WARNING: ${reason}`);
+
+      // Toast notification
       const toastMessage = (
         <div>
-          <div style={{ fontWeight: 'bold', marginBottom: '5px', color: '#dc2626' }}>
+          <div style={{ fontWeight: 'bold', marginBottom: '5px', color: severity === 'high' ? '#dc2626' : '#f59e0b' }}>
             {warningMessage}
           </div>
           <div style={{ fontSize: '12px', marginBottom: '3px' }}>
             {reason}
           </div>
           <div style={{ fontSize: '10px', opacity: 0.8 }}>
-            🤖 Custom AI Detection | Skin: {(result.skinRatio * 100).toFixed(1)}% | Exposed: {(result.suspiciousRatio * 100).toFixed(1)}%
+            🤖 Custom Algorithm | Skin: {(analysisResult.skinRatio * 100).toFixed(1)}% | Exposure: {analysisResult.exposureLevel}
           </div>
         </div>
       );
@@ -416,42 +345,31 @@ const VideoCall = ({ sessionId, userId, userName, sessionData }) => {
           warningCount: warningCount + 1,
           scenario: warningMessage,
           message: reason,
-          detectionResults: result,
-          detectionMethod: 'Custom_Advanced_Algorithm',
-          temporalData: {
-            recentDetections: recentDetections.length,
-            positiveDetections: positiveDetections.length,
-            avgConfidence
-          }
+          analysisResult,
+          detectionMethod: 'Custom_Production_Algorithm'
         });
       }
-    } else if (!result.isNudity && debugMode) {
-      console.log(`✅ Content appropriate (confidence: ${result.confidence.toFixed(3)})`);
     }
   };
 
   const handleWarningReceived = (data) => {
-    console.log('🚨 Processing nudity warning:', data);
-    
+    console.log('🚨 Processing content warning:', data);
     setWarningData(data);
     setWarningCount(data.warningCount || 0);
 
     const toastContent = (
       <div>
         <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>
-          🚨 NUDITY WARNING #{data.warningCount}: {data.scenario || 'Content Violation'}
+          🚨 WARNING #{data.warningCount}: {data.scenario || 'Content Violation'}
         </div>
         <div style={{ fontSize: '13px', lineHeight: '1.4', marginBottom: '5px' }}>
-          {data.message || 'Inappropriate content detected via advanced AI analysis'}
+          {data.message || 'Inappropriate content detected'}
         </div>
         {data.confidence && (
-          <div style={{ fontSize: '11px', opacity: 0.8, marginBottom: '3px' }}>
-            🤖 Detection Confidence: {(data.confidence * 100).toFixed(1)}%
+          <div style={{ fontSize: '11px', opacity: 0.8 }}>
+            Detection Confidence: {(data.confidence * 100).toFixed(1)}%
           </div>
         )}
-        <div style={{ fontSize: '10px', opacity: 0.7 }}>
-          Method: Custom Advanced Algorithm | Temporal Analysis: {data.temporalData?.positiveDetections || 0} detections
-        </div>
       </div>
     );
 
@@ -462,47 +380,30 @@ const VideoCall = ({ sessionId, userId, userName, sessionData }) => {
       closeOnClick: false,
       pauseOnHover: true,
       draggable: true,
-      toastId: `nudity-warning-${data.warningCount}`,
+      toastId: `content-warning-${data.warningCount}`,
     });
 
-    // Urgent audio notification
+    // Audio notification
     try {
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
       
-      // Create triple beep alert
-      for (let i = 0; i < 3; i++) {
-        setTimeout(() => {
-          const oscillator = audioCtx.createOscillator();
-          const gainNode = audioCtx.createGain();
-          
-          oscillator.connect(gainNode);
-          gainNode.connect(audioCtx.destination);
-          
-          oscillator.frequency.setValueAtTime(1400, audioCtx.currentTime);
-          gainNode.gain.setValueAtTime(0.25, audioCtx.currentTime);
-          gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
-          
-          oscillator.start();
-          oscillator.stop(audioCtx.currentTime + 0.4);
-        }, i * 500);
-      }
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      oscillator.frequency.setValueAtTime(1200, audioCtx.currentTime);
+      gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+      
+      oscillator.start();
+      oscillator.stop(audioCtx.currentTime + 0.5);
     } catch (e) {
       console.log('Audio notification failed:', e);
-    }
-
-    // Browser notification
-    if (Notification.permission === 'granted') {
-      new Notification(`🚨 URGENT: Nudity Detected #${data.warningCount}`, {
-        body: `Advanced AI detected inappropriate content with ${((data.confidence || 0) * 100).toFixed(1)}% confidence`,
-        icon: '/favicon.ico',
-        tag: `skillswap-nudity-${data.warningCount}`,
-        requireInteraction: true
-      });
     }
   };
 
   const handleMeetingTerminated = (data) => {
-    console.log('❌ Meeting terminated due to nudity violations:', data);
+    console.log('❌ Meeting terminated:', data);
     setMeetingActive(false);
     setDetectionEnabled(false);
     
@@ -513,10 +414,10 @@ const VideoCall = ({ sessionId, userId, userName, sessionData }) => {
     toast.error(
       <div>
         <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>
-          🚨 SESSION TERMINATED - NUDITY VIOLATIONS
+          🚨 SESSION TERMINATED
         </div>
         <div style={{ fontSize: '13px' }}>
-          {data.reason || 'Multiple nudity violations detected by advanced AI analysis. The educational session has been terminated immediately for safety.'}
+          {data.reason || 'Session terminated due to policy violations.'}
         </div>
       </div>,
       {
@@ -549,8 +450,6 @@ const VideoCall = ({ sessionId, userId, userName, sessionData }) => {
   const extractVideoElement = () => {
     setTimeout(() => {
       const videoElements = document.querySelectorAll('video');
-      console.log(`🔍 Found ${videoElements.length} video elements`);
-      
       if (videoElements.length > 0) {
         const localVideo = Array.from(videoElements).find(video => {
           const hasStream = video.srcObject && video.srcObject.active;
@@ -560,11 +459,7 @@ const VideoCall = ({ sessionId, userId, userName, sessionData }) => {
         
         if (localVideo && videoRef.current !== localVideo) {
           videoRef.current = localVideo;
-          console.log('✅ Video element connected for advanced nudity detection:', {
-            width: localVideo.videoWidth,
-            height: localVideo.videoHeight,
-            readyState: localVideo.readyState
-          });
+          console.log('✅ Video element connected for content analysis');
         }
       }
     }, 2000);
@@ -598,11 +493,11 @@ const VideoCall = ({ sessionId, userId, userName, sessionData }) => {
         showMyCameraToggleButton: true,
         showMyMicrophoneToggleButton: true,
         showAudioVideoSettingsButton: true,
-        maxUsers: 10, // Support multiple students
+        maxUsers: 10,
         layout: "Auto",
         
         onJoinRoom: () => {
-          console.log('✅ Joined session with advanced custom nudity detection:', sessionId);
+          console.log('✅ Joined session with production content monitoring:', sessionId);
           
           if (socketRef.current?.connected) {
             socketRef.current.emit('video-call-started', { sessionId, userId });
@@ -611,14 +506,14 @@ const VideoCall = ({ sessionId, userId, userName, sessionData }) => {
           extractVideoElement();
           setDetectionEnabled(true);
           
-          toast.success('🎓 Session started with advanced AI nudity detection!', {
+          toast.success('🎓 Session started with content monitoring', {
             position: "top-right",
             autoClose: 3000,
           });
         },
         
         onLeaveRoom: () => {
-          console.log('👋 Left the tutoring session');
+          console.log('👋 Left the session');
           
           if (socketRef.current?.connected) {
             socketRef.current.emit('session-ended', { sessionId, userId });
@@ -657,7 +552,7 @@ const VideoCall = ({ sessionId, userId, userName, sessionData }) => {
       });
 
     } catch (error) {
-      console.error('❌ Failed to start tutoring session:', error);
+      console.error('❌ Failed to start session:', error);
       
       toast.error('Unable to start session. Please refresh and try again.', {
         position: "top-center",
@@ -681,7 +576,7 @@ const VideoCall = ({ sessionId, userId, userName, sessionData }) => {
         draggable
         pauseOnHover
         theme="light"
-        limit={5}
+        limit={3}
       />
 
       {connectionStatus !== 'connected' && (
@@ -703,24 +598,20 @@ const VideoCall = ({ sessionId, userId, userName, sessionData }) => {
         }}
       />
 
-      {/* Advanced AI Monitoring Status */}
       {detectionEnabled && meetingActive && connectionStatus === 'connected' && (
-        <div className="ai-monitoring-advanced">
-          <div className="monitoring-indicator-advanced">
-            <span className="status-dot-advanced"></span>
-            <span className="status-text-advanced">🔬 AI is Monitoring the sessions</span>
+        <div className="ai-monitoring-production">
+          <div className="monitoring-indicator-production">
+            <span className="status-dot-production"></span>
+            <span className="status-text-production">🛡️ Content Monitoring</span>
             {warningCount > 0 && (
-              <span className="warning-badge-advanced">
-                {warningCount} VIOLATION{warningCount > 1 ? 'S' : ''}
+              <span className="warning-badge-production">
+                {warningCount}
               </span>
             )}
           </div>
         </div>
       )}
 
-      {/* Debug Info */}
-      
-      {/* Hidden canvas for analysis */}
       <canvas 
         ref={canvasRef} 
         style={{ display: 'none' }}
