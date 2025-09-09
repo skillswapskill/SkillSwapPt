@@ -229,6 +229,12 @@ function NavBar() {
               Dashboard
             </Link>
             <Link
+              to="/community"
+              className="hover:opacity-80 transition-all hidden sm:inline"
+            >
+              Community
+            </Link>
+            <Link
               to="/careers"
               className="hover:opacity-80 transition-all hidden sm:inline"
             >

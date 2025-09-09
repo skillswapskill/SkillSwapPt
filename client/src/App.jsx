@@ -26,6 +26,8 @@ import Support from "./components/Support";
 import Contact from "./components/Contact";
 import AboutUs from "./components/AboutUs";
 import Sam from "./components/Sam";
+import Community from "./components/Community";
+
 
 
 
@@ -64,6 +66,8 @@ function App() {
         <Route path="/support" element={<Support />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/aboutus" element={<AboutUs />} />
+        <Route path="/community" element={<Community />} />
+        <Route path="*" element={<h1 className="text-center mt-20">404 - Page Not Found</h1>} />
 
       </Routes>
 

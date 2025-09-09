@@ -18,6 +18,7 @@ import clerkRoutes from "./routes/clerk.routes.js";
 import notificationRoutes from './routes/notification.route.js';
 import challengeRoutes from './routes/challenge.routes.js';
 import paymentRoutes from './routes/payment.route.js';
+import communityRoutes from './routes/community.route.js';
 
 // __dirname for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -75,6 +76,8 @@ app.use("/api/clerk", clerkRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api', notificationRoutes);
 app.use('/api/challenges', challengeRoutes);
+app.use('/api/community', communityRoutes);
+
 
 // --- SOCKET.IO INTEGRATION FOR SUSPICIOUS ACTIVITY ---
 const suspiciousActivityController = new SuspiciousActivityController(io);
