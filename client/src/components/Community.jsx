@@ -147,31 +147,28 @@ const Community = () => {
     return true;
   };
 
-  // FIXED: Function to award credits for posting
+  // Function to award credits for posting
   const awardPostCredits = async (userId) => {
     try {
       console.log('🪙 Awarding credits for post creation...');
       const response = await apiClient.post('/api/credits/earn-post', {
-        userId: userId, // This is the Clerk ID
+        userId: userId,
         creditsEarned: 1
       });
       
       if (response.data.success) {
         console.log('✅ Credits awarded successfully');
-        // Show credit notification
         setCreditNotification({
           show: true,
           message: '🪙 You earned 1 credit for posting!'
         });
         
-        // Hide notification after 4 seconds
         setTimeout(() => {
           setCreditNotification({ show: false, message: '' });
         }, 4000);
       }
     } catch (error) {
       console.error('❌ Error awarding credits:', error);
-      // Don't show error to user for credits, as post was successful
     }
   };
 
@@ -180,13 +177,11 @@ const Community = () => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
       alert('Please select a valid image file');
       return;
     }
 
-    // Validate file size (5MB limit)
     if (file.size > 5 * 1024 * 1024) {
       alert('Image size must be less than 5MB');
       return;
@@ -195,13 +190,11 @@ const Community = () => {
     console.log('📷 Image selected:', file.name, file.size);
     setSelectedImage(file);
     
-    // Create preview
     const reader = new FileReader();
     reader.onload = (e) => setImagePreview(e.target.result);
     reader.readAsDataURL(file);
   };
 
-  // Remove selected image
   const removeImage = () => {
     console.log('🗑️ Removing selected image');
     setSelectedImage(null);
@@ -211,7 +204,6 @@ const Community = () => {
     }
   };
 
-  // Trigger file input click
   const triggerImageSelect = () => {
     console.log('📸 Triggering image selection');
     fileInputRef.current?.click();
@@ -345,7 +337,6 @@ const Community = () => {
       console.log('✅ Post link copied to clipboard');
     } catch (error) {
       console.error('❌ Failed to copy link:', error);
-      // Fallback for older browsers
       const textArea = document.createElement('textarea');
       textArea.value = postUrl;
       document.body.appendChild(textArea);
@@ -375,80 +366,98 @@ const Community = () => {
     }
   };
 
-  // UPDATED: Enhanced handleCreatePost with credit earning and NO character limits
-  const handleCreatePost = async (e) => {
-    e.preventDefault();
-    console.log('🚀 handleCreatePost called');
+  // FIXED: handleCreatePost with NO character limits
+  // ENHANCED: handleCreatePost with detailed error debugging
+const handleCreatePost = async (e) => {
+  e.preventDefault();
+  console.log('🚀 handleCreatePost called - DEBUGGING MODE');
+  
+  if (!validateUserData()) return;
+  
+  if (!newPost.trim() && !selectedImage) {
+    console.warn('⚠️ Post content and image are both empty');
+    alert('Please enter some content or select an image for your post');
+    return;
+  }
+  
+  setLoading(true);
+  clearError('createPost');
+  
+  try {
+    let imageUrl = '';
+    let imagePublicId = '';
     
-    if (!validateUserData()) return;
-    
-    if (!newPost.trim() && !selectedImage) {
-      console.warn('⚠️ Post content and image are both empty');
-      alert('Please enter some content or select an image for your post');
-      return;
-    }
-    
-    setLoading(true);
-    clearError('createPost');
-    
-    try {
-      let imageUrl = '';
-      let imagePublicId = '';
+    if (selectedImage) {
+      setUploadingImage(true);
+      console.log('📷 Uploading image to Cloudinary...');
       
-      // Upload image to Cloudinary if selected
-      if (selectedImage) {
-        setUploadingImage(true);
-        console.log('📷 Uploading image to Cloudinary...');
-        
-        const formData = new FormData();
-        formData.append('image', selectedImage);
-        
-        const imageResponse = await apiClient.post('/api/community/upload-image', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
-        
-        imageUrl = imageResponse.data.imageUrl;
-        imagePublicId = imageResponse.data.publicId;
-        console.log('✅ Image uploaded to Cloudinary:', imageUrl);
-        setUploadingImage(false);
-      }
-
-      const postData = {
-        content: newPost.trim(),
-        userId: user.id,
-        username: user.username || user.firstName || 'Unknown User',
-        userAvatar: user.imageUrl || '',
-        imageUrl: imageUrl,
-        imagePublicId: imagePublicId
-      };
+      const formData = new FormData();
+      formData.append('image', selectedImage);
       
-      console.log('📤 Creating post with data:', postData);
-      console.log('🌐 API Base URL:', baseUrl);
+      const imageResponse = await apiClient.post('/api/community/upload-image', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
       
-      const response = await apiClient.post('/api/community/posts', postData);
-      console.log('✅ Post created successfully:', response.data);
-      
-      // Reset form
-      setNewPost('');
-      removeImage();
-      await fetchPosts();
-      
-      // Award credits for posting
-      await awardPostCredits(user.id);
-      
-      // Show success message
-      alert('Post created successfully! 🎉 You earned 1 credit!');
-      
-    } catch (error) {
-      handleError(error, 'createPost');
-      alert(`Error creating post: ${error.response?.data?.message || error.message}`);
-    } finally {
-      setLoading(false);
+      imageUrl = imageResponse.data.imageUrl;
+      imagePublicId = imageResponse.data.publicId;
+      console.log('✅ Image uploaded to Cloudinary:', imageUrl);
       setUploadingImage(false);
     }
-  };
+
+    const postData = {
+      content: newPost.trim(),
+      userId: user.id,
+      username: user.username || user.firstName || 'Unknown User',
+      userAvatar: user.imageUrl || '',
+      imageUrl: imageUrl,
+      imagePublicId: imagePublicId
+    };
+    
+    console.log('📤 SENDING POST DATA:', postData);
+    console.log('🌐 API Base URL:', baseUrl);
+    console.log('🔑 User ID:', user.id);
+    console.log('📝 Content Length:', newPost.trim().length);
+    
+    const response = await apiClient.post('/api/community/posts', postData);
+    console.log('✅ Post created successfully:', response.data);
+    
+    setNewPost('');
+    removeImage();
+    await fetchPosts();
+    await awardPostCredits(user.id);
+    
+    alert('Post created successfully! 🎉 You earned 1 credit!');
+    
+  } catch (error) {
+    console.error('❌ DETAILED ERROR ANALYSIS:');
+    console.error('Error object:', error);
+    console.error('Error message:', error.message);
+    console.error('Error response:', error.response);
+    console.error('Error response data:', error.response?.data);
+    console.error('Error response status:', error.response?.status);
+    console.error('Error response headers:', error.response?.headers);
+    console.error('Error config:', error.config);
+    
+    handleError(error, 'createPost');
+    
+    // More specific error handling
+    if (error.response?.status === 400) {
+      alert(`❌ Bad Request: ${error.response.data.message || 'Invalid data sent to server'}`);
+    } else if (error.response?.status === 500) {
+      alert(`❌ Server Error: ${error.response.data.message || 'Internal server error'}`);
+    } else if (error.response?.data?.message) {
+      alert(`❌ Error: ${error.response.data.message}`);
+    } else {
+      alert(`❌ Unknown Error: ${error.message}`);
+    }
+  } finally {
+    setLoading(false);
+    setUploadingImage(false);
+  }
+};
+
 
   const handleLike = async (postId) => {
     if (!validateUserData()) return;
@@ -484,7 +493,7 @@ const Community = () => {
     }
   };
 
-  // UPDATED: handleComment with NO character limits
+  // FIXED: handleComment with NO character limits
   const handleComment = async (postId) => {
     if (!validateUserData()) return;
     
@@ -495,7 +504,7 @@ const Community = () => {
       return;
     }
     
-    console.log(`💬 Adding comment to post: ${postId}`);
+    console.log(`💬 Adding comment to post: ${postId} - NO LIMITS!`);
     clearError('comment');
     
     const commentData = {
@@ -538,12 +547,10 @@ const Community = () => {
     }
   };
 
-  // FIXED: Much smaller image aspect ratio - reasonable social media size
   const getImageClasses = (imageUrl) => {
     return "w-full h-auto max-h-[150px] sm:max-h-[180px] object-cover rounded-xl border border-gray-200 shadow-sm cursor-pointer hover:opacity-95 transition-opacity";
   };
 
-  // Loading state while user data is loading
   if (!isLoaded) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center px-4">
@@ -625,7 +632,6 @@ const Community = () => {
               </button>
             </div>
 
-            {/* Post Preview */}
             <div className="mb-6 p-4 bg-gray-50 rounded-2xl">
               <div className="flex items-center gap-3 mb-3">
                 <img
@@ -640,7 +646,6 @@ const Community = () => {
               </p>
             </div>
 
-            {/* Copy Link */}
             <div className="mb-6">
               <button
                 onClick={() => copyPostLink(shareModal.post)}
@@ -658,7 +663,6 @@ const Community = () => {
               </button>
             </div>
 
-            {/* Social Media Share Options */}
             <div className="space-y-3">
               <h4 className="text-sm font-semibold text-gray-600 mb-3">Share on social media</h4>
               
@@ -688,10 +692,9 @@ const Community = () => {
         </div>
       )}
 
-      {/* FIXED HEADER - Clean tab navigation */}
+      {/* Header */}
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-4 relative">
         <div className="flex flex-col space-y-4">
-          {/* Title Section */}
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="relative">
@@ -708,7 +711,6 @@ const Community = () => {
             </div>
           </div>
           
-          {/* Clean Tab Navigation */}
           <div className="flex space-x-1 bg-white/70 rounded-2xl p-1 shadow-md border border-blue-200/30">
             {[
               { id: 'trending', label: 'Trending', icon: '🔥' },
@@ -758,7 +760,7 @@ const Community = () => {
           </div>
         )}
 
-        {/* Create Post Card - UPDATED without character limits */}
+        {/* Create Post Card */}
         {user && (
           <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-blue-200/50 mb-6 overflow-hidden group hover:shadow-2xl transition-all duration-500">
             <div className="bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 p-5">
@@ -780,18 +782,16 @@ const Community = () => {
                   </div>
                   
                   <div className="flex-1 space-y-3">
-                    {/* UPDATED: Textarea without character limit */}
                     <div className="relative">
                       <textarea
                         value={newPost}
                         onChange={(e) => setNewPost(e.target.value)}
-                        placeholder="🚀 Share your knowledge, ask questions, or inspire fellow learners! Write as much as you want..."
+                        placeholder="🚀 Share your knowledge, ask questions, or inspire fellow learners! Write as much as you want - no limits!"
                         className="w-full p-4 border-2 border-blue-100 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all bg-white/60 backdrop-blur-sm text-gray-700 placeholder-gray-500 text-sm min-h-[80px]"
                         rows="3"
                       />
                     </div>
 
-                    {/* Credit Info Banner */}
                     <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200/50 rounded-lg p-3 flex items-center gap-2">
                       <CreditCoinIcon className="w-5 h-5 text-yellow-600 animate-pulse" />
                       <span className="text-xs text-yellow-700 font-medium">
@@ -799,7 +799,6 @@ const Community = () => {
                       </span>
                     </div>
 
-                    {/* Image Preview */}
                     {imagePreview && (
                       <div className="relative">
                         <img
@@ -861,7 +860,6 @@ const Community = () => {
                         </button>
                       </div>
                       
-                      {/* UPDATED: Share button without character limit validation */}
                       <button
                         type="submit"
                         disabled={(!newPost.trim() && !selectedImage) || loading}
@@ -903,7 +901,6 @@ const Community = () => {
               className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-lg border border-blue-200/30 overflow-hidden hover:shadow-xl hover:scale-[1.01] transition-all duration-300 group"
               style={{ animationDelay: `${index * 50}ms` }}
             >
-              {/* Post Header */}
               <div className="p-5 pb-3">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
@@ -935,7 +932,6 @@ const Community = () => {
                     </div>
                   </div>
                   
-                  {/* Post Options Dropdown */}
                   <div className="relative flex-shrink-0">
                     <button 
                       onClick={(e) => toggleDropdown(e, 'post', post._id)}
@@ -976,16 +972,15 @@ const Community = () => {
                   </div>
                 </div>
                 
-                {/* Post Content */}
                 <div className="prose max-w-none">
                   {editingPost === post._id ? (
                     <div className="mb-3">
-                      {/* UPDATED: Edit textarea without character limit */}
                       <textarea
                         value={editContent}
                         onChange={(e) => setEditContent(e.target.value)}
                         className="w-full p-3 border-2 border-blue-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all text-sm min-h-[80px]"
                         rows="3"
+                        placeholder="Edit your post... No character limits!"
                       />
                       <div className="flex items-center justify-end mt-2">
                         <div className="flex gap-2">
@@ -1012,7 +1007,6 @@ const Community = () => {
                     )
                   )}
                   
-                  {/* Post Image */}
                   {post.imageUrl && (
                     <div className="mb-3">
                       <img
@@ -1032,7 +1026,6 @@ const Community = () => {
                 </div>
               </div>
 
-              {/* Post Actions */}
               <div className="px-5 pb-4">
                 <div className="flex items-center gap-2 mb-3">
                   {post.likes?.length > 0 && (
@@ -1099,10 +1092,8 @@ const Community = () => {
                 </div>
               </div>
 
-              {/* Comments Section */}
               {showComments[post._id] && user && (
                 <div className="border-t border-gray-100 bg-gradient-to-r from-blue-50/30 to-purple-50/30 p-4">
-                  {/* Add Comment - UPDATED without character limit */}
                   <div className="flex gap-3 mb-4">
                     <img
                       src={user?.imageUrl || '/default-avatar.png'}
@@ -1116,7 +1107,7 @@ const Community = () => {
                       <textarea
                         value={commentText[post._id] || ''}
                         onChange={(e) => setCommentText(prev => ({ ...prev, [post._id]: e.target.value }))}
-                        placeholder="Share your thoughts... Write as much as you want!"
+                        placeholder="Share your thoughts... Write as much as you want - no limits!"
                         className="flex-1 px-3 py-2 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-400 transition-all bg-white/80 backdrop-blur-sm text-sm resize-none min-h-[40px]"
                         rows="2"
                         onKeyPress={(e) => {
@@ -1136,7 +1127,6 @@ const Community = () => {
                     </div>
                   </div>
 
-                  {/* Comments List */}
                   <div className="space-y-3">
                     {post.comments?.map((comment) => (
                       <div key={comment._id} className="flex gap-3 bg-white/60 backdrop-blur-sm rounded-xl p-3">
@@ -1155,7 +1145,6 @@ const Community = () => {
                               <span className="text-xs text-gray-500 flex-shrink-0">{getTimeAgo(comment.createdAt)}</span>
                             </div>
                             
-                            {/* Comment Options Dropdown */}
                             {comment.userId === user?.id && (
                               <div className="relative flex-shrink-0">
                                 <button
@@ -1189,12 +1178,12 @@ const Community = () => {
                           
                           {editingComment === `${post._id}-${comment._id}` ? (
                             <div>
-                              {/* UPDATED: Edit comment textarea without character limit */}
                               <textarea
                                 value={editContent}
                                 onChange={(e) => setEditContent(e.target.value)}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all text-xs resize-none min-h-[60px]"
                                 rows="2"
+                                placeholder="Edit your comment... No character limits!"
                               />
                               <div className="flex items-center justify-end mt-2">
                                 <div className="flex gap-2">
@@ -1228,7 +1217,6 @@ const Community = () => {
           ))}
         </div>
 
-        {/* Empty State */}
         {!fetchingPosts && posts.length === 0 && (
           <div className="text-center py-12 px-4">
             <div className="relative mb-6">

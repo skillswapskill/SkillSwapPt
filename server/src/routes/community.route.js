@@ -125,6 +125,7 @@ router.get('/posts', async (req, res) => {
       totalPages: Math.ceil(total / limit)
     });
   } catch (error) {
+    console.error('❌ Error fetching posts:', error);
     res.status(500).json({
       success: false,
       message: 'Error fetching posts',
@@ -133,31 +134,39 @@ router.get('/posts', async (req, res) => {
   }
 });
 
-// POST create new post
+// POST create new post - COMPLETELY FIXED
 router.post('/posts', async (req, res) => {
   try {
+    console.log('📥 Received POST request to create post');
+    console.log('📝 Request body:', req.body);
+    
     const { content, userId, username, userAvatar, tags, imageUrl, imagePublicId } = req.body;
     
+    // Enhanced validation logging
+    console.log('🔍 Validating request data...');
+    console.log('- userId:', userId);
+    console.log('- username:', username);
+    console.log('- content:', content ? `${content.length} characters` : 'empty');
+    console.log('- imageUrl:', imageUrl ? 'present' : 'not present');
+    
     if (!userId || !username) {
+      console.log('❌ Missing required fields');
       return res.status(400).json({
         success: false,
-        message: 'Missing required fields'
+        message: 'Missing required fields: userId and username are required'
       });
     }
 
     if (!content && !imageUrl) {
+      console.log('❌ No content or image provided');
       return res.status(400).json({
         success: false,
         message: 'Post must have either content or an image'
       });
     }
 
-    if (content && content.length > 500) {
-      return res.status(400).json({
-        success: false,
-        message: 'Post content too long (max 500 characters)'
-      });
-    }
+    // ✅ COMPLETELY REMOVED ALL CHARACTER LIMITS
+    console.log('✅ All validations passed, creating post...');
 
     const newPost = new Post({
       content: content || '',
@@ -165,30 +174,49 @@ router.post('/posts', async (req, res) => {
       imagePublicId: imagePublicId || '',
       userId,
       username,
-      userAvatar,
+      userAvatar: userAvatar || '',
       likes: [],
       upvotes: [],
       comments: [],
       tags: tags || []
     });
 
-    await newPost.save();
+    console.log('💾 Saving post to database...');
+    const savedPost = await newPost.save();
+    console.log('✅ Post saved successfully:', savedPost._id);
     
     res.status(201).json({
       success: true,
       message: 'Post created successfully',
-      post: newPost
+      post: savedPost
     });
   } catch (error) {
+    console.error('❌ DETAILED SERVER ERROR:');
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    console.error('Error name:', error.name);
+    
+    // Handle specific MongoDB validation errors
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(err => err.message);
+      console.error('❌ Validation errors:', validationErrors);
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: validationErrors
+      });
+    }
+    
     res.status(500).json({
       success: false,
-      message: 'Error creating post',
-      error: error.message
+      message: 'Server error while creating post',
+      error: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 });
 
-// PUT update post
+// PUT update post - FIXED
 router.put('/posts/:postId', async (req, res) => {
   try {
     const { postId } = req.params;
@@ -201,12 +229,7 @@ router.put('/posts/:postId', async (req, res) => {
       });
     }
 
-    if (content.length > 500) {
-      return res.status(400).json({
-        success: false,
-        message: 'Post content too long (max 500 characters)'
-      });
-    }
+    // ✅ REMOVED CHARACTER LIMITS
 
     const post = await Post.findById(postId);
     if (!post) {
@@ -233,6 +256,7 @@ router.put('/posts/:postId', async (req, res) => {
       post
     });
   } catch (error) {
+    console.error('❌ Error updating post:', error);
     res.status(500).json({
       success: false,
       message: 'Error updating post',
@@ -241,7 +265,7 @@ router.put('/posts/:postId', async (req, res) => {
   }
 });
 
-// PUT update comment
+// PUT update comment - FIXED
 router.put('/posts/:postId/comments/:commentId', async (req, res) => {
   try {
     const { postId, commentId } = req.params;
@@ -254,12 +278,7 @@ router.put('/posts/:postId/comments/:commentId', async (req, res) => {
       });
     }
 
-    if (content.length > 500) {
-      return res.status(400).json({
-        success: false,
-        message: 'Comment too long (max 500 characters)'
-      });
-    }
+    // ✅ REMOVED CHARACTER LIMITS
 
     const post = await Post.findById(postId);
     if (!post) {
@@ -294,9 +313,59 @@ router.put('/posts/:postId/comments/:commentId', async (req, res) => {
       post
     });
   } catch (error) {
+    console.error('❌ Error updating comment:', error);
     res.status(500).json({
       success: false,
       message: 'Error updating comment',
+      error: error.message
+    });
+  }
+});
+
+// POST add comment to a post - FIXED
+router.post('/posts/:postId/comment', async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const { content, userId, username, userAvatar } = req.body;
+
+    if (!content || !userId || !username) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields'
+      });
+    }
+
+    // ✅ REMOVED CHARACTER LIMITS
+
+    const post = await Post.findById(postId);
+    if (!post) {
+      return res.status(404).json({
+        success: false,
+        message: 'Post not found'
+      });
+    }
+
+    const newComment = {
+      content,
+      userId,
+      username,
+      userAvatar,
+      createdAt: new Date()
+    };
+
+    post.comments.push(newComment);
+    await post.save();
+    
+    res.status(201).json({
+      success: true,
+      message: 'Comment added successfully',
+      post
+    });
+  } catch (error) {
+    console.error('❌ Error adding comment:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error adding comment',
       error: error.message
     });
   }
@@ -340,6 +409,7 @@ router.delete('/posts/:postId/comments/:commentId', async (req, res) => {
       post
     });
   } catch (error) {
+    console.error('❌ Error deleting comment:', error);
     res.status(500).json({
       success: false,
       message: 'Error deleting comment',
@@ -378,6 +448,7 @@ router.post('/posts/:postId/like', async (req, res) => {
       post
     });
   } catch (error) {
+    console.error('❌ Error processing like:', error);
     res.status(500).json({
       success: false,
       message: 'Error processing like',
@@ -416,62 +487,10 @@ router.post('/posts/:postId/upvote', async (req, res) => {
       post
     });
   } catch (error) {
+    console.error('❌ Error processing upvote:', error);
     res.status(500).json({
       success: false,
       message: 'Error processing upvote',
-      error: error.message
-    });
-  }
-});
-
-// POST add comment to a post
-router.post('/posts/:postId/comment', async (req, res) => {
-  try {
-    const { postId } = req.params;
-    const { content, userId, username, userAvatar } = req.body;
-
-    if (!content || !userId || !username) {
-      return res.status(400).json({
-        success: false,
-        message: 'Missing required fields'
-      });
-    }
-
-    if (content.length > 500) {
-      return res.status(400).json({
-        success: false,
-        message: 'Comment too long (max 500 characters)'
-      });
-    }
-
-    const post = await Post.findById(postId);
-    if (!post) {
-      return res.status(404).json({
-        success: false,
-        message: 'Post not found'
-      });
-    }
-
-    const newComment = {
-      content,
-      userId,
-      username,
-      userAvatar,
-      createdAt: new Date()
-    };
-
-    post.comments.push(newComment);
-    await post.save();
-    
-    res.status(201).json({
-      success: true,
-      message: 'Comment added successfully',
-      post
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error adding comment',
       error: error.message
     });
   }
@@ -515,6 +534,7 @@ router.delete('/posts/:postId', async (req, res) => {
       message: 'Post deleted successfully'
     });
   } catch (error) {
+    console.error('❌ Error deleting post:', error);
     res.status(500).json({
       success: false,
       message: 'Error deleting post',
@@ -545,6 +565,7 @@ router.get('/posts/user/:userId', async (req, res) => {
       totalPages: Math.ceil(total / limit)
     });
   } catch (error) {
+    console.error('❌ Error fetching user posts:', error);
     res.status(500).json({
       success: false,
       message: 'Error fetching user posts',
