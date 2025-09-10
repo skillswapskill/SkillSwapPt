@@ -414,16 +414,21 @@ function NavBar() {
                       {user?.primaryEmailAddress?.emailAddress || ""}
                     </p>
                   </div>
-
-                  <Link to="/dashboard" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    Dashboard
+                  <Link to="/" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    Home
                   </Link>
                   <Link to="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                     Profile
                   </Link>
-                  <Link to="/" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    Home
+
+                  <Link to="/dashboard" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    Dashboard
                   </Link>
+                  <Link to="/Community" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    Community
+                  </Link>
+                  
+                  
                   <Link to="/my-learning" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                     My Learning
                   </Link>

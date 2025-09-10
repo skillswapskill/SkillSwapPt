@@ -24,7 +24,7 @@ import {
   BookmarkIcon as BookmarkSolid 
 } from '@heroicons/react/24/solid';
 import { useUser } from '@clerk/clerk-react';
-import { useApi } from '../hooks/useApi'; // Adjust path as needed
+import { useApi } from '../hooks/useApi';
 
 const Community = () => {
   const { user, isLoaded } = useUser();
@@ -505,15 +505,15 @@ const Community = () => {
     }
   };
 
-  // Dynamic image sizing based on aspect ratio
+  // FIXED: Much smaller image aspect ratio - reasonable social media size
   const getImageClasses = (imageUrl) => {
-    return "w-full h-auto max-h-[600px] object-contain rounded-2xl border border-gray-200 shadow-sm cursor-pointer hover:opacity-95 transition-opacity";
+    return "w-full h-auto max-h-[150px] sm:max-h-[180px] object-cover rounded-xl border border-gray-200 shadow-sm cursor-pointer hover:opacity-95 transition-opacity";
   };
 
   // Loading state while user data is loading
   if (!isLoaded) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center px-4">
         <div className="text-center">
           <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
           <p className="text-gray-600">Loading user data...</p>
@@ -524,9 +524,7 @@ const Community = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 relative overflow-hidden">
-      <br></br>
-      <br></br>
-      <br></br>
+      <div className="pt-20 sm:pt-24"></div>
       
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -538,27 +536,27 @@ const Community = () => {
       {/* Delete Confirmation Modal */}
       {deleteConfirm.isOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl max-w-sm w-full p-8 shadow-2xl">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-6 sm:p-8 shadow-2xl">
             <div className="text-center">
               <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <TrashIcon className="w-8 h-8 text-red-600" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">
                 Delete {deleteConfirm.type}?
               </h3>
-              <p className="text-gray-500 mb-6">
+              <p className="text-sm sm:text-base text-gray-500 mb-6">
                 This action cannot be undone. The {deleteConfirm.type} will be permanently removed.
               </p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setDeleteConfirm({ isOpen: false, type: '', id: '', postId: '' })}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors text-sm sm:text-base"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={executeDelete}
-                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors"
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors text-sm sm:text-base"
                 >
                   Delete
                 </button>
@@ -571,9 +569,9 @@ const Community = () => {
       {/* Share Modal */}
       {shareModal.isOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={closeShareModal}>
-          <div className="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl transform transition-all" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl transform transition-all" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <h3 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 Share Post
               </h3>
               <button 
@@ -647,41 +645,43 @@ const Community = () => {
         </div>
       )}
 
-      {/* Header */}
-      <div className="max-w-5xl mx-auto px-6 py-2 relative">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-4">
+      {/* FIXED HEADER - Clean tab navigation */}
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-4 relative">
+        <div className="flex flex-col space-y-4">
+          {/* Title Section */}
+          <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="relative">
-                <SparklesIcon className="w-8 h-8 text-blue-500 animate-pulse" />
-                <div className="absolute inset-0 w-8 h-8 bg-blue-500/20 rounded-full blur animate-ping"></div>
+                <SparklesIcon className="w-7 h-7 text-blue-500 animate-pulse" />
+                <div className="absolute inset-0 w-7 h-7 bg-blue-500/20 rounded-full blur animate-ping"></div>
               </div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
                 SkillSwap Community
               </h1>
             </div>
-            <div className="hidden md:flex items-center bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-full px-4 py-2 border border-blue-200/50">
+            <div className="hidden md:flex items-center bg-gradient-to-r from-orange-500/10 to-red-500/10 rounded-full px-3 py-1 border border-orange-200/50">
               <FireIcon className="w-4 h-4 text-orange-500 mr-2" />
               <span className="text-sm font-medium text-gray-700">Hot discussions</span>
             </div>
           </div>
           
-          {/* Tab Navigation */}
-          <div className="flex bg-white/80 rounded-full p-1 shadow-lg border border-blue-200/50">
+          {/* FIXED: Clean Tab Navigation */}
+          <div className="flex space-x-1 bg-white/70 rounded-2xl p-1 shadow-md border border-blue-200/30">
             {[
-              { id: 'trending', label: '🔥 Trending', icon: FireIcon },
-              { id: 'latest', label: '⚡ Latest', icon: SparklesIcon },
-              { id: 'popular', label: '🌟 Popular', icon: ArrowUpIcon }
+              { id: 'trending', label: 'Trending', icon: '🔥' },
+              { id: 'latest', label: 'Latest', icon: '⚡' },
+              { id: 'popular', label: 'Popular', icon: '🌟' }
             ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${
                   activeTab === tab.id
-                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg transform scale-105'
+                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
                     : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
                 }`}
               >
+                <span>{tab.icon}</span>
                 {tab.label}
               </button>
             ))}
@@ -689,13 +689,13 @@ const Community = () => {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-6 py-4 relative">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-2 relative">
         {/* Error Display */}
         {Object.keys(errors).length > 0 && (
-          <div className="mb-6 p-4 bg-red-100 border border-red-300 rounded-lg">
-            <h3 className="font-bold text-red-800 mb-2">Errors:</h3>
+          <div className="mb-4 p-3 bg-red-100 border border-red-300 rounded-lg">
+            <h3 className="font-bold text-red-800 mb-2 text-sm">Errors:</h3>
             {Object.entries(errors).map(([key, value]) => (
-              <div key={key} className="text-red-700 text-sm">
+              <div key={key} className="text-red-700 text-xs">
                 <strong>{key}:</strong> {value}
                 <button 
                   onClick={() => clearError(key)}
@@ -710,67 +710,67 @@ const Community = () => {
 
         {/* User Not Logged In Warning */}
         {!user && (
-          <div className="mb-6 p-4 bg-yellow-100 border border-yellow-300 rounded-lg text-center">
-            <p className="text-yellow-800">Please log in to create posts and interact with the community.</p>
+          <div className="mb-4 p-3 bg-yellow-100 border border-yellow-300 rounded-lg text-center">
+            <p className="text-yellow-800 text-sm">Please log in to create posts and interact with the community.</p>
           </div>
         )}
 
         {/* Create Post Card */}
         {user && (
-          <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-200/50 mb-8 overflow-hidden group hover:shadow-3xl transition-all duration-500">
-            <div className="bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 p-8">
+          <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-blue-200/50 mb-6 overflow-hidden group hover:shadow-2xl transition-all duration-500">
+            <div className="bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 p-5">
               <form onSubmit={handleCreatePost}>
-                <div className="flex gap-6">
-                  <div className="relative">
+                <div className="flex gap-4">
+                  <div className="relative flex-shrink-0">
                     <img
                       src={user?.imageUrl || '/default-avatar.png'}
                       alt="Your avatar"
-                      className="w-16 h-16 rounded-2xl shadow-lg ring-4 ring-blue-200/50 group-hover:ring-blue-300/70 transition-all duration-300"
+                      className="w-12 h-12 rounded-xl shadow-lg ring-2 ring-blue-200/50 group-hover:ring-blue-300/70 transition-all duration-300"
                       onError={(e) => {
                         e.target.src = '/default-avatar.png';
                         console.warn('Failed to load user avatar, using default');
                       }}
                     />
-                    <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-gradient-to-r from-green-400 to-green-500 rounded-full border-2 border-white flex items-center justify-center">
-                      <div className="w-2 h-2 bg-white rounded-full"></div>
+                    <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-gradient-to-r from-green-400 to-green-500 rounded-full border-2 border-white flex items-center justify-center">
+                      <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
                     </div>
                   </div>
                   
-                  <div className="flex-1 space-y-4">
+                  <div className="flex-1 space-y-3">
                     <div className="relative">
                       <textarea
                         value={newPost}
                         onChange={(e) => setNewPost(e.target.value)}
                         placeholder="🚀 Share your knowledge, ask questions, or inspire fellow learners!"
-                        className="w-full p-6 border-2 border-blue-100 rounded-2xl resize-none focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-400 transition-all bg-white/50 backdrop-blur-sm text-gray-700 placeholder-gray-500"
-                        rows="4"
+                        className="w-full p-4 border-2 border-blue-100 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all bg-white/60 backdrop-blur-sm text-gray-700 placeholder-gray-500 text-sm"
+                        rows="3"
                         maxLength={500}
                       />
-                      <div className={`absolute bottom-4 right-4 text-xs ${newPost.length > 450 ? 'text-red-500' : 'text-gray-400'}`}>
+                      <div className={`absolute bottom-2 right-3 text-xs ${newPost.length > 450 ? 'text-red-500' : 'text-gray-400'}`}>
                         {newPost.length}/500
                       </div>
                     </div>
 
-                    {/* Image Preview */}
+                    {/* SMALLER Image Preview */}
                     {imagePreview && (
                       <div className="relative">
                         <img
                           src={imagePreview}
                           alt="Preview"
-                          className="max-h-60 w-full object-contain rounded-2xl border-2 border-blue-100"
+                          className="max-h-24 sm:max-h-32 w-full object-cover rounded-xl border-2 border-blue-100"
                         />
                         <button
                           type="button"
                           onClick={removeImage}
-                          className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors shadow-lg"
+                          className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors shadow-lg"
                         >
-                          <XMarkIcon className="w-4 h-4" />
+                          <XMarkIcon className="w-3 h-3" />
                         </button>
                         {uploadingImage && (
-                          <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-2xl">
+                          <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-xl">
                             <div className="text-white text-center">
-                              <div className="animate-spin w-8 h-8 border-4 border-white border-t-transparent rounded-full mx-auto mb-2"></div>
-                              <p>Hold Tight Grab a coffee...</p>
+                              <div className="animate-spin w-5 h-5 border-4 border-white border-t-transparent rounded-full mx-auto mb-1"></div>
+                              <p className="text-xs">Uploading...</p>
                             </div>
                           </div>
                         )}
@@ -778,8 +778,7 @@ const Community = () => {
                     )}
                     
                     <div className="flex justify-between items-center">
-                      <div className="flex gap-3">
-                        {/* Hidden file input */}
+                      <div className="flex gap-2">
                         <input
                           type="file"
                           ref={fileInputRef}
@@ -788,11 +787,10 @@ const Community = () => {
                           className="hidden"
                         />
                         
-                        {/* Photo button with proper click handler */}
                         <button
                           type="button"
                           onClick={triggerImageSelect}
-                          className="p-3 text-blue-500 hover:bg-blue-100 rounded-xl transition-all duration-300 hover:scale-110 hover:shadow-lg"
+                          className="p-2 text-blue-500 hover:bg-blue-100 rounded-lg transition-all duration-300 hover:scale-110"
                           title="Add image"
                         >
                           <PhotoIcon className="w-5 h-5" />
@@ -800,7 +798,7 @@ const Community = () => {
                         
                         <button
                           type="button"
-                          className="p-3 text-yellow-500 hover:bg-yellow-100 rounded-xl transition-all duration-300 hover:scale-110 hover:shadow-lg"
+                          className="p-2 text-yellow-500 hover:bg-yellow-100 rounded-lg transition-all duration-300 hover:scale-110"
                           title="Add emoji"
                         >
                           <FaceSmileIcon className="w-5 h-5" />
@@ -808,7 +806,7 @@ const Community = () => {
                         
                         <button
                           type="button"
-                          className="p-3 text-orange-500 hover:bg-orange-100 rounded-xl transition-all duration-300 hover:scale-110 hover:shadow-lg"
+                          className="p-2 text-orange-500 hover:bg-orange-100 rounded-lg transition-all duration-300 hover:scale-110"
                           title="Add fire"
                         >
                           <FireIcon className="w-5 h-5" />
@@ -818,12 +816,12 @@ const Community = () => {
                       <button
                         type="submit"
                         disabled={(!newPost.trim() && !selectedImage) || loading || newPost.length > 500}
-                        className="group px-8 py-3 bg-gradient-to-r from-blue-500 via-purple-600 to-pink-600 text-white rounded-2xl font-semibold hover:shadow-2xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center gap-3 relative overflow-hidden"
+                        className="group px-6 py-2.5 bg-gradient-to-r from-blue-500 via-purple-600 to-pink-600 text-white rounded-xl font-semibold hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center gap-2 relative overflow-hidden text-sm"
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-700 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                        <PaperAirplaneIcon className="w-5 h-5 relative z-10 group-hover:rotate-12 transition-transform duration-300" />
+                        <PaperAirplaneIcon className="w-4 h-4 relative z-10 group-hover:rotate-12 transition-transform duration-300" />
                         <span className="relative z-10">
-                          {loading ? (uploadingImage ? 'Uploading...' : 'Posting...') : 'Share Magic'}
+                          {loading ? (uploadingImage ? 'Uploading...' : 'Posting...') : 'Share'}
                         </span>
                         {!loading && (
                           <SparklesIcon className="w-4 h-4 relative z-10 animate-pulse" />
@@ -841,84 +839,84 @@ const Community = () => {
         {fetchingPosts && (
           <div className="text-center py-8">
             <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading posts...</p>
+            <p className="text-gray-600 text-sm">Loading posts...</p>
           </div>
         )}
 
         {/* Posts Feed */}
-        <div className="space-y-6">
+        <div className="space-y-4">
           {posts.map((post, index) => (
             <div 
               key={post._id} 
-              className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-blue-200/30 overflow-hidden hover:shadow-2xl hover:scale-[1.02] transition-all duration-500 group"
-              style={{ animationDelay: `${index * 100}ms` }}
+              className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-lg border border-blue-200/30 overflow-hidden hover:shadow-xl hover:scale-[1.01] transition-all duration-300 group"
+              style={{ animationDelay: `${index * 50}ms` }}
             >
               {/* Post Header */}
-              <div className="p-8 pb-4">
-                <div className="flex items-start justify-between mb-6">
-                  <div className="flex items-center gap-4">
-                    <div className="relative">
+              <div className="p-5 pb-3">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="relative flex-shrink-0">
                       <img
                         src={post.userAvatar || '/default-avatar.png'}
                         alt={post.username}
-                        className="w-14 h-14 rounded-2xl shadow-lg ring-2 ring-blue-200/50"
+                        className="w-11 h-11 rounded-xl shadow-md ring-2 ring-blue-200/50"
                         onError={(e) => {
                           e.target.src = '/default-avatar.png';
                         }}
                       />
-                      <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                        <SparklesIcon className="w-3 h-3 text-white" />
+                      <div className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                        <SparklesIcon className="w-2 h-2 text-white" />
                       </div>
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-bold text-gray-800 text-lg">{post.username}</h3>
-                        <div className="px-2 py-1 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-full">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="font-bold text-gray-800 text-base truncate">{post.username}</h3>
+                        <div className="px-2 py-0.5 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-full flex-shrink-0">
                           <span className="text-xs font-medium text-blue-600">Skill Swapper</span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-sm text-gray-500">{getTimeAgo(post.createdAt)}</span>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-xs text-gray-500">{getTimeAgo(post.createdAt)}</span>
                         <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-                        <span className="text-sm text-blue-500 font-medium">Public</span>
+                        <span className="text-xs text-blue-500 font-medium">Public</span>
                       </div>
                     </div>
                   </div>
                   
                   {/* Post Options Dropdown */}
-                  <div className="relative">
+                  <div className="relative flex-shrink-0">
                     <button 
                       onClick={(e) => toggleDropdown(e, 'post', post._id)}
-                      className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all"
+                      className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all"
                     >
-                      <EllipsisHorizontalIcon className="w-5 h-5" />
+                      <EllipsisHorizontalIcon className="w-4 h-4" />
                     </button>
                     
                     {showDropdown[`post-${post._id}`] && (
-                      <div className="absolute right-0 top-full mt-2 bg-white rounded-2xl shadow-xl border border-gray-200 py-2 z-20 min-w-[150px]">
+                      <div className="absolute right-0 top-full mt-2 bg-white rounded-xl shadow-xl border border-gray-200 py-1 z-20 min-w-[140px]">
                         {post.userId === user?.id && (
                           <>
                             <button
                               onClick={() => startEditPost(post)}
-                              className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                              className="w-full px-3 py-2 text-left text-gray-700 hover:bg-gray-50 flex items-center gap-2 text-sm"
                             >
-                              <PencilIcon className="w-4 h-4" />
+                              <PencilIcon className="w-3 h-3" />
                               Edit Post
                             </button>
                             <button
                               onClick={() => confirmDelete('post', post._id)}
-                              className="w-full px-4 py-2 text-left text-red-600 hover:bg-red-50 flex items-center gap-2"
+                              className="w-full px-3 py-2 text-left text-red-600 hover:bg-red-50 flex items-center gap-2 text-sm"
                             >
-                              <TrashIcon className="w-4 h-4" />
+                              <TrashIcon className="w-3 h-3" />
                               Delete Post
                             </button>
                           </>
                         )}
                         <button
                           onClick={() => handleShare(post)}
-                          className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                          className="w-full px-3 py-2 text-left text-gray-700 hover:bg-gray-50 flex items-center gap-2 text-sm"
                         >
-                          <ShareIcon className="w-4 h-4" />
+                          <ShareIcon className="w-3 h-3" />
                           Share Post
                         </button>
                       </div>
@@ -929,11 +927,11 @@ const Community = () => {
                 {/* Post Content */}
                 <div className="prose max-w-none">
                   {editingPost === post._id ? (
-                    <div className="mb-4">
+                    <div className="mb-3">
                       <textarea
                         value={editContent}
                         onChange={(e) => setEditContent(e.target.value)}
-                        className="w-full p-4 border-2 border-blue-200 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all"
+                        className="w-full p-3 border-2 border-blue-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all text-sm"
                         rows="3"
                         maxLength={500}
                       />
@@ -942,16 +940,16 @@ const Community = () => {
                         <div className="flex gap-2">
                           <button
                             onClick={cancelEdit}
-                            className="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                            className="px-2 py-1 text-xs text-gray-600 hover:bg-gray-100 rounded transition-colors"
                           >
                             Cancel
                           </button>
                           <button
                             onClick={() => savePostEdit(post._id)}
                             disabled={!editContent.trim()}
-                            className="px-3 py-1 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1"
+                            className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1"
                           >
-                            <CheckIcon className="w-3 h-3" />
+                            <CheckIcon className="w-2 h-2" />
                             Save
                           </button>
                         </div>
@@ -959,13 +957,13 @@ const Community = () => {
                     </div>
                   ) : (
                     post.content && (
-                      <p className="text-gray-700 leading-relaxed text-lg mb-4">{post.content}</p>
+                      <p className="text-gray-700 leading-relaxed text-base mb-3">{post.content}</p>
                     )
                   )}
                   
-                  {/* Dynamic Post Image */}
+                  {/* FIXED: Much smaller Post Image with proper aspect ratio */}
                   {post.imageUrl && (
-                    <div className="mb-4">
+                    <div className="mb-3">
                       <img
                         src={post.imageUrl}
                         alt="Post content"
@@ -975,7 +973,6 @@ const Community = () => {
                           console.warn('Failed to load post image from Cloudinary');
                         }}
                         onClick={() => {
-                          // Open image in new tab
                           window.open(post.imageUrl, '_blank');
                         }}
                       />
@@ -985,11 +982,11 @@ const Community = () => {
               </div>
 
               {/* Post Actions */}
-              <div className="px-8 pb-6">
-                <div className="flex items-center gap-2 mb-4">
+              <div className="px-5 pb-4">
+                <div className="flex items-center gap-2 mb-3">
                   {post.likes?.length > 0 && (
-                    <div className="flex items-center gap-1 text-sm text-gray-500">
-                      <HeartSolid className="w-4 h-4 text-red-500" />
+                    <div className="flex items-center gap-1 text-xs text-gray-500">
+                      <HeartSolid className="w-3 h-3 text-red-500" />
                       <span>{post.likes.length} {post.likes.length === 1 ? 'person likes' : 'people like'} this</span>
                     </div>
                   )}
@@ -1026,26 +1023,26 @@ const Community = () => {
                       <button
                         key={index}
                         onClick={user ? item.action : () => alert('Please log in to interact with posts')}
-                        className={`flex items-center gap-2 px-4 py-3 rounded-2xl transition-all duration-300 ${item.color} ${item.hoverColor} group hover:scale-105`}
+                        className={`flex items-center gap-1.5 px-3 py-2 rounded-xl transition-all duration-300 ${item.color} ${item.hoverColor} group hover:scale-105`}
                       >
-                        <item.icon className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                        <item.icon className="w-4 h-4 group-hover:scale-110 transition-transform" />
                         <span className="text-sm font-medium">{item.count}</span>
-                        <span className="text-xs opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span className="text-xs opacity-0 group-hover:opacity-100 transition-opacity hidden sm:inline">
                           {item.label}
                         </span>
                       </button>
                     ))}
                   </div>
                   
-                  <div className="flex items-center gap-2">
-                    <button className="p-3 text-gray-500 hover:text-blue-500 hover:bg-blue-50 rounded-2xl transition-all hover:scale-110">
-                      <BookmarkIcon className="w-5 h-5" />
+                  <div className="flex items-center gap-1">
+                    <button className="p-2 text-gray-500 hover:text-blue-500 hover:bg-blue-50 rounded-xl transition-all hover:scale-110">
+                      <BookmarkIcon className="w-4 h-4" />
                     </button>
                     <button 
                       onClick={() => handleShare(post)}
-                      className="p-3 text-gray-500 hover:text-green-500 hover:bg-green-50 rounded-2xl transition-all hover:scale-110"
+                      className="p-2 text-gray-500 hover:text-green-500 hover:bg-green-50 rounded-xl transition-all hover:scale-110"
                     >
-                      <ShareIcon className="w-5 h-5" />
+                      <ShareIcon className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
@@ -1053,78 +1050,78 @@ const Community = () => {
 
               {/* Comments Section */}
               {showComments[post._id] && user && (
-                <div className="border-t border-gray-100 bg-gradient-to-r from-blue-50/30 to-purple-50/30 p-8">
+                <div className="border-t border-gray-100 bg-gradient-to-r from-blue-50/30 to-purple-50/30 p-4">
                   {/* Add Comment */}
-                  <div className="flex gap-4 mb-6">
+                  <div className="flex gap-3 mb-4">
                     <img
                       src={user?.imageUrl || '/default-avatar.png'}
                       alt="Your avatar"
-                      className="w-10 h-10 rounded-xl shadow-md"
+                      className="w-8 h-8 rounded-lg shadow-md flex-shrink-0"
                       onError={(e) => {
                         e.target.src = '/default-avatar.png';
                       }}
                     />
-                    <div className="flex-1 flex gap-3">
+                    <div className="flex-1 flex gap-2">
                       <input
                         type="text"
                         value={commentText[post._id] || ''}
                         onChange={(e) => setCommentText(prev => ({ ...prev, [post._id]: e.target.value }))}
                         placeholder="Share your thoughts..."
-                        className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-400 transition-all bg-white/80 backdrop-blur-sm"
+                        className="flex-1 px-3 py-2 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-400 transition-all bg-white/80 backdrop-blur-sm text-sm"
                         onKeyPress={(e) => e.key === 'Enter' && handleComment(post._id)}
                         maxLength={500}
                       />
                       <button
                         onClick={() => handleComment(post._id)}
-                        className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-2xl hover:shadow-lg transition-all hover:scale-105 flex items-center gap-2"
+                        className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:shadow-lg transition-all hover:scale-105 flex items-center gap-1 text-sm"
                       >
-                        <PaperAirplaneIcon className="w-4 h-4" />
+                        <PaperAirplaneIcon className="w-3 h-3" />
                         <span className="hidden sm:inline">Reply</span>
                       </button>
                     </div>
                   </div>
 
                   {/* Comments List */}
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {post.comments?.map((comment) => (
-                      <div key={comment._id} className="flex gap-4 bg-white/60 backdrop-blur-sm rounded-2xl p-4">
+                      <div key={comment._id} className="flex gap-3 bg-white/60 backdrop-blur-sm rounded-xl p-3">
                         <img
                           src={comment.userAvatar || '/default-avatar.png'}
                           alt={comment.username}
-                          className="w-10 h-10 rounded-xl shadow-md"
+                          className="w-8 h-8 rounded-lg shadow-md flex-shrink-0"
                           onError={(e) => {
                             e.target.src = '/default-avatar.png';
                           }}
                         />
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <span className="font-semibold text-gray-800">{comment.username}</span>
-                              <span className="text-xs text-gray-500">{getTimeAgo(comment.createdAt)}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                              <span className="font-semibold text-gray-800 text-sm truncate">{comment.username}</span>
+                              <span className="text-xs text-gray-500 flex-shrink-0">{getTimeAgo(comment.createdAt)}</span>
                             </div>
                             
                             {/* Comment Options Dropdown */}
                             {comment.userId === user?.id && (
-                              <div className="relative">
+                              <div className="relative flex-shrink-0">
                                 <button
                                   onClick={(e) => toggleDropdown(e, 'comment', `${post._id}-${comment._id}`)}
                                   className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all"
                                 >
-                                  <EllipsisHorizontalIcon className="w-4 h-4" />
+                                  <EllipsisHorizontalIcon className="w-3 h-3" />
                                 </button>
                                 
                                 {showDropdown[`comment-${post._id}-${comment._id}`] && (
-                                  <div className="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-20 min-w-[120px]">
+                                  <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20 min-w-[100px]">
                                     <button
                                       onClick={() => startEditComment(comment, post._id)}
-                                      className="w-full px-3 py-1 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                                      className="w-full px-3 py-1 text-left text-xs text-gray-700 hover:bg-gray-50 flex items-center gap-2"
                                     >
                                       <PencilIcon className="w-3 h-3" />
                                       Edit
                                     </button>
                                     <button
                                       onClick={() => confirmDelete('comment', comment._id, post._id)}
-                                      className="w-full px-3 py-1 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                      className="w-full px-3 py-1 text-left text-xs text-red-600 hover:bg-red-50 flex items-center gap-2"
                                     >
                                       <TrashIcon className="w-3 h-3" />
                                       Delete
@@ -1141,7 +1138,7 @@ const Community = () => {
                                 type="text"
                                 value={editContent}
                                 onChange={(e) => setEditContent(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all text-sm"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all text-xs"
                                 maxLength={500}
                               />
                               <div className="flex items-center justify-between mt-2">
@@ -1165,7 +1162,7 @@ const Community = () => {
                               </div>
                             </div>
                           ) : (
-                            <p className="text-gray-700 text-sm">{comment.content}</p>
+                            <p className="text-gray-700 text-sm break-words">{comment.content}</p>
                           )}
                         </div>
                       </div>
@@ -1179,15 +1176,15 @@ const Community = () => {
 
         {/* Empty State */}
         {!fetchingPosts && posts.length === 0 && (
-          <div className="text-center py-20">
-            <div className="relative mb-8">
-              <div className="text-8xl mb-4 animate-bounce">🚀</div>
+          <div className="text-center py-12 px-4">
+            <div className="relative mb-6">
+              <div className="text-6xl mb-4 animate-bounce">🚀</div>
               <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-600/20 rounded-full blur-3xl animate-pulse"></div>
             </div>
-            <h3 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
+            <h3 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
               Ready to Launch?
             </h3>
-            <p className="text-gray-600 text-lg max-w-md mx-auto">
+            <p className="text-gray-600 text-base max-w-sm mx-auto">
               Be the pioneer! Share your first amazing insight and start building our incredible community.
             </p>
           </div>
