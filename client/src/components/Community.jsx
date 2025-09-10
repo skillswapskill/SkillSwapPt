@@ -375,7 +375,7 @@ const Community = () => {
     }
   };
 
-  // UPDATED: Enhanced handleCreatePost with credit earning
+  // UPDATED: Enhanced handleCreatePost with credit earning and NO character limits
   const handleCreatePost = async (e) => {
     e.preventDefault();
     console.log('🚀 handleCreatePost called');
@@ -385,12 +385,6 @@ const Community = () => {
     if (!newPost.trim() && !selectedImage) {
       console.warn('⚠️ Post content and image are both empty');
       alert('Please enter some content or select an image for your post');
-      return;
-    }
-
-    if (newPost.length > 500) {
-      console.warn('⚠️ Post content too long');
-      alert('Post content is too long (max 500 characters)');
       return;
     }
     
@@ -441,11 +435,11 @@ const Community = () => {
       removeImage();
       await fetchPosts();
       
-      // NEW: Award credits for posting
+      // Award credits for posting
       await awardPostCredits(user.id);
       
       // Show success message
-      // alert('Post created successfully! 🎉 You earned 1 credit!');
+      alert('Post created successfully! 🎉 You earned 1 credit!');
       
     } catch (error) {
       handleError(error, 'createPost');
@@ -490,6 +484,7 @@ const Community = () => {
     }
   };
 
+  // UPDATED: handleComment with NO character limits
   const handleComment = async (postId) => {
     if (!validateUserData()) return;
     
@@ -497,12 +492,6 @@ const Community = () => {
     if (!content?.trim()) {
       console.warn('⚠️ Comment content is empty');
       alert('Please enter a comment');
-      return;
-    }
-
-    if (content.length > 500) {
-      console.warn('⚠️ Comment too long');
-      alert('Comment is too long (max 500 characters)');
       return;
     }
     
@@ -577,7 +566,7 @@ const Community = () => {
         <div className="absolute top-1/2 left-1/2 w-60 h-60 bg-gradient-to-br from-cyan-400/10 to-blue-600/10 rounded-full blur-3xl animate-bounce delay-500"></div>
       </div>
 
-      {/* NEW: Credit Notification */}
+      {/* Credit Notification */}
       {creditNotification.show && (
         <div className="fixed top-20 right-4 z-50 animate-in slide-in-from-right duration-300">
           <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 max-w-sm">
@@ -719,7 +708,7 @@ const Community = () => {
             </div>
           </div>
           
-          {/* FIXED: Clean Tab Navigation */}
+          {/* Clean Tab Navigation */}
           <div className="flex space-x-1 bg-white/70 rounded-2xl p-1 shadow-md border border-blue-200/30">
             {[
               { id: 'trending', label: 'Trending', icon: '🔥' },
@@ -769,7 +758,7 @@ const Community = () => {
           </div>
         )}
 
-        {/* Create Post Card - UPDATED with credit info */}
+        {/* Create Post Card - UPDATED without character limits */}
         {user && (
           <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-blue-200/50 mb-6 overflow-hidden group hover:shadow-2xl transition-all duration-500">
             <div className="bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 p-5">
@@ -791,29 +780,26 @@ const Community = () => {
                   </div>
                   
                   <div className="flex-1 space-y-3">
+                    {/* UPDATED: Textarea without character limit */}
                     <div className="relative">
                       <textarea
                         value={newPost}
                         onChange={(e) => setNewPost(e.target.value)}
-                        placeholder="🚀 Share your knowledge, ask questions, or inspire fellow learners!"
-                        className="w-full p-4 border-2 border-blue-100 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all bg-white/60 backdrop-blur-sm text-gray-700 placeholder-gray-500 text-sm"
+                        placeholder="🚀 Share your knowledge, ask questions, or inspire fellow learners! Write as much as you want..."
+                        className="w-full p-4 border-2 border-blue-100 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all bg-white/60 backdrop-blur-sm text-gray-700 placeholder-gray-500 text-sm min-h-[80px]"
                         rows="3"
-                        maxLength={500}
                       />
-                      <div className={`absolute bottom-2 right-3 text-xs ${newPost.length > 450 ? 'text-red-500' : 'text-gray-400'}`}>
-                        {newPost.length}/500
-                      </div>
                     </div>
 
-                    {/* NEW: Credit Info Banner */}
+                    {/* Credit Info Banner */}
                     <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200/50 rounded-lg p-3 flex items-center gap-2">
                       <CreditCoinIcon className="w-5 h-5 text-yellow-600 animate-pulse" />
                       <span className="text-xs text-yellow-700 font-medium">
-                        💡 Earn 1 credit for each post you share!
+                        💡 Earn 1 credit for each post you share! No word limits - express yourself freely!
                       </span>
                     </div>
 
-                    {/* SMALLER Image Preview */}
+                    {/* Image Preview */}
                     {imagePreview && (
                       <div className="relative">
                         <img
@@ -875,10 +861,10 @@ const Community = () => {
                         </button>
                       </div>
                       
-                      {/* UPDATED: Share button with credit info */}
+                      {/* UPDATED: Share button without character limit validation */}
                       <button
                         type="submit"
-                        disabled={(!newPost.trim() && !selectedImage) || loading || newPost.length > 500}
+                        disabled={(!newPost.trim() && !selectedImage) || loading}
                         className="group px-6 py-2.5 bg-gradient-to-r from-blue-500 via-purple-600 to-pink-600 text-white rounded-xl font-semibold hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center gap-2 relative overflow-hidden text-sm"
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-700 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -994,15 +980,14 @@ const Community = () => {
                 <div className="prose max-w-none">
                   {editingPost === post._id ? (
                     <div className="mb-3">
+                      {/* UPDATED: Edit textarea without character limit */}
                       <textarea
                         value={editContent}
                         onChange={(e) => setEditContent(e.target.value)}
-                        className="w-full p-3 border-2 border-blue-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all text-sm"
+                        className="w-full p-3 border-2 border-blue-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all text-sm min-h-[80px]"
                         rows="3"
-                        maxLength={500}
                       />
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="text-xs text-gray-400">{editContent.length}/500</span>
+                      <div className="flex items-center justify-end mt-2">
                         <div className="flex gap-2">
                           <button
                             onClick={cancelEdit}
@@ -1023,11 +1008,11 @@ const Community = () => {
                     </div>
                   ) : (
                     post.content && (
-                      <p className="text-gray-700 leading-relaxed text-base mb-3">{post.content}</p>
+                      <p className="text-gray-700 leading-relaxed text-base mb-3 whitespace-pre-wrap">{post.content}</p>
                     )
                   )}
                   
-                  {/* FIXED: Much smaller Post Image with proper aspect ratio */}
+                  {/* Post Image */}
                   {post.imageUrl && (
                     <div className="mb-3">
                       <img
@@ -1117,7 +1102,7 @@ const Community = () => {
               {/* Comments Section */}
               {showComments[post._id] && user && (
                 <div className="border-t border-gray-100 bg-gradient-to-r from-blue-50/30 to-purple-50/30 p-4">
-                  {/* Add Comment */}
+                  {/* Add Comment - UPDATED without character limit */}
                   <div className="flex gap-3 mb-4">
                     <img
                       src={user?.imageUrl || '/default-avatar.png'}
@@ -1128,18 +1113,22 @@ const Community = () => {
                       }}
                     />
                     <div className="flex-1 flex gap-2">
-                      <input
-                        type="text"
+                      <textarea
                         value={commentText[post._id] || ''}
                         onChange={(e) => setCommentText(prev => ({ ...prev, [post._id]: e.target.value }))}
-                        placeholder="Share your thoughts..."
-                        className="flex-1 px-3 py-2 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-400 transition-all bg-white/80 backdrop-blur-sm text-sm"
-                        onKeyPress={(e) => e.key === 'Enter' && handleComment(post._id)}
-                        maxLength={500}
+                        placeholder="Share your thoughts... Write as much as you want!"
+                        className="flex-1 px-3 py-2 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-400 transition-all bg-white/80 backdrop-blur-sm text-sm resize-none min-h-[40px]"
+                        rows="2"
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleComment(post._id);
+                          }
+                        }}
                       />
                       <button
                         onClick={() => handleComment(post._id)}
-                        className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:shadow-lg transition-all hover:scale-105 flex items-center gap-1 text-sm"
+                        className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:shadow-lg transition-all hover:scale-105 flex items-center gap-1 text-sm self-end"
                       >
                         <PaperAirplaneIcon className="w-3 h-3" />
                         <span className="hidden sm:inline">Reply</span>
@@ -1200,15 +1189,14 @@ const Community = () => {
                           
                           {editingComment === `${post._id}-${comment._id}` ? (
                             <div>
-                              <input
-                                type="text"
+                              {/* UPDATED: Edit comment textarea without character limit */}
+                              <textarea
                                 value={editContent}
                                 onChange={(e) => setEditContent(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all text-xs"
-                                maxLength={500}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all text-xs resize-none min-h-[60px]"
+                                rows="2"
                               />
-                              <div className="flex items-center justify-between mt-2">
-                                <span className="text-xs text-gray-400">{editContent.length}/500</span>
+                              <div className="flex items-center justify-end mt-2">
                                 <div className="flex gap-2">
                                   <button
                                     onClick={cancelEdit}
@@ -1228,7 +1216,7 @@ const Community = () => {
                               </div>
                             </div>
                           ) : (
-                            <p className="text-gray-700 text-sm break-words">{comment.content}</p>
+                            <p className="text-gray-700 text-sm break-words whitespace-pre-wrap">{comment.content}</p>
                           )}
                         </div>
                       </div>
@@ -1255,7 +1243,7 @@ const Community = () => {
             </p>
             <div className="flex items-center justify-center gap-2 text-yellow-600">
               <CreditCoinIcon className="w-5 h-5" />
-              <span className="text-sm font-medium">Plus earn credits for every post!</span>
+              <span className="text-sm font-medium">Plus earn credits for every post! No word limits!</span>
             </div>
           </div>
         )}
