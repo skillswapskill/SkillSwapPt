@@ -79,6 +79,7 @@ app.use('/api/challenges', challengeRoutes);
 app.use('/api/community', communityRoutes);
 
 
+
 // --- SOCKET.IO INTEGRATION FOR SUSPICIOUS ACTIVITY ---
 const suspiciousActivityController = new SuspiciousActivityController(io);
 

@@ -26,6 +26,15 @@ import {
 import { useUser } from '@clerk/clerk-react';
 import { useApi } from '../hooks/useApi';
 
+// Credit Coin SVG Component
+const CreditCoinIcon = ({ className = "w-4 h-4" }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <circle cx="12" cy="12" r="10" className="text-yellow-400"/>
+    <circle cx="12" cy="12" r="7" className="text-yellow-500"/>
+    <text x="12" y="16" textAnchor="middle" className="fill-yellow-900 text-xs font-bold">₹</text>
+  </svg>
+);
+
 const Community = () => {
   const { user, isLoaded } = useUser();
   const { apiClient, baseUrl } = useApi();
@@ -47,6 +56,7 @@ const Community = () => {
   const [editingComment, setEditingComment] = useState(null);
   const [editContent, setEditContent] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, type: '', id: '', postId: '' });
+  const [creditNotification, setCreditNotification] = useState({ show: false, message: '' });
   const fileInputRef = useRef(null);
 
   // Debug logging
@@ -135,6 +145,34 @@ const Community = () => {
     }
     
     return true;
+  };
+
+  // FIXED: Function to award credits for posting
+  const awardPostCredits = async (userId) => {
+    try {
+      console.log('🪙 Awarding credits for post creation...');
+      const response = await apiClient.post('/api/credits/earn-post', {
+        userId: userId, // This is the Clerk ID
+        creditsEarned: 1
+      });
+      
+      if (response.data.success) {
+        console.log('✅ Credits awarded successfully');
+        // Show credit notification
+        setCreditNotification({
+          show: true,
+          message: '🪙 You earned 1 credit for posting!'
+        });
+        
+        // Hide notification after 4 seconds
+        setTimeout(() => {
+          setCreditNotification({ show: false, message: '' });
+        }, 4000);
+      }
+    } catch (error) {
+      console.error('❌ Error awarding credits:', error);
+      // Don't show error to user for credits, as post was successful
+    }
   };
 
   // Handle image selection
@@ -337,6 +375,7 @@ const Community = () => {
     }
   };
 
+  // UPDATED: Enhanced handleCreatePost with credit earning
   const handleCreatePost = async (e) => {
     e.preventDefault();
     console.log('🚀 handleCreatePost called');
@@ -401,7 +440,12 @@ const Community = () => {
       setNewPost('');
       removeImage();
       await fetchPosts();
-      alert('Post created successfully! 🎉');
+      
+      // NEW: Award credits for posting
+      await awardPostCredits(user.id);
+      
+      // Show success message
+      // alert('Post created successfully! 🎉 You earned 1 credit!');
       
     } catch (error) {
       handleError(error, 'createPost');
@@ -532,6 +576,16 @@ const Community = () => {
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-indigo-400/20 to-pink-600/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
         <div className="absolute top-1/2 left-1/2 w-60 h-60 bg-gradient-to-br from-cyan-400/10 to-blue-600/10 rounded-full blur-3xl animate-bounce delay-500"></div>
       </div>
+
+      {/* NEW: Credit Notification */}
+      {creditNotification.show && (
+        <div className="fixed top-20 right-4 z-50 animate-in slide-in-from-right duration-300">
+          <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 max-w-sm">
+            <CreditCoinIcon className="w-6 h-6 animate-bounce" />
+            <span className="font-semibold text-sm">{creditNotification.message}</span>
+          </div>
+        </div>
+      )}
 
       {/* Delete Confirmation Modal */}
       {deleteConfirm.isOpen && (
@@ -715,7 +769,7 @@ const Community = () => {
           </div>
         )}
 
-        {/* Create Post Card */}
+        {/* Create Post Card - UPDATED with credit info */}
         {user && (
           <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-blue-200/50 mb-6 overflow-hidden group hover:shadow-2xl transition-all duration-500">
             <div className="bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 p-5">
@@ -749,6 +803,14 @@ const Community = () => {
                       <div className={`absolute bottom-2 right-3 text-xs ${newPost.length > 450 ? 'text-red-500' : 'text-gray-400'}`}>
                         {newPost.length}/500
                       </div>
+                    </div>
+
+                    {/* NEW: Credit Info Banner */}
+                    <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200/50 rounded-lg p-3 flex items-center gap-2">
+                      <CreditCoinIcon className="w-5 h-5 text-yellow-600 animate-pulse" />
+                      <span className="text-xs text-yellow-700 font-medium">
+                        💡 Earn 1 credit for each post you share!
+                      </span>
                     </div>
 
                     {/* SMALLER Image Preview */}
@@ -813,6 +875,7 @@ const Community = () => {
                         </button>
                       </div>
                       
+                      {/* UPDATED: Share button with credit info */}
                       <button
                         type="submit"
                         disabled={(!newPost.trim() && !selectedImage) || loading || newPost.length > 500}
@@ -821,10 +884,13 @@ const Community = () => {
                         <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-700 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                         <PaperAirplaneIcon className="w-4 h-4 relative z-10 group-hover:rotate-12 transition-transform duration-300" />
                         <span className="relative z-10">
-                          {loading ? (uploadingImage ? 'Uploading...' : 'Posting...') : 'Share'}
+                          {loading ? (uploadingImage ? 'Uploading...' : 'Posting...') : 'Share & Earn'}
                         </span>
                         {!loading && (
-                          <SparklesIcon className="w-4 h-4 relative z-10 animate-pulse" />
+                          <>
+                            <SparklesIcon className="w-4 h-4 relative z-10 animate-pulse" />
+                            <CreditCoinIcon className="w-4 h-4 relative z-10 text-yellow-300" />
+                          </>
                         )}
                       </button>
                     </div>
@@ -1184,9 +1250,13 @@ const Community = () => {
             <h3 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
               Ready to Launch?
             </h3>
-            <p className="text-gray-600 text-base max-w-sm mx-auto">
+            <p className="text-gray-600 text-base max-w-sm mx-auto mb-4">
               Be the pioneer! Share your first amazing insight and start building our incredible community.
             </p>
+            <div className="flex items-center justify-center gap-2 text-yellow-600">
+              <CreditCoinIcon className="w-5 h-5" />
+              <span className="text-sm font-medium">Plus earn credits for every post!</span>
+            </div>
           </div>
         )}
       </div>

@@ -177,3 +177,39 @@ export const redeemCredits = async (req, res) => {
   }
 };
 
+// Add this to your credit.controller.js
+export const earnPostCredits = async (req, res) => {
+  try {
+    const { userId, creditsEarned = 1 } = req.body;
+    
+    const user = await User.findOne({ clerkId: userId });
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
+    }
+    
+    // Award credits for posting
+    user.creditEarned += creditsEarned;
+    user.totalCredits += creditsEarned;
+    user.notifications.push({
+      message: `You have earned ${creditsEarned} credit${creditsEarned > 1 ? 's' : ''} for sharing a post in the community!`,
+      type: "credit",
+      isRead: false,
+      createdAt: new Date()
+    });
+    
+    await user.save();
+    
+    return res.status(200).json({ 
+      success: true,
+      message: "Credits awarded successfully", 
+      user,
+      creditsEarned
+    });
+  } catch (err) {
+    console.error("Post credit error:", err);
+    return res.status(500).json({ 
+      message: "Server error",
+      error: err.message 
+    });
+  }
+};
