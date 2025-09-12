@@ -13,9 +13,63 @@ import dayjs from "dayjs";
 // ✅ Import the dynamic API client
 import { apiClient } from "../config/api";
 
+// 🎨 Loading Progress Bar Component
+const LoadingProgressBar = ({ isLoading }) => {
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    if (isLoading) {
+      setProgress(0);
+      const interval = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            return 100;
+          }
+          // Simulate realistic loading with varying speeds
+          const increment = Math.random() * 15 + 5; // Random between 5-20
+          return Math.min(prev + increment, 100);
+        });
+      }, 200); // Update every 200ms
+
+      return () => clearInterval(interval);
+    }
+  }, [isLoading]);
+
+  if (!isLoading && progress === 0) return null;
+
+  return (
+    <div className="fixed top-0 left-0 right-0 z-50">
+      {/* Main progress bar */}
+      <div className="h-1 bg-transparent">
+        <div
+          className="h-full bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 shadow-lg transition-all duration-300 ease-out"
+          style={{
+            width: `${progress}%`,
+            boxShadow: '0 0 10px rgba(59, 130, 246, 0.6)',
+          }}
+        />
+      </div>
+      
+      {/* Shimmer effect */}
+      <div
+        className="absolute top-0 h-1 w-20 bg-gradient-to-r from-transparent via-white to-transparent opacity-30 animate-pulse"
+        style={{
+          left: `${Math.max(0, progress - 10)}%`,
+          transition: 'left 300ms ease-out',
+        }}
+      />
+    </div>
+  );
+};
+
 function Profile() {
   const { user, isSignedIn } = useUser();
   const navigate = useNavigate();
+
+  // 🎨 Loading states
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isPageReady, setIsPageReady] = useState(false);
 
   const [step, setStep] = useState(1);
   const [name, setName] = useState("");
@@ -143,7 +197,7 @@ function Profile() {
           toast.error("Failed to add service");
         }
       }
-    }else{
+    } else {
       toast.error("Service name must match one of your skills");
       setServiceName(""); // Clear input if skill doesn't match
       setServiceCredits(""); // Clear credits input as well
@@ -153,8 +207,6 @@ function Profile() {
 
   // ✅ Delete service using dynamic API
   const handleDeleteService = async (sessionId) => {
-    // console.log("Trying to delete sessionId:", sessionId);
-
     try {
       // ✅ Using apiClient instead of hardcoded URL
       await apiClient.delete(`/api/sessions/delete/${sessionId}`);
@@ -214,11 +266,15 @@ function Profile() {
     return <PickersDay {...other} day={day} outsideCurrentMonth={outsideCurrentMonth} />;
   };
 
-  // ✅ Sync user using dynamic API
+  // ✅ Sync user using dynamic API with loading simulation
   useEffect(() => {
     const syncUser = async () => {
       if (!isSignedIn) return;
+      
       try {
+        // Start loading
+        setIsInitialLoading(true);
+        
         // ✅ Using apiClient instead of hardcoded URL
         const res = await apiClient.post("/api/users/sync", {
           clerkId: user.id,
@@ -233,10 +289,23 @@ function Profile() {
         setSkills(data.skills);
         setProfilePic(data.profilePic);
         setMongoUserId(data._id);
-        if (data._id) fetchOfferedServices(data._id);
+        
+        if (data._id) await fetchOfferedServices(data._id);
         if (data.showCongrats) setShowCongrats(true);
+
+        // Simulate realistic loading time
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
       } catch (err) {
         console.error("Sync failed", err);
+        // Still stop loading even on error
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      } finally {
+        // Ensure loading completes
+        setTimeout(() => {
+          setIsInitialLoading(false);
+          setTimeout(() => setIsPageReady(true), 100);
+        }, 500);
       }
     };
 
@@ -253,7 +322,6 @@ function Profile() {
           time: s.dateTime,
         }));
         setServices(formatted);
-        // console.log("Fetched offered services:", formatted);
       } catch (err) {
         console.error("Could not fetch offered services", err);
       }
@@ -276,15 +344,48 @@ function Profile() {
     setSkills(skills.filter((s) => s !== skill));
   };
 
-  if (!isSignedIn) return <div>Loading...</div>;
+  // Show loading screen
+  if (!isSignedIn) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading progress bar and initial loading screen
+  if (isInitialLoading || !isPageReady) {
+    return (
+      <>
+        <LoadingProgressBar isLoading={isInitialLoading} />
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-blue-600 rounded-lg flex items-center justify-center mx-auto mb-4 animate-pulse">
+              <span className="text-white font-bold text-2xl">S</span>
+            </div>
+            <h2 className="text-xl font-semibold text-blue-800 mb-2 animate-pulse">SkillSwap</h2>
+            <p className="text-gray-600 animate-pulse">Loading your profile...</p>
+            <div className="mt-6 flex space-x-1 justify-center">
+              <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
+              <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+              <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   // 🎨 SIMPLIFIED Congratulations Screen - Clean & Minimal
   if (showCongrats) {
     return (
-      <div className="fixed inset-0 bg-gray-50 z-50 flex flex-col items-center justify-center p-6">
-        <div className="w-full max-w-lg bg-white shadow-xl rounded-xl p-8 text-center">
+      <div className="fixed inset-0 bg-gray-50 z-50 flex flex-col items-center justify-center p-6 animate-fade-in">
+        <div className="w-full max-w-lg bg-white shadow-xl rounded-xl p-8 text-center transform animate-scale-in">
           {/* Success Icon */}
-          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
             <span className="text-4xl">🎉</span>
           </div>
 
@@ -333,7 +434,7 @@ function Profile() {
           {/* Continue Button */}
           <button
             onClick={() => setShowCongrats(false)}
-            className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-semibold transition-colors"
+            className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-semibold transition-colors transform hover:scale-105"
           >
             Get Started
           </button>
@@ -345,14 +446,14 @@ function Profile() {
   if (!isSetupDone) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-50 px-4">
-        <div className="w-full max-w-md bg-white shadow-xl rounded-xl p-6">
+        <div className="w-full max-w-md bg-white shadow-xl rounded-xl p-6 transform animate-fade-in-up">
           {step === 1 && (
             <div>
               <h2 className="text-xl font-semibold text-center mb-6 text-blue-800">
                 Set up your profile
               </h2>
               <div className="flex flex-col items-center gap-4">
-                <label className="relative w-28 h-28 rounded-full overflow-hidden border-4 border-blue-500 shadow-lg cursor-pointer">
+                <label className="relative w-28 h-28 rounded-full overflow-hidden border-4 border-blue-500 shadow-lg cursor-pointer hover:border-blue-600 transition-colors">
                   {profilePic ? (
                     <img
                       src={profilePic}
@@ -372,18 +473,18 @@ function Profile() {
                   />
                 </label>
                 {uploading && (
-                  <p className="text-blue-600 text-sm">Uploading...</p>
+                  <p className="text-blue-600 text-sm animate-pulse">Uploading...</p>
                 )}
                 <input
                   type="text"
                   placeholder="Enter your name"
-                  className="w-full border rounded-lg px-4 py-2 text-gray-800"
+                  className="w-full border rounded-lg px-4 py-2 text-gray-800 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                 />
                 <button
                   onClick={() => setStep(2)}
-                  className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
+                  className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transform hover:scale-105 transition-all"
                 >
                   Next
                 </button>
@@ -402,11 +503,11 @@ function Profile() {
                   value={inputSkill}
                   onChange={(e) => setInputSkill(e.target.value)}
                   placeholder="e.g. React"
-                  className="flex-1 border rounded-lg px-3 py-2"
+                  className="flex-1 border rounded-lg px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
                 />
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transform hover:scale-105 transition-all"
                 >
                   Add
                 </button>
@@ -415,12 +516,12 @@ function Profile() {
                 {skills.map((skill, idx) => (
                   <span
                     key={idx}
-                    className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center gap-1"
+                    className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center gap-1 animate-fade-in"
                   >
                     {skill}
                     <button
                       onClick={() => handleRemoveSkill(skill)}
-                      className="text-red-500 text-xs"
+                      className="text-red-500 text-xs hover:text-red-700 transition-colors"
                     >
                       ✕
                     </button>
@@ -430,10 +531,10 @@ function Profile() {
               <button
                 onClick={handleSubmit}
                 disabled={uploading}
-                className={`w-full py-2 rounded-lg text-white ${
+                className={`w-full py-2 rounded-lg text-white transition-all transform ${
                   uploading
                     ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-green-600 hover:bg-green-700"
+                    : "bg-green-600 hover:bg-green-700 hover:scale-105"
                 }`}
               >
                 {uploading ? "Saving..." : "Submit & View Profile"}
@@ -445,16 +546,16 @@ function Profile() {
     );
   }
 
-  // Main profile view
+  // Main profile view with fade-in animation
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 p-6 animate-fade-in">
       <br />
       <br />
       <div className="max-w-6xl mx-auto">
         {/* Profile Info - Full width on all screens */}
-        <div className="col-span-full bg-white shadow-xl rounded-xl p-6 flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+        <div className="col-span-full bg-white shadow-xl rounded-xl p-6 flex flex-col md:flex-row justify-between items-center gap-4 mb-6 transform animate-slide-up">
           <div className="flex items-center gap-4">
-            <label className="relative w-20 h-20 rounded-full overflow-hidden border-4 border-blue-500 shadow-md cursor-pointer">
+            <label className="relative w-20 h-20 rounded-full overflow-hidden border-4 border-blue-500 shadow-md cursor-pointer hover:border-blue-600 transition-all duration-300 hover:scale-105">
               <img
                 src={profilePic || user.imageUrl || "/user.png"}
                 alt="Profile"
@@ -472,7 +573,7 @@ function Profile() {
             <div>
               {editMode ? (
                 <input
-                  className="text-xl font-semibold text-blue-700 border-b border-blue-500"
+                  className="text-xl font-semibold text-blue-700 border-b border-blue-500 focus:border-blue-600 focus:outline-none transition-colors"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                 />
@@ -484,13 +585,14 @@ function Profile() {
                   skills.map((skill, idx) => (
                     <span
                       key={idx}
-                      className="bg-blue-100 text-blue-700 px-3 py-1 text-sm rounded-full flex items-center gap-1"
+                      className="bg-blue-100 text-blue-700 px-3 py-1 text-sm rounded-full flex items-center gap-1 animate-fade-in hover:bg-blue-200 transition-colors"
+                      style={{animationDelay: `${idx * 0.1}s`}}
                     >
                       {skill}
                       {editMode && (
                         <button
                           onClick={() => handleRemoveSkill(skill)}
-                          className="text-red-500 text-xs"
+                          className="text-red-500 text-xs hover:text-red-700 transition-colors"
                         >
                           ✕
                         </button>
@@ -510,11 +612,11 @@ function Profile() {
                     value={inputSkill}
                     onChange={(e) => setInputSkill(e.target.value)}
                     placeholder="Add Skill"
-                    className="px-2 py-1 border rounded-md"
+                    className="px-2 py-1 border rounded-md focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
                   />
                   <button
                     type="submit"
-                    className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transform hover:scale-105 transition-all"
                   >
                     Add
                   </button>
@@ -525,9 +627,9 @@ function Profile() {
 
           {/* 🔥 ENHANCED Credits Section with Buy Credits and Redeem Button */}
           <div className="text-center min-w-[200px]">
-            <div className="bg-gradient-to-br from-blue-50 to-green-50 rounded-xl p-4 mb-3 border border-blue-100">
+            <div className="bg-gradient-to-br from-blue-50 to-green-50 rounded-xl p-4 mb-3 border border-blue-100 hover:shadow-lg transition-shadow">
               <p className="text-lg font-medium text-blue-700 mb-1">Credits</p>
-              <p className="text-3xl font-bold text-green-600 mb-4">
+              <p className="text-3xl font-bold text-green-600 mb-4 animate-pulse">
                 {credits.toLocaleString()}
               </p>
 
@@ -578,10 +680,10 @@ function Profile() {
                 <button
                   onClick={handleSubmit}
                   disabled={uploading}
-                  className={`px-4 py-1 rounded mt-2 text-white text-sm transition-all ${
+                  className={`px-4 py-1 rounded mt-2 text-white text-sm transition-all transform ${
                     uploading
                       ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-green-600 hover:bg-green-700 shadow-md hover:shadow-lg"
+                      : "bg-green-600 hover:bg-green-700 shadow-md hover:shadow-lg hover:scale-105"
                   }`}
                 >
                   {uploading ? "Saving..." : "Save Changes"}
@@ -593,19 +695,19 @@ function Profile() {
 
         {/* Grid layout for Calendar and Sessions */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* 🎨 Enhanced Calendar with Session Highlighting (NO GREEN BADGES) */}
-          <div className="hidden lg:block bg-white shadow-xl rounded-xl p-6">
+          {/* 🎨 Enhanced Calendar with Session Highlighting */}
+          <div className="hidden lg:block bg-white shadow-xl rounded-xl p-6 transform animate-slide-up" style={{animationDelay: '0.2s'}}>
             <h3 className="text-xl font-semibold mb-3 text-blue-700 flex items-center gap-2">
               📅 Calendar 
               {services.length > 0 && (
-                <span className="text-sm text-green-600 font-normal">
+                <span className="text-sm text-green-600 font-normal animate-fade-in">
                   ({services.length} session{services.length !== 1 ? 's' : ''})
                 </span>
               )}
             </h3>
             {services.length > 0 && (
               <p className="text-xs text-gray-600 mb-3 flex items-center gap-1">
-                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                 Sessions highlighted in green
               </p>
             )}
@@ -619,7 +721,7 @@ function Profile() {
           </div>
 
           {/* Meeting UI - Full width on mobile, half width on laptop */}
-          <div className="bg-white shadow-xl rounded-xl p-6 lg:col-span-1 col-span-1">
+          <div className="bg-white shadow-xl rounded-xl p-6 lg:col-span-1 col-span-1 transform animate-slide-up" style={{animationDelay: '0.4s'}}>
             <h3 className="text-xl font-semibold mb-3 text-blue-700 flex items-center gap-2">
               📹 My Sessions
             </h3>
@@ -632,7 +734,8 @@ function Profile() {
                 services.map((service, idx) => (
                   <div
                     key={idx}
-                    className="border border-gray-300 rounded-xl p-4 shadow-sm flex justify-between items-center"
+                    className="border border-gray-300 rounded-xl p-4 shadow-sm flex justify-between items-center hover:shadow-md transition-shadow animate-fade-in"
+                    style={{animationDelay: `${idx * 0.1}s`}}
                   >
                     <div>
                       <p className="font-medium text-blue-800">
@@ -651,7 +754,7 @@ function Profile() {
                     </div>
                     <button
                       onClick={() => handleDeleteService(service._id)}
-                      className="text-red-600 hover:underline text-sm"
+                      className="text-red-600 hover:underline text-sm hover:text-red-800 transition-colors"
                     >
                       Delete
                     </button>
@@ -667,14 +770,14 @@ function Profile() {
                 placeholder="Service name"
                 value={serviceName}
                 onChange={(e) => setServiceName(e.target.value)}
-                className="border rounded-md px-3 py-2 w-full"
+                className="border rounded-md px-3 py-2 w-full focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
               />
               <input
                 type="number"
                 placeholder="Credit required"
                 value={serviceCredits}
                 onChange={(e) => setServiceCredits(e.target.value)}
-                className="border rounded-md px-3 py-2 w-full"
+                className="border rounded-md px-3 py-2 w-full focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
               />
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DateTimePicker
@@ -686,7 +789,7 @@ function Profile() {
               </LocalizationProvider>
               <button
                 onClick={handleAddService}
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 w-full"
+                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 w-full transform hover:scale-105 transition-all"
               >
                 Add Service
               </button>
@@ -706,6 +809,67 @@ function Profile() {
         draggable
         pauseOnHover
       />
+
+      {/* Custom CSS for animations */}
+      <style jsx>{`
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+        
+        @keyframes fade-in-up {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes slide-up {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes scale-in {
+          from {
+            opacity: 0;
+            transform: scale(0.9);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+        
+        .animate-fade-in {
+          animation: fade-in 0.6s ease-out;
+        }
+        
+        .animate-fade-in-up {
+          animation: fade-in-up 0.8s ease-out;
+        }
+
+        .animate-slide-up {
+          animation: slide-up 0.6s ease-out;
+        }
+
+        .animate-scale-in {
+          animation: scale-in 0.5s ease-out;
+        }
+      `}</style>
     </div>
   );
 }

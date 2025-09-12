@@ -27,6 +27,7 @@ import Contact from "./components/Contact";
 import AboutUs from "./components/AboutUs";
 import Sam from "./components/Sam";
 import Community from "./components/Community";
+import NotFound404 from "./components/NotFound404";
 
 
 
@@ -67,7 +68,7 @@ function App() {
         <Route path="/contact" element={<Contact />} />
         <Route path="/aboutus" element={<AboutUs />} />
         <Route path="/community" element={<Community />} />
-        <Route path="*" element={<h1 className="text-center mt-20">404 - Page Not Found</h1>} />
+        <Route path="*" element={<NotFound404/>} />
 
       </Routes>
 
