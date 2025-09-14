@@ -9,9 +9,9 @@ import { apiClient } from '../config/api';
 const creditPackages = [
   { 
     id: 1, 
-    label: "11 Credits", 
+    label: "10 Credits", 
     amount: 9, 
-    credits: 11,
+    credits: 10,
     originalPrice: 18,
     savings: "Save ₹9",
     bestFor: "Try it out",
@@ -20,10 +20,10 @@ const creditPackages = [
   { 
     id: 2, 
     label: "50 Credits", 
-    amount: 49, 
+    amount: 45, 
     credits: 50,
     originalPrice: 100,
-    savings: "Save ₹51",
+    savings: "Save ₹55",
     popular: true,
     bestFor: "Most Popular",
     icon: "⭐",
@@ -32,30 +32,30 @@ const creditPackages = [
   { 
     id: 3, 
     label: "100 Credits", 
-    amount: 99, 
+    amount: 90, 
     credits: 100,
     originalPrice: 200,
-    savings: "Save ₹101",
+    savings: "Save ₹111",
     bestFor: "Power User",
     icon: "💎"
   },
   { 
     id: 4, 
     label: "150 Credits", 
-    amount: 149, 
+    amount: 135, 
     credits: 150,
     originalPrice: 300,
-    savings: "Save ₹151",
+    savings: "Save ₹166",
     bestFor: "Professional",
     icon: "🏆"
   },
   { 
     id: 5, 
     label: "200 Credits", 
-    amount: 199, 
+    amount: 180, 
     credits: 200,
     originalPrice: 400,
-    savings: "Save ₹201",
+    savings: "Save ₹220",
     bestFor: "Enterprise",
     icon: "👑",
     badge: "MAXIMUM SAVINGS"

@@ -17,8 +17,8 @@ function Redeem() {
   const [mongoUserId, setMongoUserId] = useState("");
   const [showRupeeModal, setShowRupeeModal] = useState(false);
 
-  // Conversion rate: 1000 credits = 2000 e rupees (1 credit = 2 e rupees)
-  const CONVERSION_RATE = 2; // 2 e rupees per credit
+  // Conversion rate: 1000 credits = 905 e rupees (1 credit = 0.910 e rupees)
+  const CONVERSION_RATE = 0.910; // 2 e rupees per credit
   const MIN_CREDITS = 1000; // Minimum credits to redeem
 
   // ✅ Updated fetchUserData function
@@ -38,7 +38,7 @@ function Redeem() {
         setCredits(data.totalCredits);
         
         // ✅ Handle both old skillCoins and new eRupees fields
-        const userERupees = data.eRupees || (data.skillCoins ? data.skillCoins * 2000 : 0);
+        const userERupees = data.eRupees || (data.skillCoins ? data.skillCoins * 910 : 0);
         setERupees(userERupees);
         setMongoUserId(data._id);
       } catch (err) {
@@ -268,8 +268,8 @@ function Redeem() {
 
             {/* Conversion Rate */}
             <div className="bg-gradient-to-r from-blue-600 to-green-600 text-white rounded-xl p-4 text-center mb-6">
-              <p className="font-bold text-lg">1000 Credits = ₹2000 E Rupees</p>
-              <p className="text-sm opacity-95 font-medium">(1 Credit = ₹2 E Rupees)</p>
+              <p className="font-bold text-lg">1000 Credits = ₹910 E Rupees</p>
+              <p className="text-sm opacity-95 font-medium">(1 Credit = ₹0.910 E Rupees)</p>
             </div>
 
             {/* Input */}
