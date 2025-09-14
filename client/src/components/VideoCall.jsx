@@ -13,6 +13,7 @@ const VideoCall = ({ sessionId, userId, userName, sessionData }) => {
   const [detectionEnabled, setDetectionEnabled] = useState(true);
   const [connectionStatus, setConnectionStatus] = useState('connecting');
   const [warningCount, setWarningCount] = useState(0);
+  const [showRatingModal, setShowRatingModal] = useState(false);
 
   // Refs
   const videoRef = useRef();

@@ -26,11 +26,10 @@ export const debitCreditsOnSubscription = async (req, res) => {
 
       user.notifications.push({
         message: `You have been debited ${session.creditsUsed} credits for subscribing to the session "${session.name}".`,
-        type:"debit",
+        type: "debit",
         isRead: false,
         createdAt: new Date()
-
-      })
+      });
 
       await user.save();
       return res.status(200).json({ message: "Credits debited successfully", user });
@@ -48,74 +47,38 @@ export const earnCredits = async (req, res) => {
   try {
     const { userId, sessionId } = req.body;
     
-    // console.log("🔍 EARN CREDITS DEBUG START");
-    // console.log("📨 Request body:", req.body);
-    
     const user = await User.findById(userId);
-    // console.log("👤 User found:", !!user);
-    // console.log("💰 User current credits:", user?.totalCredits, user?.creditEarned);
     
     if (!user) {
-      // console.log("❌ User not found - returning 401");
       return res.status(401).json({ message: "User not found" });
     }
 
     const session = await Session.findById(sessionId);
-    // console.log("📚 Session found:", !!session);
-    // console.log("📊 Session details:", {
-    //   subscribed: session?.subscribed,
-    //   unsubscribed: session?.unsubscribed,
-    //   creditsUsed: session?.creditsUsed
-    // });
     
     if (!session) {
-      // console.log("❌ Session not found - returning 404");
       return res.status(404).json({ message: "Session not found" });
     }
 
     const conditionMet = session.subscribed && !session.unsubscribed;
-    // console.log("🎯 Condition check result:", conditionMet);
     
     if (conditionMet) {
-      // console.log("✅ Condition met - proceeding with credit update");
-      
-      const oldEarned = user.creditEarned;
-      const oldTotal = user.totalCredits;
-      
       user.creditEarned += session.creditsUsed;
       user.totalCredits += session.creditsUsed;
 
       user.notifications.push({
         message: `You have earned ${session.creditsUsed} credits `,
-        type:"credit",
+        type: "credit",
         isRead: false,
         createdAt: new Date()
-
-      })
-
-      // console.log("📈 Credit changes:", {
-      //   creditsToAdd: session.creditsUsed,
-      //   creditEarned: `${oldEarned} → ${user.creditEarned}`,
-      //   totalCredits: `${oldTotal} → ${user.totalCredits}`
-      // });
+      });
 
       const savedUser = await user.save();
-      // console.log("💾 User saved successfully");
-      // console.log("🎉 Final user state:", {
-      //   creditEarned: savedUser.creditEarned,
-      //   totalCredits: savedUser.totalCredits
-      // });
       
       return res.status(200).json({ 
         message: "Credits credited successfully", 
         user: savedUser 
       });
     } else {
-      // console.log("❌ CONDITION FAILED:");
-      // console.log("   - session.subscribed:", session.subscribed);
-      // console.log("   - session.unsubscribed:", session.unsubscribed);
-      // console.log("   - Expected: subscribed=true AND unsubscribed=false");
-      
       return res.status(400).json({ 
         message: "Session is not subscribed or is unsubscribed",
         debug: {
@@ -125,7 +88,7 @@ export const earnCredits = async (req, res) => {
       });
     }
   } catch (err) {
-    // console.error("💥 Credit error:", err);
+    console.error("Credit error:", err);
     return res.status(500).json({ 
       message: "Server error",
       error: err.message 
@@ -133,10 +96,13 @@ export const earnCredits = async (req, res) => {
   }
 };
 
-// Add to your credits.controller.js
+// ✅ FIXED: Redeem Credits for E Rupees
 export const redeemCredits = async (req, res) => {
   try {
-    const { userId, creditsToRedeem, skillCoinsToReceive } = req.body;
+    // ✅ Updated to accept eRupeesToReceive instead of skillCoinsToReceive
+    const { userId, creditsToRedeem, eRupeesToReceive } = req.body;
+
+    console.log("Redeem request:", { userId, creditsToRedeem, eRupeesToReceive });
 
     const user = await User.findById(userId);
     if (!user) {
@@ -147,33 +113,49 @@ export const redeemCredits = async (req, res) => {
       return res.status(400).json({ message: "Insufficient credits" });
     }
 
-    // Deduct credits and add SkillCoins
+    // ✅ Deduct credits and add E Rupees
     user.totalCredits -= creditsToRedeem;
-    user.skillCoins = (user.skillCoins || 0) + skillCoinsToReceive;
-    user.creditSpent += creditsToRedeem; // Track total spent
+    
+    // ✅ Handle both old skillCoins field and new eRupees field for backward compatibility
+    if (!user.eRupees && user.skillCoins) {
+      // Migration: Convert existing skillCoins to eRupees
+      user.eRupees = (user.skillCoins * 2000) || 0; // Convert old skillCoins to eRupees (1 skillCoin = 2000 eRupees)
+    }
+    
+    user.eRupees = (user.eRupees || 0) + eRupeesToReceive;
+    user.creditSpent += creditsToRedeem;
 
+    // ✅ Updated notification message for E Rupees
     user.notifications.push({
-        message: `You have redeemed ${creditsToRedeem} credits for ${skillCoinsToReceive} SkillCoins.`,
-        type:"credit",
-        isRead: false,
-        createdAt: new Date()
+      message: `You have redeemed ${creditsToRedeem} credits for ₹${eRupeesToReceive} E Rupees.`,
+      type: "credit",
+      isRead: false,
+      createdAt: new Date()
+    });
 
-      })
-
-    await user.save();
+    const savedUser = await user.save();
+    
+    console.log("Redemption successful:", {
+      remainingCredits: savedUser.totalCredits,
+      totalERupees: savedUser.eRupees
+    });
 
     return res.status(200).json({ 
       message: "Credits redeemed successfully", 
-      user,
+      user: savedUser,
       redeemed: {
         credits: creditsToRedeem,
-        skillCoins: skillCoinsToReceive
+        eRupees: eRupeesToReceive
       }
     });
 
   } catch (err) {
     console.error("Redeem error:", err);
-    return res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ 
+      message: "Server error",
+      error: err.message,
+      stack: err.stack
+    });
   }
 };
 

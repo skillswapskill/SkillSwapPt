@@ -32,6 +32,15 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    ratings: [{
+  sessionId: String,
+  userId: String, // Reviewer
+  rating: Number,
+  createdAt: { type: Date, default: Date.now }
+}],
+averageRating: { type: Number, default: 0 },
+ratingsCount: { type: Number, default: 0 },
+
     notifications: {
       type: [
         {
@@ -49,7 +58,12 @@ const userSchema = new mongoose.Schema(
       default: () => [{ message: "Welcome to SkillSwap 😊", type: "welcome" }],
     },
     // Add this to your user schema
-    skillCoins: { type: Number, default: 0 },
+    // Add this field to your User schema
+eRupees: {
+  type: Number,
+  default: 0
+},
+
 
     firstLoginRewarded: { type: Boolean, default: false },
     isSetupDone: { type: Boolean, default: false },
