@@ -1,2 +1,50 @@
 @import "tailwindcss";
+/* src/styles/App.css */
+/* Your existing styles */
+
+@layer utilities {
+  .animate-shimmer {
+    animation: shimmer 2s linear infinite;
+  }
+  
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+  
+  .animate-in {
+    animation: slideInFromTop 0.3s ease-out forwards;
+  }
+  
+  .slide-in-from-top-3 {
+    transform: translateY(-12px);
+    opacity: 0;
+  }
+  
+  @keyframes slideInFromTop {
+    from {
+      transform: translateY(-12px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+}
+
+/* Add responsive breakpoint for extra small screens */
+@media (min-width: 475px) {
+  .xs\:inline {
+    display: inline;
+  }
+  .xs\:hidden {
+    display: none;
+  }
+}
+
 
