@@ -137,10 +137,10 @@ export default function Hero() {
                 to="/sign-in"
                 className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
               >
-                Get started
+                Log In
               </Link>
               <Link to="/sign-in" className="text-sm/6 font-semibold text-gray-900">
-                Learn more <span aria-hidden="true">→</span>
+                Explore more <span aria-hidden="true">→</span>
               </Link>
             </div>
           </div>
