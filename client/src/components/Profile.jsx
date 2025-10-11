@@ -687,7 +687,7 @@ function Profile() {
 
               {credits < 1000 && (
                 <p className="text-xs text-gray-500 mt-2">
-                  Minimum 1,000 credits required to redeem
+                  Minimum 200 credits required to redeem
                 </p>
               )}
             </div>
