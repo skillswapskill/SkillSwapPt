@@ -104,7 +104,7 @@ function Reedeem() {
     setIsLoading(true);
 
     try {
-      const response = await apiClient.post("/api/credits/cashout", {
+      const response = await apiClient.post("/api/users/cashout", {
         userId: mongoUserId,
         creditsToCashout: cashoutAmount,
         grossAmount: calculatedAmount,
@@ -126,7 +126,7 @@ function Reedeem() {
     } catch (error) {
       console.error("Cashout failed:", error);
       const errorMessage =
-        error.response?.data?.message || "Cashout failed. Please try again.";
+        error.response?.data?.message ;
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);

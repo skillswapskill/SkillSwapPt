@@ -242,4 +242,50 @@ router.post("/rate-instructor", async (req, res) => {
   }
 });
 
+router.post("/cashout", async (req, res) => {
+  const { userId, creditsToCashout, grossAmount, platformFee, netAmount, upiId } = req.body;
+  
+  if (!userId || !creditsToCashout || !upiId || !netAmount) {
+    return res.status(400).json({ error: "Missing required parameters" });
+  }
+
+  try {
+    // Find user by MongoDB _id (not clerkId)
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Check if user has sufficient credits
+    if (user.totalCredits < creditsToCashout) {
+      return res.status(400).json({ error: "Insufficient credits" });
+    }
+
+    // Deduct credits from user's balance
+    user.totalCredits -= creditsToCashout;
+    
+    // Update or save UPI ID
+    user.upiId = upiId;
+
+    // Save the updated user
+    await user.save();
+
+    // TODO: Add actual payment processing logic here
+    // This is where you'd integrate with payment gateway
+    console.log(`Processing cashout: ₹${netAmount} to ${upiId}`);
+
+    res.status(200).json({ 
+      message: "Cashout request successful",
+      newBalance: user.totalCredits,
+      amount: netAmount,
+      upiId: upiId
+    });
+    
+  } catch (err) {
+    console.error("Cashout error:", err);
+    res.status(500).json({ error: "Failed to process cashout - Server Issues" });
+  }
+});
+
+
 export default router;
