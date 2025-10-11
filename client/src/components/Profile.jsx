@@ -46,17 +46,17 @@ const LoadingProgressBar = ({ isLoading }) => {
           className="h-full bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 shadow-lg transition-all duration-300 ease-out"
           style={{
             width: `${progress}%`,
-            boxShadow: '0 0 10px rgba(59, 130, 246, 0.6)',
+            boxShadow: "0 0 10px rgba(59, 130, 246, 0.6)",
           }}
         />
       </div>
-      
+
       {/* Shimmer effect */}
       <div
         className="absolute top-0 h-1 w-20 bg-gradient-to-r from-transparent via-white to-transparent opacity-30 animate-pulse"
         style={{
           left: `${Math.max(0, progress - 10)}%`,
-          transition: 'left 300ms ease-out',
+          transition: "left 300ms ease-out",
         }}
       />
     </div>
@@ -168,7 +168,12 @@ function Profile() {
 
   // ✅ Add service using dynamic API
   const handleAddService = async () => {
-    if (skills.some(skill => skill.toLowerCase().trim() === serviceName.toLowerCase().trim())) {
+    if (
+      skills.some(
+        (skill) =>
+          skill.toLowerCase().trim() === serviceName.toLowerCase().trim()
+      )
+    ) {
       if (serviceName.trim() && serviceCredits) {
         const newService = {
           name: serviceName.trim(),
@@ -235,46 +240,53 @@ function Profile() {
   // 🎨 Custom Day Component for Calendar with Session Highlighting (NO BADGE)
   const CustomDay = (props) => {
     const { day, outsideCurrentMonth, ...other } = props;
-    
+
     // Check if this date has any sessions
-    const hasSession = services.some(service => 
-      dayjs(service.time).format('YYYY-MM-DD') === day.format('YYYY-MM-DD')
+    const hasSession = services.some(
+      (service) =>
+        dayjs(service.time).format("YYYY-MM-DD") === day.format("YYYY-MM-DD")
     );
 
     if (hasSession && !outsideCurrentMonth) {
       return (
-        <PickersDay 
-          {...other} 
-          day={day} 
+        <PickersDay
+          {...other}
+          day={day}
           outsideCurrentMonth={outsideCurrentMonth}
           sx={{
-            backgroundColor: '#dcfce7',
-            color: '#166534',
-            fontWeight: 'bold',
-            '&:hover': {
-              backgroundColor: '#bbf7d0',
+            backgroundColor: "#dcfce7",
+            color: "#166534",
+            fontWeight: "bold",
+            "&:hover": {
+              backgroundColor: "#bbf7d0",
             },
-            '&.Mui-selected': {
-              backgroundColor: '#10b981',
-              color: 'white',
-            }
+            "&.Mui-selected": {
+              backgroundColor: "#10b981",
+              color: "white",
+            },
           }}
         />
       );
     }
 
-    return <PickersDay {...other} day={day} outsideCurrentMonth={outsideCurrentMonth} />;
+    return (
+      <PickersDay
+        {...other}
+        day={day}
+        outsideCurrentMonth={outsideCurrentMonth}
+      />
+    );
   };
 
   // ✅ Sync user using dynamic API with loading simulation
   useEffect(() => {
     const syncUser = async () => {
       if (!isSignedIn) return;
-      
+
       try {
         // Start loading
         setIsInitialLoading(true);
-        
+
         // ✅ Using apiClient instead of hardcoded URL
         const res = await apiClient.post("/api/users/sync", {
           clerkId: user.id,
@@ -289,17 +301,16 @@ function Profile() {
         setSkills(data.skills);
         setProfilePic(data.profilePic);
         setMongoUserId(data._id);
-        
+
         if (data._id) await fetchOfferedServices(data._id);
         if (data.showCongrats) setShowCongrats(true);
 
         // Simulate realistic loading time
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
+        await new Promise((resolve) => setTimeout(resolve, 1500));
       } catch (err) {
         console.error("Sync failed", err);
         // Still stop loading even on error
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       } finally {
         // Ensure loading completes
         setTimeout(() => {
@@ -366,12 +377,22 @@ function Profile() {
             <div className="w-16 h-16 bg-blue-600 rounded-lg flex items-center justify-center mx-auto mb-4 animate-pulse">
               <span className="text-white font-bold text-2xl">S</span>
             </div>
-            <h2 className="text-xl font-semibold text-blue-800 mb-2 animate-pulse">SkillSwap</h2>
-            <p className="text-gray-600 animate-pulse">Loading your profile...</p>
+            <h2 className="text-xl font-semibold text-blue-800 mb-2 animate-pulse">
+              SkillSwap
+            </h2>
+            <p className="text-gray-600 animate-pulse">
+              Loading your profile...
+            </p>
             <div className="mt-6 flex space-x-1 justify-center">
               <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
-              <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-              <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+              <div
+                className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"
+                style={{ animationDelay: "0.1s" }}
+              ></div>
+              <div
+                className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"
+                style={{ animationDelay: "0.2s" }}
+              ></div>
             </div>
           </div>
         </div>
@@ -393,7 +414,7 @@ function Profile() {
           <h2 className="text-3xl font-bold text-blue-800 mb-4">
             Welcome to SkillSwap!
           </h2>
-          
+
           <p className="text-gray-600 mb-6">
             Congratulations! Your account has been created successfully.
           </p>
@@ -405,7 +426,9 @@ function Profile() {
               <span className="text-3xl font-bold text-green-600">
                 {credits}
               </span>
-              <span className="text-lg font-semibold text-blue-700">Credits</span>
+              <span className="text-lg font-semibold text-blue-700">
+                Credits
+              </span>
             </div>
             <p className="text-sm text-gray-600 mt-2">
               Start learning or teaching skills with your bonus credits!
@@ -473,7 +496,9 @@ function Profile() {
                   />
                 </label>
                 {uploading && (
-                  <p className="text-blue-600 text-sm animate-pulse">Uploading...</p>
+                  <p className="text-blue-600 text-sm animate-pulse">
+                    Uploading...
+                  </p>
                 )}
                 <input
                   type="text"
@@ -586,7 +611,7 @@ function Profile() {
                     <span
                       key={idx}
                       className="bg-blue-100 text-blue-700 px-3 py-1 text-sm rounded-full flex items-center gap-1 animate-fade-in hover:bg-blue-200 transition-colors"
-                      style={{animationDelay: `${idx * 0.1}s`}}
+                      style={{ animationDelay: `${idx * 0.1}s` }}
                     >
                       {skill}
                       {editMode && (
@@ -696,12 +721,15 @@ function Profile() {
         {/* Grid layout for Calendar and Sessions */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* 🎨 Enhanced Calendar with Session Highlighting */}
-          <div className="hidden lg:block bg-white shadow-xl rounded-xl p-6 transform animate-slide-up" style={{animationDelay: '0.2s'}}>
+          <div
+            className="hidden lg:block bg-white shadow-xl rounded-xl p-6 transform animate-slide-up"
+            style={{ animationDelay: "0.2s" }}
+          >
             <h3 className="text-xl font-semibold mb-3 text-blue-700 flex items-center gap-2">
-              📅 Calendar 
+              📅 Calendar
               {services.length > 0 && (
                 <span className="text-sm text-green-600 font-normal animate-fade-in">
-                  ({services.length} session{services.length !== 1 ? 's' : ''})
+                  ({services.length} session{services.length !== 1 ? "s" : ""})
                 </span>
               )}
             </h3>
@@ -712,7 +740,7 @@ function Profile() {
               </p>
             )}
             <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <DateCalendar 
+              <DateCalendar
                 slots={{
                   day: CustomDay,
                 }}
@@ -721,7 +749,10 @@ function Profile() {
           </div>
 
           {/* Meeting UI - Full width on mobile, half width on laptop */}
-          <div className="bg-white shadow-xl rounded-xl p-6 lg:col-span-1 col-span-1 transform animate-slide-up" style={{animationDelay: '0.4s'}}>
+          <div
+            className="bg-white shadow-xl rounded-xl p-6 lg:col-span-1 col-span-1 transform animate-slide-up"
+            style={{ animationDelay: "0.4s" }}
+          >
             <h3 className="text-xl font-semibold mb-3 text-blue-700 flex items-center gap-2">
               📹 My Sessions
             </h3>
@@ -735,7 +766,7 @@ function Profile() {
                   <div
                     key={idx}
                     className="border border-gray-300 rounded-xl p-4 shadow-sm flex justify-between items-center hover:shadow-md transition-shadow animate-fade-in"
-                    style={{animationDelay: `${idx * 0.1}s`}}
+                    style={{ animationDelay: `${idx * 0.1}s` }}
                   >
                     <div>
                       <p className="font-medium text-blue-800">
@@ -774,9 +805,21 @@ function Profile() {
               />
               <input
                 type="number"
-                placeholder="Credit required"
+                placeholder="Credit required (minimum 200, We Encourage you to set it higher!)"
                 value={serviceCredits}
-                onChange={(e) => setServiceCredits(e.target.value)}
+                onChange={(e) => {
+                  // Allow all numeric input while typing
+                  setServiceCredits(e.target.value);
+                }}
+                onBlur={(e) => {
+                  // Validate when user finishes typing
+                  const value = Number(e.target.value);
+                  if (e.target.value !== "" && (isNaN(value) || value < 200)) {
+                    toast.error("Credits must be at least 200");
+                    setServiceCredits("200"); // Set to minimum valid value
+                  }
+                }}
+                min="200"
                 className="border rounded-md px-3 py-2 w-full focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
               />
               <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -820,7 +863,7 @@ function Profile() {
             opacity: 1;
           }
         }
-        
+
         @keyframes fade-in-up {
           from {
             opacity: 0;
@@ -853,11 +896,11 @@ function Profile() {
             transform: scale(1);
           }
         }
-        
+
         .animate-fade-in {
           animation: fade-in 0.6s ease-out;
         }
-        
+
         .animate-fade-in-up {
           animation: fade-in-up 0.8s ease-out;
         }

@@ -82,6 +82,10 @@ eRupees: {
       },
       default: new Map(),
     },
+    upiId: {
+      type: String,
+      default: "",
+    },
   },
   { timestamps: true }
 );

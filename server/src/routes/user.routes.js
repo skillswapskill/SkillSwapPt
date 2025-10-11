@@ -84,64 +84,53 @@ router.post("/upload-profile-pic", upload.single("profilePic"), async (req, res)
 
 // ✅ FIXED: Sync user endpoint - now includes eRupees field
 router.post("/sync", async (req, res) => {
-  const { clerkId, name, email, profilePic } = req.body;
-  
-  console.log("🔍 Sync request for clerkId:", clerkId);
-  
-  if (!clerkId) {
-    return res.status(400).json({ message: "Clerk ID required" });
-  }
-  
+  const { clerkId, name, email, profilePic, upiId } = req.body;
+
+  if (!clerkId) return res.status(400).json({ message: "Clerk ID required" });
+
   try {
     let user = await User.findOne({ clerkId });
-    
+
     if (!user) {
-      console.log("👤 Creating new user");
       user = await User.create({
-        clerkId, 
-        name, 
+        clerkId,
+        name,
         email,
         totalCredits: 100,
         isSetupDone: false,
         profilePic: profilePic || "",
         skillCoins: 0,
-        eRupees: 0, // ✅ Initialize eRupees for new users
+        eRupees: 0,
         creditEarned: 0,
-        creditSpent: 0
+        creditSpent: 0,
+        upiId: upiId || "",
       });
     } else {
-      console.log("👤 Found existing user");
-      // Update user info but don't overwrite existing data
       user.name = name || user.name;
       user.email = email || user.email;
+      if (upiId) user.upiId = upiId; // ✅ update if passed
       await user.save();
     }
 
-    // ✅ IMPORTANT: Include eRupees in the response
-    const responseData = {
+    res.json({
       _id: user._id,
+      name: user.name,
+      email: user.email,
       totalCredits: user.totalCredits || 0,
       creditEarned: user.creditEarned || 0,
       creditSpent: user.creditSpent || 0,
-      isSetupDone: user.isSetupDone || false,
-      name: user.name,
-      email: user.email,
+      skillCoins: user.skillCoins || 0,
+      eRupees: user.eRupees || 0,
       skills: user.skills || [],
-      skillCoins: user.skillCoins || 0, 
-      eRupees: user.eRupees || 0, // ✅ THIS WAS MISSING!
+      isSetupDone: user.isSetupDone || false,
       profilePic: user.profilePic || null,
-      showCongrats: !user.isSetupDone,
-    };
-
-    console.log("📦 Sending response:", responseData);
-    
-    res.json(responseData);
-    
+      upiId: user.upiId || "",
+    });
   } catch (err) {
-    console.error("❌ Sync failed:", err);
     res.status(500).json({ error: "Sync failed: " + err.message });
   }
 });
+
 
 // Setup complete endpoint (existing code)
 router.post("/setup-complete", async (req, res) => {
@@ -169,32 +158,22 @@ router.post("/setup-complete", async (req, res) => {
 
 // Other existing routes...
 router.put("/update", async (req, res) => {
-  const { clerkId, name, skills, profilePic } = req.body;
+  const { clerkId, name, skills, profilePic, upiId } = req.body;
 
   try {
     const updatedUser = await User.findOneAndUpdate(
       { clerkId },
-      {
-        $set: {
-          name,
-          skills,
-          profilePic,
-        },
-      },
+      { $set: { name, skills, profilePic, upiId } },
       { new: true }
     );
 
-    if (!updatedUser) {
-      return res.status(404).json({ error: "User not found" });
-    }
+    if (!updatedUser) return res.status(404).json({ error: "User not found" });
 
     res.status(200).json({ message: "Profile updated", user: updatedUser });
   } catch (err) {
-    console.error("Failed to update profile", err);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Update failed: " + err.message });
   }
 });
-
 router.get("/all", async (req, res) => {
   try {
     // Include clerkId in the query so we can filter properly
