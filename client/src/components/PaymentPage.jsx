@@ -10,20 +10,20 @@ const creditPackages = [
   { 
     id: 1, 
     label: "10 Credits", 
-    amount: 9, 
+    amount: 20, 
     credits: 10,
-    originalPrice: 18,
-    savings: "Save ₹9",
+    originalPrice: 40,
+    savings: "Save ₹20",
     bestFor: "Try it out",
     icon: "🚀"
   },
   { 
     id: 2, 
     label: "50 Credits", 
-    amount: 45, 
+    amount: 100, 
     credits: 50,
-    originalPrice: 100,
-    savings: "Save ₹55",
+    originalPrice: 200,
+    savings: "Save ₹100",
     popular: true,
     bestFor: "Most Popular",
     icon: "⭐",
@@ -32,30 +32,41 @@ const creditPackages = [
   { 
     id: 3, 
     label: "100 Credits", 
-    amount: 90, 
+    amount: 200, 
     credits: 100,
-    originalPrice: 200,
-    savings: "Save ₹111",
+    originalPrice: 400,
+    savings: "Save ₹200",
     bestFor: "Power User",
     icon: "💎"
   },
   { 
     id: 4, 
-    label: "150 Credits", 
-    amount: 135, 
-    credits: 150,
-    originalPrice: 300,
-    savings: "Save ₹166",
+    label: "200 Credits", 
+    amount: 400, 
+    credits: 200,
+    originalPrice: 800,
+    savings: "Save ₹400",
     bestFor: "Professional",
     icon: "🏆"
   },
   { 
     id: 5, 
-    label: "200 Credits", 
-    amount: 180, 
-    credits: 200,
-    originalPrice: 400,
-    savings: "Save ₹220",
+    label: "500 Credits", 
+    amount: 1000, 
+    credits: 500,
+    originalPrice: 2000,
+    savings: "Save ₹1000",
+    bestFor: "Enterprise",
+    icon: "👑",
+    badge: "MAXIMUM SAVINGS"
+  },
+  { 
+    id: 6, 
+    label: "1000 Credits", 
+    amount: 2000, 
+    credits: 1000,
+    originalPrice: 4000,
+    savings: "Save ₹2000",
     bestFor: "Enterprise",
     icon: "👑",
     badge: "MAXIMUM SAVINGS"
@@ -90,17 +101,14 @@ const PaymentPage = () => {
     
     try {
       // Load Razorpay script
-      // console.log('📦 Loading Razorpay SDK...');
       const scriptLoaded = await loadRazorpayScript();
       if (!scriptLoaded) {
         toast.error("Payment system could not be loaded. Please check your internet connection.");
         setLoading(false);
         return;
       }
-      // console.log('✅ Razorpay SDK loaded');
 
       // ✅ Create order using apiClient (same pattern as your Booking component)
-      // console.log('📝 Creating payment order...');
       const orderResponse = await apiClient.post('/api/payment/order', {
         amount: selectedPackage.amount
       });
@@ -112,7 +120,6 @@ const PaymentPage = () => {
       }
 
       const orderData = orderResponse.data;
-      // console.log('✅ Order created:', orderData);
 
       // Razorpay checkout options
       const options = {
@@ -123,12 +130,9 @@ const PaymentPage = () => {
         description: `Purchase ${selectedPackage.credits} Credits - ${selectedPackage.bestFor}`,
         order_id: orderData.id,
         handler: async function (response) {
-          // console.log('🎉 Payment successful:', response);
           
           try {
             // ✅ Update credits using apiClient (same pattern as your Booking component)
-            // console.log('💳 Updating user credits...');
-            
             const updateResponse = await apiClient.post('/api/payment/update-credits', {
               clerkId: user.id,
               creditsToAdd: selectedPackage.credits,
@@ -143,15 +147,11 @@ const PaymentPage = () => {
             }
 
             const creditUpdate = updateResponse.data;
-            // console.log('✅ Credits updated:', creditUpdate);
 
             // Show success toast
             toast.success(
               `🎉 Payment Successful! ${selectedPackage.credits} credits added to your account!`
             );
-            
-            // Optional: You can navigate somewhere or refresh data
-            // navigate('/dashboard');
             
           } catch (error) {
             console.error('❌ Credit update failed:', error);
@@ -171,7 +171,6 @@ const PaymentPage = () => {
         },
         modal: {
           ondismiss: function() {
-            // console.log('Payment cancelled by user');
             setLoading(false);
           }
         }
@@ -223,10 +222,102 @@ const PaymentPage = () => {
           </div>
         </div>
 
-        {/* Pricing Cards */}
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-12">
-            {creditPackages.map((pkg) => (
+        {/* Pricing Cards - Single Row Layout */}
+        <div className="max-w-7xl mx-auto">
+          {/* Main 5 cards in a single row */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-8">
+            {creditPackages.slice(0, 5).map((pkg) => (
+              <div
+                key={pkg.id}
+                onClick={() => setSelectedPackage(pkg)}
+                className={`relative p-4 rounded-2xl cursor-pointer transition-all duration-300 transform hover:-translate-y-2 hover:shadow-2xl min-h-[280px] flex flex-col justify-between ${
+                  selectedPackage.id === pkg.id
+                    ? "bg-gradient-to-b from-indigo-500 to-purple-600 text-white scale-105 shadow-2xl"
+                    : "bg-white border border-gray-200 hover:border-indigo-300 hover:shadow-lg"
+                }`}
+              >
+                {/* Badge */}
+                {pkg.badge && (
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                    <div className="bg-gradient-to-r from-orange-400 to-red-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg whitespace-nowrap">
+                      {pkg.badge}
+                    </div>
+                  </div>
+                )}
+
+                {/* Popular Badge */}
+                {pkg.popular && selectedPackage.id !== pkg.id && (
+                  <div className="absolute top-0 right-0 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-xs font-bold px-2 py-1 rounded-bl-2xl rounded-tr-2xl">
+                    POPULAR
+                  </div>
+                )}
+
+                <div className="text-center flex-1 flex flex-col justify-between">
+                  {/* Top section */}
+                  <div>
+                    {/* Icon */}
+                    <div className="text-3xl mb-2">{pkg.icon}</div>
+                    
+                    {/* Package Name */}
+                    <h3 className={`text-base font-bold mb-1 ${
+                      selectedPackage.id === pkg.id ? "text-white" : "text-gray-800"
+                    }`}>
+                      {pkg.label}
+                    </h3>
+                    
+                    {/* Best For */}
+                    <p className={`text-xs mb-3 ${
+                      selectedPackage.id === pkg.id ? "text-indigo-100" : "text-indigo-600"
+                    }`}>
+                      {pkg.bestFor}
+                    </p>
+                  </div>
+                  
+                  {/* Middle section - Pricing */}
+                  <div className="mb-3">
+                    {pkg.originalPrice && (
+                      <p className={`text-xs line-through ${
+                        selectedPackage.id === pkg.id ? "text-indigo-200" : "text-gray-400"
+                      }`}>
+                        ₹{pkg.originalPrice}
+                      </p>
+                    )}
+                    <p className={`text-2xl font-bold ${
+                      selectedPackage.id === pkg.id ? "text-white" : "text-gray-900"
+                    }`}>
+                      ₹{pkg.amount}
+                    </p>
+                  </div>
+                  
+                  {/* Bottom section - Savings - FIXED COLOR CONTRAST */}
+                  <div>
+                    {pkg.savings && (
+                      <div className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${
+                        selectedPackage.id === pkg.id 
+                          ? "bg-green-500 text-white border border-green-400" 
+                          : "bg-green-100 text-green-800"
+                      }`}>
+                        {pkg.savings}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Selection Indicator */}
+                {selectedPackage.id === pkg.id && (
+                  <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2">
+                    <div className="w-4 h-4 bg-white rounded-full flex items-center justify-center">
+                      <div className="w-2 h-2 bg-indigo-600 rounded-full animate-pulse"></div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* 1000 Credits card - Full width below */}
+          <div className="max-w-md mx-auto">
+            {creditPackages.slice(5).map((pkg) => (
               <div
                 key={pkg.id}
                 onClick={() => setSelectedPackage(pkg)}
@@ -242,13 +333,6 @@ const PaymentPage = () => {
                     <div className="bg-gradient-to-r from-orange-400 to-red-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
                       {pkg.badge}
                     </div>
-                  </div>
-                )}
-
-                {/* Popular Badge */}
-                {pkg.popular && selectedPackage.id !== pkg.id && (
-                  <div className="absolute top-0 right-0 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-xs font-bold px-3 py-1 rounded-bl-2xl rounded-tr-2xl">
-                    POPULAR
                   </div>
                 )}
 
@@ -286,11 +370,11 @@ const PaymentPage = () => {
                     </p>
                   </div>
                   
-                  {/* Savings */}
+                  {/* Savings - FIXED COLOR CONTRAST */}
                   {pkg.savings && (
                     <div className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
                       selectedPackage.id === pkg.id 
-                        ? "bg-white bg-opacity-20 text-white" 
+                        ? "bg-green-500 text-white border border-green-400" 
                         : "bg-green-100 text-green-800"
                     }`}>
                       {pkg.savings}
@@ -311,7 +395,7 @@ const PaymentPage = () => {
           </div>
 
           {/* Selected Package Summary */}
-          <div className="bg-white rounded-2xl shadow-xl p-8 mb-8 border border-gray-100">
+          <div className="bg-white rounded-2xl shadow-xl p-8 mt-8 border border-gray-100">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h3 className="text-2xl font-bold text-gray-800">
@@ -378,7 +462,7 @@ const PaymentPage = () => {
           </div>
 
           {/* Social Proof */}
-          <div className="text-center">
+          <div className="text-center mt-8">
             <p className="text-gray-600 mb-4">Join thousands of learners who've already invested in their future</p>
             <div className="flex justify-center items-center space-x-8 text-sm text-gray-500">
               <div>⭐⭐⭐⭐⭐ 4.9/5 rating</div>

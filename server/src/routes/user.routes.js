@@ -101,7 +101,7 @@ router.post("/sync", async (req, res) => {
         clerkId, 
         name, 
         email,
-        totalCredits: 300,
+        totalCredits: 100,
         isSetupDone: false,
         profilePic: profilePic || "",
         skillCoins: 0,
