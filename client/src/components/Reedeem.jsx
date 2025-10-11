@@ -197,7 +197,7 @@ function Reedeem() {
               type="text"
               value={upiId}
               onChange={handleUpiIdChange}
-              placeholder="yourname@upi"
+              placeholder="yourname@upi--Paste your UPI ID Here"
               className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors font-medium"
             />
             <p className="text-gray-600 text-sm mt-2">
