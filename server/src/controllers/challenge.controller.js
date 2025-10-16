@@ -10,7 +10,7 @@ const challengeTemplates = [
     description: 'Write a simple JavaScript function that returns your first name',
     instruction: 'Complete: function getMyName() { return "____"; }',
     placeholder: 'function getMyName() { return "Your Name"; }',
-    credits: 50,
+    credits: 1,
     validateAnswer: (answer, userName) => {
       const userAnswer = answer.toLowerCase();
       return userAnswer.includes('return') && userAnswer.includes('"') && userAnswer.length > 10;
@@ -23,7 +23,7 @@ const challengeTemplates = [
     description: 'Write your pet\'s name (or favorite animal) in Hindi (Devanagari script)',
     instruction: 'Example: Dog = कुत्ता, Cat = बिल्ली',
     placeholder: 'कुत्ता',
-    credits: 40,
+    credits: 1,
     validateAnswer: (answer) => {
       const hindiRegex = /[\u0900-\u097F]/;
       return hindiRegex.test(answer) && answer.length > 0;
@@ -36,7 +36,7 @@ const challengeTemplates = [
     description: 'Solve this equation',
     instruction: 'What is 15 × 7 + 23 - 8?',
     placeholder: 'Enter your answer',
-    credits: 30,
+    credits: 1,
     validateAnswer: (answer) => parseInt(answer) === 120
   },
   {
@@ -46,7 +46,7 @@ const challengeTemplates = [
     description: 'Complete the sequence',
     instruction: 'Find the next number: 2, 4, 8, 16, 32, ?',
     placeholder: 'Next number',
-    credits: 35,
+    credits: 1,
     validateAnswer: (answer) => parseInt(answer) === 64
   },
   {
@@ -56,7 +56,7 @@ const challengeTemplates = [
     description: 'Reverse the word "SKILLSWAP"',
     instruction: 'Write SKILLSWAP backwards',
     placeholder: 'PAWSLLIKS',
-    credits: 25,
+    credits: 1,
     validateAnswer: (answer) => answer.toUpperCase() === 'PAWSLLIKS'
   },
   {
@@ -66,7 +66,7 @@ const challengeTemplates = [
     description: 'Write a haiku about learning',
     instruction: '3 lines: 5-7-5 syllables about education or skills',
     placeholder: 'Learning is fun\nKnowledge grows every single day\nWisdom never ends',
-    credits: 60,
+    credits: 1,
     validateAnswer: (answer) => {
       const lines = answer.split('\n').filter(line => line.trim());
       return lines.length >= 3 && answer.length > 20;
@@ -79,7 +79,7 @@ const challengeTemplates = [
     description: 'Tell a story about learning using only emojis',
     instruction: 'Use at least 8 emojis to create a learning story',
     placeholder: '📚➡️🧠➡️💡➡️🎓➡️😊',
-    credits: 45,
+    credits: 1,
     validateAnswer: (answer) => {
       const emojiCount = (answer.match(/[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu) || []).length;
       return emojiCount >= 8;
