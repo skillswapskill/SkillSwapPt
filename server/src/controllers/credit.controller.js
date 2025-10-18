@@ -1,197 +1,231 @@
-import { User } from "../models/user.model.js";
-import { Session } from "../models/session.model.js";
+import  {User}  from "../models/user.model.js";
+import Session  from "../models/session.model.js";
 
-// Debit credits when a user subscribes to a session
+/* 
+-------------------------------------------
+ 🟢 DEBIT CREDITS ON SESSION SUBSCRIPTION
+-------------------------------------------
+  Learner books → credits deducted → stored in buffer (not transferred yet)
+*/
 export const debitCreditsOnSubscription = async (req, res) => {
   try {
     const { userId, sessionId } = req.body;
 
     const user = await User.findById(userId);
-    if (!user) {
-      return res.status(401).json({ message: "User not found" });
-    }
+    if (!user) return res.status(404).json({ message: "User not found" });
 
     const session = await Session.findById(sessionId);
-    if (!session) {
-      return res.status(404).json({ message: "Session not found" });
-    }
+    if (!session) return res.status(404).json({ message: "Session not found" });
 
     if (session.subscribed && !session.unsubscribed) {
-      if (user.totalCredits < session.creditsUsed) {
+      const creditsToHold = session.creditsUsed;
+
+      if (user.totalCredits < creditsToHold) {
         return res.status(400).json({ message: "Insufficient credits" });
       }
 
-      user.creditSpent += session.creditsUsed;
-      user.totalCredits -= session.creditsUsed;
+      // Deduct and hold in buffer
+      user.totalCredits -= creditsToHold;
+      session.bufferHeld = creditsToHold;
+      session.status = "scheduled";
+      await session.save();
+      await user.save();
 
       user.notifications.push({
-        message: `You have been debited ${session.creditsUsed} credits for subscribing to the session "${session.name}".`,
+        message: `You booked "${session.skill}" session. ${creditsToHold} credits are temporarily held.`,
         type: "debit",
         isRead: false,
-        createdAt: new Date()
+        createdAt: new Date(),
       });
 
       await user.save();
-      return res.status(200).json({ message: "Credits debited successfully", user });
+
+      return res.status(200).json({
+        message: "Credits held in buffer successfully",
+        bufferHeld: session.bufferHeld,
+        user,
+      });
     } else {
-      return res.status(400).json({ message: "Session is not subscribed or is unsubscribed" });
+      return res.status(400).json({ message: "Invalid session state" });
     }
   } catch (err) {
     console.error("Debit error:", err);
-    return res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ message: "Server error", error: err.message });
   }
 };
 
-// Credit the teacher when a session is completed
+/* 
+-------------------------------------------
+ 🟢 RELEASE CREDITS AFTER SESSION COMPLETION
+-------------------------------------------
+  After the meeting ends successfully, release buffer credits to teacher
+*/
 export const earnCredits = async (req, res) => {
   try {
-    const { userId, sessionId } = req.body;
-    
-    const user = await User.findById(userId);
-    
-    if (!user) {
-      return res.status(401).json({ message: "User not found" });
-    }
+    const { sessionId } = req.body;
 
-    const session = await Session.findById(sessionId);
-    
-    if (!session) {
-      return res.status(404).json({ message: "Session not found" });
-    }
+    const session = await Session.findById(sessionId).populate("teacher");
+    if (!session) return res.status(404).json({ message: "Session not found" });
 
-    const conditionMet = session.subscribed && !session.unsubscribed;
-    
-    if (conditionMet) {
-      user.creditEarned += session.creditsUsed;
-      user.totalCredits += session.creditsUsed;
+    if (session.isReleased)
+      return res.status(400).json({ message: "Credits already released" });
 
-      user.notifications.push({
-        message: `You have earned ${session.creditsUsed} credits `,
-        type: "credit",
-        isRead: false,
-        createdAt: new Date()
-      });
+    if (session.status !== "completed" && session.status !== "ongoing")
+      return res
+        .status(400)
+        .json({ message: "Session not yet completed" });
 
-      const savedUser = await user.save();
-      
-      return res.status(200).json({ 
-        message: "Credits credited successfully", 
-        user: savedUser 
-      });
-    } else {
-      return res.status(400).json({ 
-        message: "Session is not subscribed or is unsubscribed",
-        debug: {
-          subscribed: session.subscribed,
-          unsubscribed: session.unsubscribed
-        }
-      });
-    }
-  } catch (err) {
-    console.error("Credit error:", err);
-    return res.status(500).json({ 
-      message: "Server error",
-      error: err.message 
+    const teacher = await User.findById(session.teacher._id);
+    if (!teacher)
+      return res.status(404).json({ message: "Teacher not found" });
+
+    // Move from buffer → teacher
+    const creditsToRelease = session.bufferHeld;
+    teacher.creditEarned += creditsToRelease;
+    teacher.totalCredits += creditsToRelease;
+
+    teacher.notifications.push({
+      message: `You earned ${creditsToRelease} credits for session "${session.skill}".`,
+      type: "credit",
+      isRead: false,
+      createdAt: new Date(),
     });
+
+    session.bufferHeld = 0;
+    session.isReleased = true;
+    session.status = "completed";
+
+    await teacher.save();
+    await session.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Credits released to teacher successfully",
+      teacher,
+    });
+  } catch (err) {
+    console.error("Credit release error:", err);
+    return res.status(500).json({ message: "Server error", error: err.message });
   }
 };
 
-// ✅ FIXED: Redeem Credits for E Rupees
+/* 
+-------------------------------------------
+ 🔴 CANCEL / REFUND SESSION
+-------------------------------------------
+  If teacher didn’t attend → refund buffer to learner
+*/
+export const cancelAndRefundCredits = async (req, res) => {
+  try {
+    const { sessionId } = req.body;
+
+    const session = await Session.findById(sessionId).populate("learner");
+    if (!session) return res.status(404).json({ message: "Session not found" });
+
+    if (session.isReleased)
+      return res
+        .status(400)
+        .json({ message: "Credits already released, cannot refund" });
+
+    const learner = await User.findById(session.learner._id);
+    if (!learner)
+      return res.status(404).json({ message: "Learner not found" });
+
+    // Refund from buffer
+    learner.totalCredits += session.bufferHeld;
+    learner.notifications.push({
+      message: `Refunded ${session.bufferHeld} credits for cancelled session "${session.skill}".`,
+      type: "credit",
+      isRead: false,
+      createdAt: new Date(),
+    });
+
+    session.bufferHeld = 0;
+    session.status = "cancelled";
+
+    await learner.save();
+    await session.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Session cancelled and credits refunded successfully",
+      learner,
+    });
+  } catch (err) {
+    console.error("Refund error:", err);
+    return res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+
+/* 
+-------------------------------------------
+ 💰 REDEEM CREDITS TO E-RUPEES
+-------------------------------------------
+*/
 export const redeemCredits = async (req, res) => {
   try {
-    // ✅ Updated to accept eRupeesToReceive instead of skillCoinsToReceive
     const { userId, creditsToRedeem, eRupeesToReceive } = req.body;
 
-    console.log("Redeem request:", { userId, creditsToRedeem, eRupeesToReceive });
-
     const user = await User.findById(userId);
-    if (!user) {
-      return res.status(401).json({ message: "User not found" });
-    }
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    if (user.totalCredits < creditsToRedeem) {
+    if (user.totalCredits < creditsToRedeem)
       return res.status(400).json({ message: "Insufficient credits" });
-    }
 
-    // ✅ Deduct credits and add E Rupees
     user.totalCredits -= creditsToRedeem;
-    
-    // ✅ Handle both old skillCoins field and new eRupees field for backward compatibility
-    if (!user.eRupees && user.skillCoins) {
-      // Migration: Convert existing skillCoins to eRupees
-      user.eRupees = (user.skillCoins * 2000) || 0; // Convert old skillCoins to eRupees (1 skillCoin = 2000 eRupees)
-    }
-    
     user.eRupees = (user.eRupees || 0) + eRupeesToReceive;
     user.creditSpent += creditsToRedeem;
 
-    // ✅ Updated notification message for E Rupees
     user.notifications.push({
-      message: `You have redeemed ${creditsToRedeem} credits for ₹${eRupeesToReceive} E Rupees.`,
+      message: `You redeemed ${creditsToRedeem} credits for ₹${eRupeesToReceive}.`,
       type: "credit",
       isRead: false,
-      createdAt: new Date()
+      createdAt: new Date(),
     });
 
     const savedUser = await user.save();
-    
-    console.log("Redemption successful:", {
-      remainingCredits: savedUser.totalCredits,
-      totalERupees: savedUser.eRupees
-    });
 
-    return res.status(200).json({ 
-      message: "Credits redeemed successfully", 
+    return res.status(200).json({
+      message: "Credits redeemed successfully",
       user: savedUser,
-      redeemed: {
-        credits: creditsToRedeem,
-        eRupees: eRupeesToReceive
-      }
+      redeemed: { credits: creditsToRedeem, eRupees: eRupeesToReceive },
     });
-
   } catch (err) {
     console.error("Redeem error:", err);
-    return res.status(500).json({ 
-      message: "Server error",
-      error: err.message,
-      stack: err.stack
-    });
+    return res.status(500).json({ message: "Server error", error: err.message });
   }
 };
 
-// Add this to your credit.controller.js
+/* 
+-------------------------------------------
+ 🪙 EARN CREDITS BY POSTING
+-------------------------------------------
+*/
 export const earnPostCredits = async (req, res) => {
   try {
     const { userId, creditsEarned = 1 } = req.body;
-    
+
     const user = await User.findOne({ clerkId: userId });
-    if (!user) {
-      return res.status(401).json({ message: "User not found" });
-    }
-    
-    // Award credits for posting
+    if (!user) return res.status(404).json({ message: "User not found" });
+
     user.creditEarned += creditsEarned;
     user.totalCredits += creditsEarned;
     user.notifications.push({
-      message: `You have earned ${creditsEarned} credit${creditsEarned > 1 ? 's' : ''} for sharing a post in the community!`,
+      message: `You earned ${creditsEarned} credit${creditsEarned > 1 ? "s" : ""} for sharing a post.`,
       type: "credit",
       isRead: false,
-      createdAt: new Date()
+      createdAt: new Date(),
     });
-    
+
     await user.save();
-    
-    return res.status(200).json({ 
+
+    res.status(200).json({
       success: true,
-      message: "Credits awarded successfully", 
+      message: "Credits awarded successfully",
       user,
-      creditsEarned
     });
   } catch (err) {
     console.error("Post credit error:", err);
-    return res.status(500).json({ 
-      message: "Server error",
-      error: err.message 
-    });
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 };

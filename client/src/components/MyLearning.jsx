@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { useUser } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
-import { apiClient } from '../config/api';
+// ✅ FIXED: Use the useApi hook instead of direct import
+import { useApi } from '../hooks/useApi';
 
 const MyLearning = () => {
   const { user } = useUser();
   const navigate = useNavigate();
+  
+  // ✅ FIXED: Use the useApi hook
+  const { get, delete: deleteRequest, patch } = useApi();
   
   const [learningSessions, setLearningSessions] = useState([]);
   const [teachingSessions, setTeachingSessions] = useState([]);
@@ -19,11 +23,8 @@ const MyLearning = () => {
   useEffect(() => {
     if (!user) return;
 
-    if (!user.publicMetadata?.mongoId) {
-      syncUserMetadata();
-    } else {
-      fetchAllSessions(user.publicMetadata.mongoId);
-    }
+    // Fetch sessions using Clerk ID directly
+    fetchAllSessions(user.id);
 
     // Check for any meetings that were left while app was closed
     checkForMissedMeetingEnds();
@@ -41,12 +42,10 @@ const MyLearning = () => {
       const timeSinceLeft = now - leftTime;
       
       if (timeSinceLeft >= 5 * 60 * 1000) { // 5 minutes passed
-        // Delete immediately
         console.log("🗑️ Auto-deleting missed session:", sessionId);
         deleteCompletedSession(sessionId);
         localStorage.removeItem(key);
       } else {
-        // Schedule deletion for remaining time
         const remainingTime = (5 * 60 * 1000) - timeSinceLeft;
         console.log(`⏰ Scheduling deletion for session ${sessionId} in ${remainingTime/1000}s`);
         setTimeout(() => {
@@ -57,35 +56,17 @@ const MyLearning = () => {
     });
   };
 
-  const syncUserMetadata = async () => {
+  // ✅ FIXED: Fetch sessions using Clerk ID
+  const fetchAllSessions = async (clerkUserId) => {
     try {
-      setSyncing(true);
-      console.log("🔄 Syncing user metadata for:", user.id);
-      
-      await apiClient.post("/api/users/sync-metadata", {
-        clerkId: user.id
-      });
-      
-      window.location.reload();
-    } catch (error) {
-      console.error("❌ Metadata sync failed:", error);
-      setError("Failed to sync user metadata");
-      setLoading(false);
-      setSyncing(false);
-    }
-  };
-
-  // Enhanced fetch function with better error handling and logging
-  const fetchAllSessions = async (mongoUserId) => {
-    try {
-      console.log("✅ Fetching all sessions for Mongo ID:", mongoUserId);
+      console.log("✅ Fetching all sessions for Clerk ID:", clerkUserId);
       setLoading(true);
       setError(null);
       
       // Fetch learning sessions
       try {
         console.log("📚 Fetching learning sessions...");
-        const learningRes = await apiClient.get(`/api/sessions/subscribed-by-mongo/${mongoUserId}`);
+        const learningRes = await get(`/api/sessions/subscribed/${clerkUserId}`);
         
         console.log("📚 Learning sessions response:", learningRes.data);
         
@@ -107,13 +88,12 @@ const MyLearning = () => {
         setLearningSessions([]);
       }
       
-      // Fetch teaching sessions with enhanced error handling
+      // Fetch teaching sessions
       try {
         console.log("🎯 Fetching teaching sessions...");
-        const teachingRes = await apiClient.get(`/api/sessions/teaching/${mongoUserId}`);
+        const teachingRes = await get(`/api/sessions/teaching/${clerkUserId}`);
         
-        console.log("🎯 Teaching sessions response:", teachingRes);
-        console.log("🎯 Teaching sessions data:", teachingRes.data);
+        console.log("🎯 Teaching sessions response:", teachingRes.data);
         
         // Handle both array and object responses
         let teachingData = [];
@@ -148,21 +128,21 @@ const MyLearning = () => {
     }
   };
 
-  // Session deletion function - matches your backend route
+  // ✅ FIXED: Session deletion using useApi hook
   const deleteCompletedSession = async (sessionId) => {
     try {
       setDeletingSession(sessionId);
       console.log("🗑️ Deleting completed session:", sessionId);
       
-      // API call matching your backend route: /delete/:sessionId
-      const response = await apiClient.delete(`/api/sessions/delete/${sessionId}`);
+      // ✅ FIXED: Use deleteRequest from useApi hook
+      const response = await deleteRequest(`/api/sessions/delete/${sessionId}`);
       
       if (response.status === 200) {
         console.log("✅ Session deleted successfully");
         
         // Remove the session from local state
-        setLearningSessions(prev => prev.filter(session => session._id !== sessionId));
-        setTeachingSessions(prev => prev.filter(session => session._id !== sessionId));
+        setLearningSessions(prev => prev.filter(session => session.id !== sessionId && session._id !== sessionId));
+        setTeachingSessions(prev => prev.filter(session => session.id !== sessionId && session._id !== sessionId));
         
         // Clean up any related localStorage
         localStorage.removeItem(`meeting-left-${sessionId}`);
@@ -181,14 +161,14 @@ const MyLearning = () => {
     }
   };
 
-  // Alternative: Mark session as completed instead of deleting
+  // ✅ FIXED: Mark session as completed using useApi hook
   const markSessionAsCompleted = async (sessionId) => {
     try {
       setDeletingSession(sessionId);
       console.log("✅ Marking session as completed:", sessionId);
       
-      // Update session status to completed
-      const response = await apiClient.patch(`/api/sessions/${sessionId}`, {
+      // ✅ FIXED: Use patch from useApi hook
+      const response = await patch(`/api/sessions/${sessionId}`, {
         status: 'Completed'
       });
       
@@ -196,20 +176,13 @@ const MyLearning = () => {
         console.log("✅ Session marked as completed");
         
         // Update local state
-        setLearningSessions(prev => 
-          prev.map(session => 
-            session._id === sessionId 
-              ? { ...session, status: 'Completed' }
-              : session
-          )
-        );
-        setTeachingSessions(prev => 
-          prev.map(session => 
-            session._id === sessionId 
-              ? { ...session, status: 'Completed' }
-              : session
-          )
-        );
+        const updateSession = (session) => 
+          (session._id === sessionId || session.id === sessionId)
+            ? { ...session, status: 'Completed' }
+            : session;
+
+        setLearningSessions(prev => prev.map(updateSession));
+        setTeachingSessions(prev => prev.map(updateSession));
       }
       
     } catch (error) {
@@ -265,7 +238,6 @@ const MyLearning = () => {
     };
     
     const handleVisibilityChange = () => {
-      // Check when page becomes visible again
       if (!document.hidden) {
         checkIfUserLeftMeeting();
       }
@@ -274,7 +246,6 @@ const MyLearning = () => {
     const handleBeforeUnload = () => {
       if (isInMeeting) {
         console.log("👋 User leaving meeting via browser close/navigate");
-        // Store the time when user left
         localStorage.setItem(`meeting-left-${sessionId}`, Date.now().toString());
       }
     };
@@ -296,17 +267,18 @@ const MyLearning = () => {
   const handleJoinMeeting = async (session) => {
     const now = new Date();
     const scheduledTime = new Date(session.dateTime);
+    const sessionId = session._id || session.id;
     
     if (now >= scheduledTime) {
       try {
         // Navigate to the meeting room first
-        navigate(`/join-room/${session._id}`);
+        navigate(`/join-room/${sessionId}`);
         
         // Mark as completed when joining
-        await markSessionAsCompleted(session._id);
+        await markSessionAsCompleted(sessionId);
         
         // Start monitoring for when user leaves meeting
-        startMeetingEndMonitoring(session._id);
+        startMeetingEndMonitoring(sessionId);
         
       } catch (error) {
         console.error("❌ Error handling meeting join:", error);
@@ -419,7 +391,7 @@ const MyLearning = () => {
             <button 
               onClick={() => {
                 setError(null);
-                fetchAllSessions(user.publicMetadata?.mongoId);
+                fetchAllSessions(user.id);
               }}
               className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
             >
@@ -456,34 +428,49 @@ const MyLearning = () => {
       </div>
 
       {loading ? (
-        <p className="text-center text-gray-500">Loading sessions...</p>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-500">Loading sessions...</p>
+        </div>
       ) : currentSessions.length === 0 ? (
         <div className="text-center text-gray-500">
-          <p className="text-lg mb-4">
-            {activeTab === "learning" 
-              ? "No learning sessions yet." 
-              : "No teaching sessions booked yet."
-            }
-          </p>
-          <p className="text-sm">
-            {activeTab === "learning" 
-              ? "Book a session from the dashboard to start learning!" 
-              : "Students will appear here when they book your sessions."
-            }
-          </p>
+          <div className="bg-white rounded-lg p-8 shadow-md max-w-md mx-auto">
+            <div className="text-6xl mb-4">
+              {activeTab === "learning" ? "📚" : "🎯"}
+            </div>
+            <h3 className="text-xl font-semibold mb-3 text-gray-700">
+              {activeTab === "learning" 
+                ? "No learning sessions yet" 
+                : "No teaching sessions booked yet"
+              }
+            </h3>
+            <p className="text-sm text-gray-500 mb-6">
+              {activeTab === "learning" 
+                ? "Book a session from the dashboard to start learning!" 
+                : "Students will appear here when they book your sessions."
+              }
+            </p>
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              {activeTab === "learning" ? "Browse Sessions" : "Create Sessions"}
+            </button>
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
           {currentSessions.map((session) => {
             const buttonConfig = getSessionButton(session);
             const participantInfo = getParticipantInfo(session);
-            const isDeleting = deletingSession === session._id;
+            const sessionId = session._id || session.id;
+            const isDeleting = deletingSession === sessionId;
             const isPastDue = isSessionPastDue(session);
-            const hasScheduledDeletion = localStorage.getItem(`meeting-left-${session._id}`);
+            const hasScheduledDeletion = localStorage.getItem(`meeting-left-${sessionId}`);
             
             return (
               <div
-                key={session._id}
+                key={sessionId}
                 className={`bg-white rounded-lg shadow-lg p-6 border border-gray-200 transform transition-all duration-300 hover:scale-105 hover:shadow-xl ${
                   isDeleting ? 'opacity-50' : ''
                 } ${session.status === 'Completed' ? 'border-l-4 border-l-blue-500' : ''} ${
@@ -594,7 +581,7 @@ const MyLearning = () => {
                   {/* Manual Delete Button for completed sessions */}
                   {session.status === 'Completed' && (
                     <button
-                      onClick={() => deleteCompletedSession(session._id)}
+                      onClick={() => deleteCompletedSession(sessionId)}
                       disabled={isDeleting}
                       className="w-full text-red-600 font-medium py-2 px-4 rounded-lg border border-red-300 hover:bg-red-50 transition-all duration-300 disabled:opacity-50"
                     >
