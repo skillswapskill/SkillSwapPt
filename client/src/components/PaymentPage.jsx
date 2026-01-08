@@ -3,7 +3,7 @@ import { useUser } from "@clerk/clerk-react";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-// ✅ Import the dynamic API client (same as your Booking component)
+// ✅ Import the dynamic API client (e as your Booking component)
 import { apiClient } from '../config/api';
 
 const creditPackages = [
@@ -108,7 +108,7 @@ const PaymentPage = () => {
         return;
       }
 
-      // ✅ Create order using apiClient (same pattern as your Booking component)
+      // ✅ Create order using apiClient (e pattern as your Booking component)
       const orderResponse = await apiClient.post('/api/payment/order', {
         amount: selectedPackage.amount
       });
@@ -132,7 +132,7 @@ const PaymentPage = () => {
         handler: async function (response) {
           
           try {
-            // ✅ Update credits using apiClient (same pattern as your Booking component)
+            // ✅ Update credits using apiClient (e pattern as your Booking component)
             const updateResponse = await apiClient.post('/api/payment/update-credits', {
               clerkId: user.id,
               creditsToAdd: selectedPackage.credits,
@@ -473,7 +473,7 @@ const PaymentPage = () => {
         </div>
       </div>
 
-      {/* Toast Container (same as your Booking component) */}
+      {/* Toast Container (e as your Booking component) */}
       <ToastContainer 
         position="top-right" 
         autoClose={3000}
