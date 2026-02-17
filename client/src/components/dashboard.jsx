@@ -14,14 +14,25 @@ import {
   FaCheck,
   FaStar,
   FaTimes,
-  FaMagic
+  FaMagic,
+  FaBookReader
 } from "react-icons/fa";
 import { HiSparkles } from "react-icons/hi";
+import { HiAcademicCap } from "react-icons/hi2";
 import { useUser } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
+import { toast } from 'react-hot-toast';
 
 // ✅ Import the dynamic API client
 import { apiClient } from "../config/api";
+// import ParticleNetwork from "./ParticleNetwork";
+import Typewriter from "./Typewriter";
+
+// Inline style for gradient animation and shine
+const gradientStyle = {
+  backgroundSize: '200% 200%',
+  animation: 'gradient-x 3s ease infinite',
+};
 
 // Enhanced Sun/Moon illustrations with improved gradients and animations
 const scenes = {
@@ -232,7 +243,7 @@ const FloatingParticles = () => {
           }}
         />
       ))}
-      
+
       {/* Enhanced sparkles */}
       {[...Array(20)].map((_, i) => (
         <div
@@ -248,7 +259,7 @@ const FloatingParticles = () => {
           ✨
         </div>
       ))}
-      
+
       {/* Extra glow effects */}
       {[...Array(8)].map((_, i) => (
         <div
@@ -330,32 +341,31 @@ const FloatingChallengeButton = ({ challenge, onOpen, isCompleted }) => {
         {/* Enhanced multi-layer glowing background */}
         <div className="absolute -inset-4 bg-gradient-to-r from-pink-400 via-purple-500 to-indigo-500 rounded-full animate-pulse opacity-60 group-hover:opacity-80 transition-opacity duration-300 blur-lg" />
         <div className="absolute -inset-2 bg-gradient-to-r from-pink-300 via-purple-400 to-indigo-400 rounded-full opacity-40 group-hover:opacity-60 transition-opacity duration-300 blur-md" />
-        
+
         {/* Main button with enhanced styling */}
-        <div className={`relative flex flex-col items-center justify-center w-20 h-20 rounded-full shadow-2xl transition-all duration-300 transform group-hover:scale-105 ${
-          isCompleted 
-            ? 'bg-gradient-to-br from-green-500 via-emerald-500 to-green-600 border-2 border-green-300' 
-            : 'bg-gradient-to-br from-pink-500 via-purple-600 to-indigo-600 border-2 border-white/30'
-        }`}>
-          
+        <div className={`relative flex flex-col items-center justify-center w-20 h-20 rounded-full shadow-2xl transition-all duration-300 transform group-hover:scale-105 ${isCompleted
+          ? 'bg-gradient-to-br from-green-500 via-emerald-500 to-green-600 border-2 border-green-300'
+          : 'bg-gradient-to-br from-pink-500 via-purple-600 to-indigo-600 border-2 border-white/30'
+          }`}>
+
           {/* Enhanced background overlay for better contrast */}
           <div className="absolute inset-0 rounded-full bg-black/20 backdrop-blur-sm"></div>
-          
+
           {/* Icon with enhanced visibility */}
           <div className="relative z-10 text-white drop-shadow-lg mb-1">
-            {isCompleted ? 
-              <FaCheck className="text-2xl filter drop-shadow-md" /> : 
+            {isCompleted ?
+              <FaCheck className="text-2xl filter drop-shadow-md" /> :
               <IconComponent className="text-2xl filter drop-shadow-md" />
             }
           </div>
-          
+
           {/* Credits text with perfect visibility */}
           <div className="relative z-10 text-white font-black text-sm drop-shadow-lg tracking-wide">
             <span className="bg-black/30 px-1.5 py-0.5 rounded-full backdrop-blur-sm">
               +{challenge.credits}
             </span>
           </div>
-          
+
           {/* Enhanced pulse rings */}
           <div className="absolute inset-0 rounded-full border-2 border-white/60 animate-ping opacity-75" />
           <div className="absolute inset-0 rounded-full border border-white/40 animate-pulse" />
@@ -368,7 +378,7 @@ const FloatingChallengeButton = ({ challenge, onOpen, isCompleted }) => {
             <div className="relative">
               {/* Enhanced glow background */}
               <div className="absolute -inset-1 bg-gradient-to-r from-orange-400 to-red-500 rounded-full blur-md opacity-75"></div>
-              
+
               {/* Main badge with FULL VISIBILITY */}
               <div className="relative bg-gradient-to-r from-orange-500 via-red-500 to-orange-600 text-white font-black px-4 py-2 rounded-full animate-bounce shadow-2xl border-2 border-white">
                 <div className="absolute inset-0 bg-black/10 rounded-full"></div>
@@ -376,7 +386,7 @@ const FloatingChallengeButton = ({ challenge, onOpen, isCompleted }) => {
                   Try Now!
                 </span>
               </div>
-              
+
               {/* Extra glow ring */}
               <div className="absolute inset-0 border-2 border-orange-300 rounded-full animate-pulse opacity-50"></div>
             </div>
@@ -389,7 +399,7 @@ const FloatingChallengeButton = ({ challenge, onOpen, isCompleted }) => {
             <div className="relative">
               {/* Enhanced glow background */}
               <div className="absolute -inset-1 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full blur-md opacity-75"></div>
-              
+
               {/* Main badge with FULL VISIBILITY */}
               <div className="relative bg-gradient-to-r from-green-500 via-emerald-500 to-green-600 text-white font-black px-4 py-2 rounded-full shadow-2xl border-2 border-white">
                 <div className="absolute inset-0 bg-black/10 rounded-full"></div>
@@ -397,7 +407,7 @@ const FloatingChallengeButton = ({ challenge, onOpen, isCompleted }) => {
                   Done! <span className="ml-1">✨</span>
                 </span>
               </div>
-              
+
               {/* Extra glow ring */}
               <div className="absolute inset-0 border-2 border-green-300 rounded-full animate-pulse opacity-50"></div>
             </div>
@@ -407,8 +417,8 @@ const FloatingChallengeButton = ({ challenge, onOpen, isCompleted }) => {
         {/* Floating sparkles around button */}
         <div className="absolute -inset-12 pointer-events-none">
           <div className="absolute top-2 right-2 text-yellow-300 text-sm animate-ping opacity-60">✨</div>
-          <div className="absolute bottom-2 left-2 text-pink-300 text-xs animate-ping opacity-40" style={{animationDelay: '1s'}}>✨</div>
-          <div className="absolute top-1/2 left-2 text-purple-300 text-sm animate-ping opacity-50" style={{animationDelay: '2s'}}>💫</div>
+          <div className="absolute bottom-2 left-2 text-pink-300 text-xs animate-ping opacity-40" style={{ animationDelay: '1s' }}>✨</div>
+          <div className="absolute top-1/2 left-2 text-purple-300 text-sm animate-ping opacity-50" style={{ animationDelay: '2s' }}>💫</div>
         </div>
       </button>
     </div>
@@ -470,14 +480,14 @@ const ChallengeModal = ({ challenge, isOpen, onClose, onComplete, isCompleted, u
 
     // Call backend to complete challenge
     const result = await onComplete(challenge, answer);
-    
+
     if (result.success) {
       setFeedback({
         type: 'success',
         message: `🎉 Correct! You earned ${result.creditsEarned} credits!`
       });
       setShowConfetti(true);
-      
+
       setTimeout(() => {
         setShowConfetti(false);
         setFeedback(null);
@@ -488,12 +498,12 @@ const ChallengeModal = ({ challenge, isOpen, onClose, onComplete, isCompleted, u
         type: 'error',
         message: result.message || '❌ Incorrect answer. Try again!'
       });
-      
+
       setTimeout(() => {
         setFeedback(null);
       }, 3000);
     }
-    
+
     setIsSubmitting(false);
   };
 
@@ -504,7 +514,7 @@ const ChallengeModal = ({ challenge, isOpen, onClose, onComplete, isCompleted, u
       {/* Enhanced Backdrop with particles */}
       <div className="fixed inset-0 z-[9998] bg-black/80 backdrop-blur-lg">
         <FloatingParticles />
-        
+
         {/* Modal Container */}
         <div className="flex items-center justify-center min-h-screen p-4 sm:p-6">
           {/* Modal */}
@@ -512,12 +522,12 @@ const ChallengeModal = ({ challenge, isOpen, onClose, onComplete, isCompleted, u
             {/* Enhanced glowing backdrop */}
             <div className="absolute -inset-4 bg-gradient-to-r from-pink-400 via-purple-500 to-indigo-500 rounded-3xl blur-2xl opacity-50 animate-pulse" />
             <div className="absolute -inset-2 bg-gradient-to-r from-pink-300 via-purple-400 to-indigo-400 rounded-3xl blur-xl opacity-30" />
-            
+
             {/* Main modal content */}
             <div className="relative bg-white/10 backdrop-blur-2xl rounded-3xl border border-white/30 shadow-2xl overflow-hidden">
               {/* Enhanced glassmorphism overlay */}
               <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-white/5 to-transparent rounded-3xl" />
-              
+
               {/* Content */}
               <div className="relative p-6 sm:p-10">
                 {/* Header */}
@@ -538,7 +548,7 @@ const ChallengeModal = ({ challenge, isOpen, onClose, onComplete, isCompleted, u
                       </div>
                     </div>
                   </div>
-                  
+
                   <button
                     onClick={onClose}
                     className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full border border-white/40 flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-xl"
@@ -575,17 +585,16 @@ const ChallengeModal = ({ challenge, isOpen, onClose, onComplete, isCompleted, u
                         rows={challenge.type === 'code' || challenge.type === 'creative' ? 5 : 3}
                       />
                     </div>
-                    
+
                     <div className="relative">
                       <div className="absolute -inset-1 bg-gradient-to-r from-pink-500 to-purple-600 rounded-2xl blur opacity-50"></div>
                       <button
                         onClick={handleSubmit}
                         disabled={!answer.trim() || isSubmitting}
-                        className={`relative w-full py-4 sm:py-5 px-6 sm:px-8 rounded-2xl font-black text-lg sm:text-xl transition-all duration-300 transform hover:scale-105 shadow-2xl ${
-                          answer.trim() && !isSubmitting
-                            ? 'bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white'
-                            : 'bg-white/20 text-white/50 cursor-not-allowed'
-                        }`}
+                        className={`relative w-full py-4 sm:py-5 px-6 sm:px-8 rounded-2xl font-black text-lg sm:text-xl transition-all duration-300 transform hover:scale-105 shadow-2xl ${answer.trim() && !isSubmitting
+                          ? 'bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white'
+                          : 'bg-white/20 text-white/50 cursor-not-allowed'
+                          }`}
                       >
                         {isSubmitting ? (
                           <div className="flex items-center justify-center space-x-3">
@@ -603,11 +612,10 @@ const ChallengeModal = ({ challenge, isOpen, onClose, onComplete, isCompleted, u
 
                     {/* Enhanced Feedback Message */}
                     {feedback && (
-                      <div className={`relative p-4 sm:p-6 rounded-2xl text-center font-black text-lg transition-all duration-300 transform shadow-2xl ${
-                        feedback.type === 'success' 
-                          ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white border-2 border-green-300' 
-                          : 'bg-gradient-to-r from-red-500 to-pink-500 text-white border-2 border-red-300'
-                      }`}>
+                      <div className={`relative p-4 sm:p-6 rounded-2xl text-center font-black text-lg transition-all duration-300 transform shadow-2xl ${feedback.type === 'success'
+                        ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white border-2 border-green-300'
+                        : 'bg-gradient-to-r from-red-500 to-pink-500 text-white border-2 border-red-300'
+                        }`}>
                         <div className="absolute inset-0 bg-black/20 rounded-2xl"></div>
                         <div className="relative drop-shadow-md">
                           {feedback.message}
@@ -633,7 +641,7 @@ const ChallengeModal = ({ challenge, isOpen, onClose, onComplete, isCompleted, u
           </div>
         </div>
       </div>
-      
+
       {/* Confetti */}
       <Confetti show={showConfetti} />
     </>
@@ -646,11 +654,16 @@ const Dashboard = () => {
 
   const [allUsers, setAllUsers] = useState([]);
   const [currentUserMongo, setCurrentUserMongo] = useState(null);
-  const [treesPlanted, setTreesPlanted] = useState(10000);
+  // ✅ Session Counter (Static as requested)
+  // No state needed for static text
+
   const [search, setSearch] = useState("");
+  const [showAllUsers, setShowAllUsers] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedClerkData, setSelectedClerkData] = useState(null);
-  const [showAllUsers, setShowAllUsers] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [feedback, setFeedback] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   // 🎯 CHALLENGE STATE
   const [todaysChallenge, setTodaysChallenge] = useState(null);
@@ -670,7 +683,7 @@ const Dashboard = () => {
   // 🎯 CHALLENGE LOGIC - Updated for real backend
   const getTodaysChallenge = async () => {
     if (!user?.id) return null;
-    
+
     try {
       const response = await apiClient.get('/api/challenges/daily', {
         params: { clerkId: user.id }
@@ -688,7 +701,7 @@ const Dashboard = () => {
         const challengeData = await getTodaysChallenge();
         if (challengeData?.success) {
           setTodaysChallenge(challengeData.challenge);
-          
+
           // Update completion status
           if (challengeData.isCompleted) {
             setCompletedChallenges(new Set([challengeData.challenge.id]));
@@ -697,7 +710,7 @@ const Dashboard = () => {
         }
       }
     };
-    
+
     fetchChallenge();
   }, [user?.id]);
 
@@ -705,7 +718,7 @@ const Dashboard = () => {
     try {
       // console.log('🎯 Completing challenge:', challenge.title);
       // console.log('👤 User ID:', user?.id);
-      
+
       const response = await apiClient.post('/api/challenges/complete', {
         clerkId: user.id,
         challengeId: challenge.id,
@@ -718,13 +731,13 @@ const Dashboard = () => {
         // Update local state
         const newCompletions = new Set([...completedChallenges, challenge.id]);
         const newAnswers = { ...challengeAnswers, [challenge.id]: answer };
-        
+
         setCompletedChallenges(newCompletions);
         setChallengeAnswers(newAnswers);
 
         // console.log(`🎉 Challenge completed! Earned ${response.data.creditsEarned} credits`);
         // console.log(`💰 New total credits: ${response.data.newTotalCredits}`);
-        
+
         return { success: true, creditsEarned: response.data.creditsEarned };
       } else {
         console.error('❌ Challenge completion failed:', response.data.message);
@@ -798,12 +811,7 @@ const Dashboard = () => {
     }
   };
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTreesPlanted((prev) => prev + 1);
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
+  // Session counter Interval REMOVED as requested (Static 500+)
 
   useEffect(() => {
     if (isSignedIn && user?.id) {
@@ -882,6 +890,8 @@ const Dashboard = () => {
 
   return (
     <div className="relative min-h-screen flex flex-col justify-between px-4 sm:px-6 py-10 bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 overflow-hidden">
+
+
       {/* Animated background particles */}
       <div className="absolute inset-0 pointer-events-none">
         <div
@@ -920,9 +930,11 @@ const Dashboard = () => {
       <div className="text-center mb-8 relative z-20">
         <div className="inline-flex items-center justify-center px-6 sm:px-8 py-4 bg-white/20 backdrop-blur-sm rounded-3xl border border-white/30 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
           <HiSparkles className="text-yellow-400 text-xl sm:text-2xl mr-3 animate-pulse" />
+          <HiSparkles className="text-yellow-400 text-xl sm:text-2xl mr-3 animate-pulse" />
           <h1 className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
             {getTimeGreeting()}, {user?.firstName || "Learner"}
           </h1>
+          <HiSparkles className="text-yellow-400 text-xl sm:text-2xl ml-3 animate-pulse" />
           <HiSparkles className="text-yellow-400 text-xl sm:text-2xl ml-3 animate-pulse" />
         </div>
       </div>
@@ -1018,22 +1030,34 @@ const Dashboard = () => {
         )}
       </div>
 
-      {/* Enhanced Trees Counter */}
+      {/* Enhanced Sessions Counter (Academic Theme) */}
       <div className="text-center mt-12 relative z-20">
-        <div className="inline-flex flex-col items-center px-6 sm:px-8 py-6 bg-gradient-to-br from-green-100 to-emerald-100 rounded-3xl shadow-2xl border border-green-200/50 backdrop-blur-sm hover:shadow-3xl transition-all duration-300 transform hover:scale-105">
+        <div className="inline-flex flex-col items-center px-6 sm:px-8 py-6 rounded-3xl shadow-2xl border backdrop-blur-sm hover:shadow-3xl transition-all duration-300 transform hover:scale-105 bg-gradient-to-br from-indigo-50 to-blue-50 border-indigo-200/50">
           <div className="flex items-center mb-2">
-            <FaSeedling className="text-green-600 text-lg sm:text-xl mr-2 animate-pulse" />
-            <p className="text-base sm:text-lg font-semibold text-green-800">
-              Number of Trees Planted
+            <HiAcademicCap className="text-lg sm:text-xl mr-2 animate-bounce text-indigo-600" />
+            <p className="text-base sm:text-lg font-semibold text-indigo-800">
+              Number of Sessions Taken
             </p>
-            <FaSeedling className="text-green-600 text-lg sm:text-xl ml-2 animate-pulse" />
+            <FaBookReader className="text-lg sm:text-xl ml-2 animate-pulse text-blue-600" />
           </div>
           <div className="relative">
-            <p className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-              {treesPlanted.toLocaleString()}
+            <p
+              className="text-4xl sm:text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 filter drop-shadow-sm"
+              style={gradientStyle}
+            >
+              500+
             </p>
-            <div className="absolute inset-0 bg-green-400 opacity-20 blur-xl rounded-lg animate-pulse"></div>
+            <div className="absolute inset-0 opacity-20 blur-xl rounded-lg animate-pulse bg-indigo-400"></div>
           </div>
+
+          {/* Style tag for keyframes */}
+          <style jsx>{`
+            @keyframes gradient-x {
+              0% { background-position: 0% 50%; }
+              50% { background-position: 100% 50%; }
+              100% { background-position: 0% 50%; }
+            }
+          `}</style>
         </div>
       </div>
 

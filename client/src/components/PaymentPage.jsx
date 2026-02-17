@@ -7,20 +7,20 @@ import 'react-toastify/dist/ReactToastify.css';
 import { apiClient } from '../config/api';
 
 const creditPackages = [
-  { 
-    id: 1, 
-    label: "10 Credits", 
-    amount: 20, 
+  {
+    id: 1,
+    label: "10 Credits",
+    amount: 20,
     credits: 10,
     originalPrice: 40,
     savings: "Save ₹20",
     bestFor: "Try it out",
     icon: "🚀"
   },
-  { 
-    id: 2, 
-    label: "50 Credits", 
-    amount: 100, 
+  {
+    id: 2,
+    label: "50 Credits",
+    amount: 100,
     credits: 50,
     originalPrice: 200,
     savings: "Save ₹100",
@@ -29,30 +29,30 @@ const creditPackages = [
     icon: "⭐",
     badge: "BEST VALUE"
   },
-  { 
-    id: 3, 
-    label: "100 Credits", 
-    amount: 200, 
+  {
+    id: 3,
+    label: "100 Credits",
+    amount: 200,
     credits: 100,
     originalPrice: 400,
     savings: "Save ₹200",
     bestFor: "Power User",
     icon: "💎"
   },
-  { 
-    id: 4, 
-    label: "200 Credits", 
-    amount: 400, 
+  {
+    id: 4,
+    label: "200 Credits",
+    amount: 400,
     credits: 200,
     originalPrice: 800,
     savings: "Save ₹400",
     bestFor: "Professional",
     icon: "🏆"
   },
-  { 
-    id: 5, 
-    label: "500 Credits", 
-    amount: 1000, 
+  {
+    id: 5,
+    label: "500 Credits",
+    amount: 1000,
     credits: 500,
     originalPrice: 2000,
     savings: "Save ₹1000",
@@ -60,10 +60,10 @@ const creditPackages = [
     icon: "👑",
     badge: "MAXIMUM SAVINGS"
   },
-  { 
-    id: 6, 
-    label: "1000 Credits", 
-    amount: 2000, 
+  {
+    id: 6,
+    label: "1000 Credits",
+    amount: 2000,
     credits: 1000,
     originalPrice: 4000,
     savings: "Save ₹2000",
@@ -98,7 +98,7 @@ const PaymentPage = () => {
     }
 
     setLoading(true);
-    
+
     try {
       // Load Razorpay script
       const scriptLoaded = await loadRazorpayScript();
@@ -130,7 +130,7 @@ const PaymentPage = () => {
         description: `Purchase ${selectedPackage.credits} Credits - ${selectedPackage.bestFor}`,
         order_id: orderData.id,
         handler: async function (response) {
-          
+
           try {
             // ✅ Update credits using apiClient (e pattern as your Booking component)
             const updateResponse = await apiClient.post('/api/payment/update-credits', {
@@ -152,11 +152,11 @@ const PaymentPage = () => {
             toast.success(
               `🎉 Payment Successful! ${selectedPackage.credits} credits added to your account!`
             );
-            
+
           } catch (error) {
             console.error('❌ Credit update failed:', error);
             const errorMessage = error?.response?.data?.message || "Failed to update credits";
-            
+
             toast.error(
               `⚠️ Payment completed but failed to update credits automatically. Please contact support with Payment ID: ${response.razorpay_payment_id}`
             );
@@ -170,7 +170,7 @@ const PaymentPage = () => {
           color: "#6366F1",
         },
         modal: {
-          ondismiss: function() {
+          ondismiss: function () {
             setLoading(false);
           }
         }
@@ -197,14 +197,14 @@ const PaymentPage = () => {
             <span className="animate-pulse mr-2">🔥</span>
             Limited Time Offer - Up to 50% Savings!
           </div>
-          
+
           <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-4">
             Unlock Your Potential
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
             Invest in yourself today. Get instant access to premium learning content with our credit system.
           </p>
-          
+
           {/* Trust Indicators */}
           <div className="flex justify-center items-center space-x-8 text-gray-500 mb-12">
             <div className="flex items-center">
@@ -230,11 +230,10 @@ const PaymentPage = () => {
               <div
                 key={pkg.id}
                 onClick={() => setSelectedPackage(pkg)}
-                className={`relative p-4 rounded-2xl cursor-pointer transition-all duration-300 transform hover:-translate-y-2 hover:shadow-2xl min-h-[280px] flex flex-col justify-between ${
-                  selectedPackage.id === pkg.id
+                className={`relative p-4 rounded-2xl cursor-pointer transition-all duration-300 transform hover:-translate-y-2 hover:shadow-2xl min-h-[280px] flex flex-col justify-between ${selectedPackage.id === pkg.id
                     ? "bg-gradient-to-b from-indigo-500 to-purple-600 text-white scale-105 shadow-2xl"
                     : "bg-white border border-gray-200 hover:border-indigo-300 hover:shadow-lg"
-                }`}
+                  }`}
               >
                 {/* Badge */}
                 {pkg.badge && (
@@ -257,46 +256,41 @@ const PaymentPage = () => {
                   <div>
                     {/* Icon */}
                     <div className="text-3xl mb-2">{pkg.icon}</div>
-                    
+
                     {/* Package Name */}
-                    <h3 className={`text-base font-bold mb-1 ${
-                      selectedPackage.id === pkg.id ? "text-white" : "text-gray-800"
-                    }`}>
+                    <h3 className={`text-base font-bold mb-1 ${selectedPackage.id === pkg.id ? "text-white" : "text-gray-800"
+                      }`}>
                       {pkg.label}
                     </h3>
-                    
+
                     {/* Best For */}
-                    <p className={`text-xs mb-3 ${
-                      selectedPackage.id === pkg.id ? "text-indigo-100" : "text-indigo-600"
-                    }`}>
+                    <p className={`text-xs mb-3 ${selectedPackage.id === pkg.id ? "text-indigo-100" : "text-indigo-600"
+                      }`}>
                       {pkg.bestFor}
                     </p>
                   </div>
-                  
+
                   {/* Middle section - Pricing */}
                   <div className="mb-3">
                     {pkg.originalPrice && (
-                      <p className={`text-xs line-through ${
-                        selectedPackage.id === pkg.id ? "text-indigo-200" : "text-gray-400"
-                      }`}>
+                      <p className={`text-xs line-through ${selectedPackage.id === pkg.id ? "text-indigo-200" : "text-gray-400"
+                        }`}>
                         ₹{pkg.originalPrice}
                       </p>
                     )}
-                    <p className={`text-2xl font-bold ${
-                      selectedPackage.id === pkg.id ? "text-white" : "text-gray-900"
-                    }`}>
+                    <p className={`text-2xl font-bold ${selectedPackage.id === pkg.id ? "text-white" : "text-gray-900"
+                      }`}>
                       ₹{pkg.amount}
                     </p>
                   </div>
-                  
+
                   {/* Bottom section - Savings - FIXED COLOR CONTRAST */}
                   <div>
                     {pkg.savings && (
-                      <div className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${
-                        selectedPackage.id === pkg.id 
-                          ? "bg-green-500 text-white border border-green-400" 
+                      <div className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${selectedPackage.id === pkg.id
+                          ? "bg-green-500 text-white border border-green-400"
                           : "bg-green-100 text-green-800"
-                      }`}>
+                        }`}>
                         {pkg.savings}
                       </div>
                     )}
@@ -321,11 +315,10 @@ const PaymentPage = () => {
               <div
                 key={pkg.id}
                 onClick={() => setSelectedPackage(pkg)}
-                className={`relative p-6 rounded-2xl cursor-pointer transition-all duration-300 transform hover:-translate-y-2 hover:shadow-2xl ${
-                  selectedPackage.id === pkg.id
+                className={`relative p-6 rounded-2xl cursor-pointer transition-all duration-300 transform hover:-translate-y-2 hover:shadow-2xl ${selectedPackage.id === pkg.id
                     ? "bg-gradient-to-b from-indigo-500 to-purple-600 text-white scale-105 shadow-2xl"
                     : "bg-white border border-gray-200 hover:border-indigo-300 hover:shadow-lg"
-                }`}
+                  }`}
               >
                 {/* Badge */}
                 {pkg.badge && (
@@ -339,44 +332,39 @@ const PaymentPage = () => {
                 <div className="text-center">
                   {/* Icon */}
                   <div className="text-4xl mb-3">{pkg.icon}</div>
-                  
+
                   {/* Package Name */}
-                  <h3 className={`text-lg font-bold mb-2 ${
-                    selectedPackage.id === pkg.id ? "text-white" : "text-gray-800"
-                  }`}>
+                  <h3 className={`text-lg font-bold mb-2 ${selectedPackage.id === pkg.id ? "text-white" : "text-gray-800"
+                    }`}>
                     {pkg.label}
                   </h3>
-                  
+
                   {/* Best For */}
-                  <p className={`text-sm mb-4 ${
-                    selectedPackage.id === pkg.id ? "text-indigo-100" : "text-indigo-600"
-                  }`}>
+                  <p className={`text-sm mb-4 ${selectedPackage.id === pkg.id ? "text-indigo-100" : "text-indigo-600"
+                    }`}>
                     {pkg.bestFor}
                   </p>
-                  
+
                   {/* Pricing */}
                   <div className="mb-4">
                     {pkg.originalPrice && (
-                      <p className={`text-sm line-through ${
-                        selectedPackage.id === pkg.id ? "text-indigo-200" : "text-gray-400"
-                      }`}>
+                      <p className={`text-sm line-through ${selectedPackage.id === pkg.id ? "text-indigo-200" : "text-gray-400"
+                        }`}>
                         ₹{pkg.originalPrice}
                       </p>
                     )}
-                    <p className={`text-3xl font-bold ${
-                      selectedPackage.id === pkg.id ? "text-white" : "text-gray-900"
-                    }`}>
+                    <p className={`text-3xl font-bold ${selectedPackage.id === pkg.id ? "text-white" : "text-gray-900"
+                      }`}>
                       ₹{pkg.amount}
                     </p>
                   </div>
-                  
+
                   {/* Savings - FIXED COLOR CONTRAST */}
                   {pkg.savings && (
-                    <div className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                      selectedPackage.id === pkg.id 
-                        ? "bg-green-500 text-white border border-green-400" 
+                    <div className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${selectedPackage.id === pkg.id
+                        ? "bg-green-500 text-white border border-green-400"
                         : "bg-green-100 text-green-800"
-                    }`}>
+                      }`}>
                       {pkg.savings}
                     </div>
                   )}
@@ -431,11 +419,10 @@ const PaymentPage = () => {
             <button
               onClick={handlePayment}
               disabled={loading || !user}
-              className={`w-full py-4 px-8 rounded-xl font-bold text-lg transition-all duration-300 transform focus:outline-none focus:ring-4 focus:ring-indigo-300 ${
-                loading || !user
+              className={`w-full py-4 px-8 rounded-xl font-bold text-lg transition-all duration-300 transform focus:outline-none focus:ring-4 focus:ring-indigo-300 ${loading || !user
                   ? 'bg-gray-400 cursor-not-allowed text-white'
                   : 'bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white hover:scale-105 hover:shadow-2xl'
-              }`}
+                }`}
             >
               {!user ? (
                 "Please Login to Purchase"
@@ -474,8 +461,8 @@ const PaymentPage = () => {
       </div>
 
       {/* Toast Container (e as your Booking component) */}
-      <ToastContainer 
-        position="top-right" 
+      <ToastContainer
+        position="top-right"
         autoClose={3000}
         hideProgressBar={false}
         newestOnTop={false}

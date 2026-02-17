@@ -11,8 +11,8 @@ export default function CareerPortal() {
     },
     // Add more roles later
     {
-      id:"Blockchain Developer",
-      title:"Blockchain Developer",
+      id: "Blockchain Developer",
+      title: "Blockchain Developer",
       description: "Design BlockChain and Crypto System for SkillSwap."
     }
   ];

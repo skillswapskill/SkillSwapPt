@@ -556,11 +556,10 @@ function Profile() {
               <button
                 onClick={handleSubmit}
                 disabled={uploading}
-                className={`w-full py-2 rounded-lg text-white transition-all transform ${
-                  uploading
+                className={`w-full py-2 rounded-lg text-white transition-all transform ${uploading
                     ? "bg-gray-400 cursor-not-allowed"
                     : "bg-green-600 hover:bg-green-700 hover:scale-105"
-                }`}
+                  }`}
               >
                 {uploading ? "Saving..." : "Submit & View Profile"}
               </button>
@@ -705,11 +704,10 @@ function Profile() {
                 <button
                   onClick={handleSubmit}
                   disabled={uploading}
-                  className={`px-4 py-1 rounded mt-2 text-white text-sm transition-all transform ${
-                    uploading
+                  className={`px-4 py-1 rounded mt-2 text-white text-sm transition-all transform ${uploading
                       ? "bg-gray-400 cursor-not-allowed"
                       : "bg-green-600 hover:bg-green-700 shadow-md hover:shadow-lg hover:scale-105"
-                  }`}
+                    }`}
                 >
                   {uploading ? "Saving..." : "Save Changes"}
                 </button>

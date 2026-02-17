@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router } from "react-router-dom";
 import { SignedIn, SignedOut, UserButton } from "@clerk/clerk-react";
 import React, { useState, useEffect } from "react";
 
@@ -28,53 +28,32 @@ import AboutUs from "./components/AboutUs";
 // import Sam from "./components/Sam";
 import Community from "./components/Community";
 import NotFound404 from "./components/NotFound404";
+// import ClickSparkles from "./components/ClickSparkles";
+import AnimatedRoutes from "./components/AnimatedRoutes";
 
 
 
 
 
 function App() {
-  
+
   return (
     <Router>
+      {/* <ClickSparkles /> */}
       <NavBar />
-      <Toaster 
-          position="top-center" // Optional: Customize position, etc.
-          toastOptions={{
-            success: { duration: 4000 }, // Optional: Global options
-          }}
-        />
-      
-      {/* <Sam/> */}
-      <Routes>
-        <Route path="/" element={<Hero/>} />
-        <Route path="/sign-in" element={<Login />} />
-        <Route path="/sign-up" element={<Register />} />
-        <Route path="/careers" element={<CareerPortal />} />
-        <Route path="/careers/frontend-dev" element={<JobDetail />} />
-        <Route path="business" element={<Business/>}/>
-        <Route path="/profile" element={<Profile/>}/>
-        <Route path="/dashboard" element={<Dashboard/>}/>
-        <Route path="/profileclicked" element={<ProfileClicked />} />
-        <Route path="/book-session" element={<Booking />} />
-        <Route path="/my-learning" element={<MyLearning />} />
-        <Route path="/join-room/:sessionId" element={<JoinRoom />} />
-        <Route path="/redeem" element={<Reedeem />} />
-        <Route path="/payment" element={<PaymentPage />} />
-        <Route path="/team" element={<Team />} />
-        <Route path="/terms" element={<Terms />} /> 
-        <Route path="/privacy" element={<Privacy />} />
-        <Route path="/support" element={<Support />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/aboutus" element={<AboutUs />} />
-        <Route path="/community" element={<Community />} />
-        <Route path="*" element={<NotFound404/>} />
+      <Toaster
+        position="top-center" // Optional: Customize position, etc.
+        toastOptions={{
+          success: { duration: 4000 }, // Optional: Global options
+        }}
+      />
 
-      </Routes>
+      {/* <Sam/> */}
+      <AnimatedRoutes />
 
       <Footer />
     </Router>
-    
+
   );
 }
 

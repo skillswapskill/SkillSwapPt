@@ -26,32 +26,32 @@ const ProfileClicked = () => {
     }
   }, [user]);
   const fetchselectedUser = async (clerkId) => { // Change parameter name
-  try {
-    console.log("🔍 Fetching user with clerkId:", clerkId);
-    const res = await apiClient.get(`/api/users/current/${clerkId}`); // Use existing route
-    
-    console.log("📊 Response data:", res.data);
-    
-    const userData = {
-      ...res.data,
-      totalCredits: res.data.totalCredits || 300
-    };
-    
-    console.log("✅ Final userData:", userData);
-    setSelectedUser(userData);
-    return userData;
-    
-  } catch (error) {
-    console.error("❌ Failed to fetch user:", error);
-    toast.error("Failed to load user. Please try again.");
-  }
-};
+    try {
+      console.log("🔍 Fetching user with clerkId:", clerkId);
+      const res = await apiClient.get(`/api/users/current/${clerkId}`); // Use existing route
+
+      console.log("📊 Response data:", res.data);
+
+      const userData = {
+        ...res.data,
+        totalCredits: res.data.totalCredits || 300
+      };
+
+      console.log("✅ Final userData:", userData);
+      setSelectedUser(userData);
+      return userData;
+
+    } catch (error) {
+      console.error("❌ Failed to fetch user:", error);
+      toast.error("Failed to load user. Please try again.");
+    }
+  };
 
   const fetchSessions = async (mongoUserId) => {
     try {
       setIsLoading(true);
       const res = await apiClient.get(`/api/sessions/${mongoUserId}`);
-      
+
       const fetched = res.data.map((s) => ({
         _id: s._id?.$oid || s._id,
         name: s.skill,
@@ -63,7 +63,7 @@ const ProfileClicked = () => {
         subscribed: s.subscribed,
         status: s.status
       }));
-      
+
       setSessions(fetched);
     } catch (error) {
       console.error("❌ Failed to fetch sessions:", error.message);
@@ -122,8 +122,8 @@ const ProfileClicked = () => {
         </button>
 
         {/* Compact Profile + Sessions Layout */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 h-[calc(100vh-140px)]">
-          
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 h-auto xl:h-[calc(100vh-140px)]">
+
           {/* Left Side - Profile Card */}
           <div className="xl:col-span-1">
             <div className="bg-white rounded-2xl shadow-xl overflow-hidden h-full">
@@ -137,9 +137,9 @@ const ProfileClicked = () => {
                   />
                   <div className="absolute -bottom-1 -right-6 bg-green-500 w-4 h-4 rounded-full border-2 border-white"></div>
                 </div>
-                
+
                 <h1 className="text-xl font-bold text-white mb-2">{user.name}</h1>
-                
+
                 {/* Compact Skills */}
                 <div className="flex flex-wrap gap-1 justify-center mb-3">
                   {user.skills?.slice(0, 3).map((skill, idx) => (
@@ -221,13 +221,12 @@ const ProfileClicked = () => {
                     {sessions.map((session, index) => {
                       const dateTime = formatDateTime(session.dateTime);
                       const isBooked = !!session.learner;
-                      
+
                       return (
                         <div
                           key={index}
-                          className={`relative overflow-hidden rounded-lg border transition-all duration-300 hover:shadow-lg ${
-                            isBooked ? 'border-gray-200 bg-gray-50' : 'border-purple-100 bg-white hover:border-purple-200'
-                          }`}
+                          className={`relative overflow-hidden rounded-lg border transition-all duration-300 hover:shadow-lg ${isBooked ? 'border-gray-200 bg-gray-50' : 'border-purple-100 bg-white hover:border-purple-200'
+                            }`}
                         >
                           {/* Compact Session Layout */}
                           <div className="p-4">
@@ -243,13 +242,12 @@ const ProfileClicked = () => {
                                     </span>
                                   )}
                                 </div>
-                                
+
                                 <div className="grid grid-cols-2 gap-4 mb-3">
                                   {/* Credits */}
                                   <div className="flex items-center">
-                                    <div className={`w-6 h-6 rounded-lg flex items-center justify-center mr-2 ${
-                                      isBooked ? 'bg-gray-200' : 'bg-green-100'
-                                    }`}>
+                                    <div className={`w-6 h-6 rounded-lg flex items-center justify-center mr-2 ${isBooked ? 'bg-gray-200' : 'bg-green-100'
+                                      }`}>
                                       <svg className={`w-3 h-3 ${isBooked ? 'text-gray-400' : 'text-green-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                                       </svg>
@@ -265,9 +263,8 @@ const ProfileClicked = () => {
                                   {/* Date & Time */}
                                   {dateTime && (
                                     <div className="flex items-center">
-                                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center mr-2 ${
-                                        isBooked ? 'bg-gray-200' : 'bg-blue-100'
-                                      }`}>
+                                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center mr-2 ${isBooked ? 'bg-gray-200' : 'bg-blue-100'
+                                        }`}>
                                         <svg className={`w-3 h-3 ${isBooked ? 'text-gray-400' : 'text-blue-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                         </svg>
@@ -286,15 +283,14 @@ const ProfileClicked = () => {
                               {/* Compact Book Button */}
                               <div className="ml-4">
                                 <button
-                                  className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-300 ${
-                                    isBooked
+                                  className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-300 ${isBooked
                                       ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                                       : 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 transform hover:scale-105 shadow-md'
-                                  }`}
+                                    }`}
                                   disabled={isBooked}
                                   onClick={() => {
                                     if (isBooked) return;
-                                    
+
                                     navigate("/book-session", {
                                       state: {
                                         session: {

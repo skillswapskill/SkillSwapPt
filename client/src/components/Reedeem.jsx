@@ -126,7 +126,7 @@ function Reedeem() {
     } catch (error) {
       console.error("Cashout failed:", error);
       const errorMessage =
-        error.response?.data?.message ;
+        error.response?.data?.message;
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -216,11 +216,10 @@ function Reedeem() {
             <button
               onClick={handleCashoutSubmit}
               disabled={isLoading}
-              className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all ${
-                isLoading
+              className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all ${isLoading
                   ? "bg-gray-400 text-gray-600 cursor-not-allowed"
                   : "bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg"
-              }`}
+                }`}
             >
               {isLoading ? "Processing..." : "Confirm Cashout"}
             </button>
@@ -299,11 +298,10 @@ function Reedeem() {
 
               {/* Cashout Status */}
               <div
-                className={`rounded-xl p-4 border-2 ${
-                  credits >= MIN_CREDITS
+                className={`rounded-xl p-4 border-2 ${credits >= MIN_CREDITS
                     ? "bg-green-50 border-green-200"
                     : "bg-orange-50 border-orange-200"
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-lg">
@@ -318,9 +316,8 @@ function Reedeem() {
                 <p className="text-sm text-gray-600">
                   {credits >= MIN_CREDITS
                     ? "You can cashout your credits now"
-                    : `Need ${
-                        MIN_CREDITS - credits
-                      } more credits to unlock cashout`}
+                    : `Need ${MIN_CREDITS - credits
+                    } more credits to unlock cashout`}
                 </p>
               </div>
             </div>
@@ -420,21 +417,20 @@ function Reedeem() {
                   parseInt(creditsToCashout) < MIN_CREDITS ||
                   parseInt(creditsToCashout) > credits
                 }
-                className={`w-full py-4 rounded-xl font-bold text-lg transition-all transform ${
-                  !creditsToCashout ||
-                  parseInt(creditsToCashout) < MIN_CREDITS ||
-                  parseInt(creditsToCashout) > credits
+                className={`w-full py-4 rounded-xl font-bold text-lg transition-all transform ${!creditsToCashout ||
+                    parseInt(creditsToCashout) < MIN_CREDITS ||
+                    parseInt(creditsToCashout) > credits
                     ? "bg-gray-400 text-gray-600 cursor-not-allowed"
                     : "bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl hover:scale-105"
-                }`}
+                  }`}
               >
                 {!creditsToCashout
                   ? "Enter Amount to Cashout"
                   : parseInt(creditsToCashout) < MIN_CREDITS
-                  ? `Minimum ${MIN_CREDITS} Credits Required`
-                  : parseInt(creditsToCashout) > credits
-                  ? "Insufficient Credits"
-                  : `Cashout ₹${finalAmount.toFixed(2)} Now`}
+                    ? `Minimum ${MIN_CREDITS} Credits Required`
+                    : parseInt(creditsToCashout) > credits
+                      ? "Insufficient Credits"
+                      : `Cashout ₹${finalAmount.toFixed(2)} Now`}
               </button>
             </div>
           </div>

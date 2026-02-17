@@ -14,7 +14,7 @@ const Support = () => {
             Support Center
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            We're here to help you make the most of your SkillSwap experience. 
+            We're here to help you make the most of your SkillSwap experience.
             Find answers, get support, and connect with our community.
           </p>
         </div>
@@ -42,23 +42,23 @@ const Support = () => {
           <div className="text-center">
             <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
               </svg>
             </div>
             <h3 className="text-2xl font-bold text-gray-800 mb-4">Follow us on YouTube</h3>
             <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
-              Subscribe to our YouTube channel for tutorials, tips, success stories, and quick solutions to common issues. 
+              Subscribe to our YouTube channel for tutorials, tips, success stories, and quick solutions to common issues.
               Get visual guides and stay updated with the latest SkillSwap features!
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <a 
-                href="https://www.youtube.com/@SkillSwap-n4r" 
-                target="_blank" 
+              <a
+                href="https://www.youtube.com/@SkillSwap-n4r"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="bg-red-600 text-white px-8 py-3 rounded-lg hover:bg-red-700 transition-colors font-medium flex items-center space-x-2"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
                 </svg>
                 <span>Subscribe to SkillSwap</span>
               </a>
@@ -90,11 +90,10 @@ const Support = () => {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-6 py-3 rounded-lg font-medium transition-all ${
-                  activeTab === tab
+                className={`px-6 py-3 rounded-lg font-medium transition-all ${activeTab === tab
                     ? 'bg-indigo-600 text-white shadow-md'
                     : 'text-gray-600 hover:text-indigo-600'
-                }`}
+                  }`}
               >
                 {tab === 'faq' && 'FAQ'}
                 {tab === 'tickets' && 'Support Tickets'}
@@ -161,7 +160,7 @@ const Support = () => {
               <h2 className="text-2xl font-bold text-gray-800 mb-6">Submit a Support Ticket</h2>
               <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded mb-6">
                 <p className="text-blue-700">
-                  <strong>💡 Tip:</strong> Before submitting a ticket, check our FAQ above and visit our 
+                  <strong>💡 Tip:</strong> Before submitting a ticket, check our FAQ above and visit our
                   <a href="https://www.youtube.com/@SkillSwap-n4r" target="_blank" rel="noopener noreferrer" className="underline ml-1 hover:text-blue-800">
                     YouTube channel
                   </a> for video solutions!
@@ -217,7 +216,7 @@ const Support = () => {
                 <div className="flex items-center space-x-3">
                   <input type="checkbox" id="youtube" className="rounded text-indigo-600" />
                   <label htmlFor="youtube" className="text-sm text-gray-600">
-                    I have checked the 
+                    I have checked the
                     <a href="https://www.youtube.com/@SkillSwap-n4r" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-700 underline mx-1">
                       YouTube channel
                     </a>
@@ -253,14 +252,14 @@ const Support = () => {
           <p className="mb-6 opacity-90">
             Don't wait for email responses! Get instant visual solutions on our YouTube channel.
           </p>
-          <a 
-            href="https://www.youtube.com/@SkillSwap-n4r" 
-            target="_blank" 
+          <a
+            href="https://www.youtube.com/@SkillSwap-n4r"
+            target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center space-x-2 bg-white text-red-600 px-6 py-3 rounded-lg hover:bg-gray-100 transition-colors font-medium"
           >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+              <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
             </svg>
             <span>Visit SkillSwap YouTube</span>
           </a>

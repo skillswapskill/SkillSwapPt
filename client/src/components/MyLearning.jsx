@@ -7,10 +7,10 @@ import { useApi } from '../hooks/useApi';
 const MyLearning = () => {
   const { user } = useUser();
   const navigate = useNavigate();
-  
+
   // ✅ FIXED: Use the useApi hook
   const { get, delete: deleteRequest, patch } = useApi();
-  
+
   const [learningSessions, setLearningSessions] = useState([]);
   const [teachingSessions, setTeachingSessions] = useState([]);
   const [activeTab, setActiveTab] = useState("learning");
@@ -34,20 +34,20 @@ const MyLearning = () => {
   const checkForMissedMeetingEnds = () => {
     const keys = Object.keys(localStorage);
     const meetingLeftKeys = keys.filter(key => key.startsWith('meeting-left-'));
-    
+
     meetingLeftKeys.forEach(key => {
       const sessionId = key.replace('meeting-left-', '');
       const leftTime = parseInt(localStorage.getItem(key));
       const now = Date.now();
       const timeSinceLeft = now - leftTime;
-      
+
       if (timeSinceLeft >= 5 * 60 * 1000) { // 5 minutes passed
         console.log("🗑️ Auto-deleting missed session:", sessionId);
         deleteCompletedSession(sessionId);
         localStorage.removeItem(key);
       } else {
         const remainingTime = (5 * 60 * 1000) - timeSinceLeft;
-        console.log(`⏰ Scheduling deletion for session ${sessionId} in ${remainingTime/1000}s`);
+        console.log(`⏰ Scheduling deletion for session ${sessionId} in ${remainingTime / 1000}s`);
         setTimeout(() => {
           deleteCompletedSession(sessionId);
           localStorage.removeItem(key);
@@ -62,14 +62,14 @@ const MyLearning = () => {
       console.log("✅ Fetching all sessions for Clerk ID:", clerkUserId);
       setLoading(true);
       setError(null);
-      
+
       // Fetch learning sessions
       try {
         console.log("📚 Fetching learning sessions...");
         const learningRes = await get(`/api/sessions/subscribed/${clerkUserId}`);
-        
+
         console.log("📚 Learning sessions response:", learningRes.data);
-        
+
         // Handle both array and object responses
         let learningData = [];
         if (Array.isArray(learningRes.data)) {
@@ -79,7 +79,7 @@ const MyLearning = () => {
         } else if (learningRes.data?.success && Array.isArray(learningRes.data?.data)) {
           learningData = learningRes.data.data;
         }
-        
+
         const sortedLearning = learningData.sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
         setLearningSessions(sortedLearning);
         console.log("✅ Learning sessions set:", sortedLearning.length);
@@ -87,14 +87,14 @@ const MyLearning = () => {
         console.error("❌ Failed to fetch learning sessions:", learningError);
         setLearningSessions([]);
       }
-      
+
       // Fetch teaching sessions
       try {
         console.log("🎯 Fetching teaching sessions...");
         const teachingRes = await get(`/api/sessions/teaching/${clerkUserId}`);
-        
+
         console.log("🎯 Teaching sessions response:", teachingRes.data);
-        
+
         // Handle both array and object responses
         let teachingData = [];
         if (Array.isArray(teachingRes.data)) {
@@ -104,7 +104,7 @@ const MyLearning = () => {
         } else if (teachingRes.data?.success && Array.isArray(teachingRes.data?.data)) {
           teachingData = teachingRes.data.data;
         }
-        
+
         const sortedTeaching = teachingData.sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
         setTeachingSessions(sortedTeaching);
         console.log("✅ Teaching sessions set:", sortedTeaching.length);
@@ -119,7 +119,7 @@ const MyLearning = () => {
         });
         setTeachingSessions([]);
       }
-      
+
     } catch (error) {
       console.error("❌ Failed to load sessions:", error);
       setError("Failed to load sessions");
@@ -133,26 +133,26 @@ const MyLearning = () => {
     try {
       setDeletingSession(sessionId);
       console.log("🗑️ Deleting completed session:", sessionId);
-      
+
       // ✅ FIXED: Use deleteRequest from useApi hook
       const response = await deleteRequest(`/api/sessions/delete/${sessionId}`);
-      
+
       if (response.status === 200) {
         console.log("✅ Session deleted successfully");
-        
+
         // Remove the session from local state
         setLearningSessions(prev => prev.filter(session => session.id !== sessionId && session._id !== sessionId));
         setTeachingSessions(prev => prev.filter(session => session.id !== sessionId && session._id !== sessionId));
-        
+
         // Clean up any related localStorage
         localStorage.removeItem(`meeting-left-${sessionId}`);
-        
+
         console.log("Session removed from UI");
-        
+
       } else {
         throw new Error('Failed to delete session');
       }
-      
+
     } catch (error) {
       console.error("❌ Failed to delete session:", error);
       setError("Failed to delete session. Please try again.");
@@ -166,17 +166,17 @@ const MyLearning = () => {
     try {
       setDeletingSession(sessionId);
       console.log("✅ Marking session as completed:", sessionId);
-      
+
       // ✅ FIXED: Use patch from useApi hook
       const response = await patch(`/api/sessions/${sessionId}`, {
         status: 'Completed'
       });
-      
+
       if (response.status === 200) {
         console.log("✅ Session marked as completed");
-        
+
         // Update local state
-        const updateSession = (session) => 
+        const updateSession = (session) =>
           (session._id === sessionId || session.id === sessionId)
             ? { ...session, status: 'Completed' }
             : session;
@@ -184,7 +184,7 @@ const MyLearning = () => {
         setLearningSessions(prev => prev.map(updateSession));
         setTeachingSessions(prev => prev.map(updateSession));
       }
-      
+
     } catch (error) {
       console.error("❌ Failed to mark session as completed:", error);
       setError("Failed to update session status.");
@@ -196,32 +196,32 @@ const MyLearning = () => {
   // Start monitoring for when user leaves meeting
   const startMeetingEndMonitoring = (sessionId) => {
     console.log("🔍 Starting meeting end monitoring for:", sessionId);
-    
+
     let meetingEndTimer = null;
     let isInMeeting = true;
     let checkInterval = null;
-    
+
     const checkIfUserLeftMeeting = () => {
       const isOnMeetingPage = window.location.pathname.includes(`/join-room/${sessionId}`);
-      
+
       if (!isOnMeetingPage && isInMeeting) {
         console.log("👋 User left meeting:", sessionId);
         onUserLeftMeeting(sessionId);
         isInMeeting = false;
-        
+
         // Clean up interval
         if (checkInterval) {
           clearInterval(checkInterval);
         }
       }
     };
-    
+
     const onUserLeftMeeting = (sessionId) => {
       console.log("⏰ Starting 5-minute deletion timer for:", sessionId);
-      
+
       // Store in localStorage for persistence across browser closes
       localStorage.setItem(`meeting-left-${sessionId}`, Date.now().toString());
-      
+
       // Start 5-minute deletion timer
       meetingEndTimer = setTimeout(async () => {
         try {
@@ -231,30 +231,30 @@ const MyLearning = () => {
           console.error("❌ Failed to auto-delete session:", error);
         }
       }, 5 * 60 * 1000); // 5 minutes
-      
+
       // Clean up listeners
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-    
+
     const handleVisibilityChange = () => {
       if (!document.hidden) {
         checkIfUserLeftMeeting();
       }
     };
-    
+
     const handleBeforeUnload = () => {
       if (isInMeeting) {
         console.log("👋 User leaving meeting via browser close/navigate");
         localStorage.setItem(`meeting-left-${sessionId}`, Date.now().toString());
       }
     };
-    
+
     // Set up monitoring
     checkInterval = setInterval(checkIfUserLeftMeeting, 5000); // Check every 5 seconds
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('beforeunload', handleBeforeUnload);
-    
+
     // Store timer info
     setMeetingTimers(prev => new Map(prev.set(sessionId, {
       sessionId,
@@ -268,18 +268,18 @@ const MyLearning = () => {
     const now = new Date();
     const scheduledTime = new Date(session.dateTime);
     const sessionId = session._id || session.id;
-    
+
     if (now >= scheduledTime) {
       try {
         // Navigate to the meeting room first
         navigate(`/join-room/${sessionId}`);
-        
+
         // Mark as completed when joining
         await markSessionAsCompleted(sessionId);
-        
+
         // Start monitoring for when user leaves meeting
         startMeetingEndMonitoring(sessionId);
-        
+
       } catch (error) {
         console.error("❌ Error handling meeting join:", error);
       }
@@ -388,7 +388,7 @@ const MyLearning = () => {
               <h3 className="font-bold">⚠️ Error</h3>
               <p className="text-sm">{error}</p>
             </div>
-            <button 
+            <button
               onClick={() => {
                 setError(null);
                 fetchAllSessions(user.id);
@@ -406,21 +406,19 @@ const MyLearning = () => {
         <div className="bg-white rounded-lg p-1 shadow-md">
           <button
             onClick={() => setActiveTab("learning")}
-            className={`px-6 py-3 rounded-md font-medium transition-all duration-300 ${
-              activeTab === "learning"
+            className={`px-6 py-3 rounded-md font-medium transition-all duration-300 ${activeTab === "learning"
                 ? "bg-blue-600 text-white shadow-md"
                 : "text-gray-600 hover:text-blue-600"
-            }`}
+              }`}
           >
             📚 My Learning ({learningSessions.length})
           </button>
           <button
             onClick={() => setActiveTab("teaching")}
-            className={`px-6 py-3 rounded-md font-medium transition-all duration-300 ${
-              activeTab === "teaching"
+            className={`px-6 py-3 rounded-md font-medium transition-all duration-300 ${activeTab === "teaching"
                 ? "bg-green-600 text-white shadow-md"
                 : "text-gray-600 hover:text-green-600"
-            }`}
+              }`}
           >
             🎯 My Teaching ({teachingSessions.length})
           </button>
@@ -439,14 +437,14 @@ const MyLearning = () => {
               {activeTab === "learning" ? "📚" : "🎯"}
             </div>
             <h3 className="text-xl font-semibold mb-3 text-gray-700">
-              {activeTab === "learning" 
-                ? "No learning sessions yet" 
+              {activeTab === "learning"
+                ? "No learning sessions yet"
                 : "No teaching sessions booked yet"
               }
             </h3>
             <p className="text-sm text-gray-500 mb-6">
-              {activeTab === "learning" 
-                ? "Book a session from the dashboard to start learning!" 
+              {activeTab === "learning"
+                ? "Book a session from the dashboard to start learning!"
                 : "Students will appear here when they book your sessions."
               }
             </p>
@@ -467,26 +465,23 @@ const MyLearning = () => {
             const isDeleting = deletingSession === sessionId;
             const isPastDue = isSessionPastDue(session);
             const hasScheduledDeletion = localStorage.getItem(`meeting-left-${sessionId}`);
-            
+
             return (
               <div
                 key={sessionId}
-                className={`bg-white rounded-lg shadow-lg p-6 border border-gray-200 transform transition-all duration-300 hover:scale-105 hover:shadow-xl ${
-                  isDeleting ? 'opacity-50' : ''
-                } ${session.status === 'Completed' ? 'border-l-4 border-l-blue-500' : ''} ${
-                  hasScheduledDeletion ? 'border-l-4 border-l-orange-500' : ''
-                }`}
+                className={`bg-white rounded-lg shadow-lg p-6 border border-gray-200 transform transition-all duration-300 hover:scale-105 hover:shadow-xl ${isDeleting ? 'opacity-50' : ''
+                  } ${session.status === 'Completed' ? 'border-l-4 border-l-blue-500' : ''} ${hasScheduledDeletion ? 'border-l-4 border-l-orange-500' : ''
+                  }`}
               >
                 {/* Session Header */}
                 <div className="mb-4">
                   <h2 className="text-xl font-bold text-blue-900 mb-2">
                     {session.skill || session.name || 'Unknown Session'}
                   </h2>
-                  <div className={`w-full h-1 rounded-full ${
-                    activeTab === "learning" 
+                  <div className={`w-full h-1 rounded-full ${activeTab === "learning"
                       ? "bg-gradient-to-r from-blue-500 to-green-500"
                       : "bg-gradient-to-r from-green-500 to-blue-500"
-                  }`}></div>
+                    }`}></div>
                 </div>
 
                 {/* Session Details */}
@@ -497,14 +492,14 @@ const MyLearning = () => {
                       {new Date(session.dateTime).toLocaleDateString()}
                     </span>
                   </div>
-                  
+
                   <div className="flex items-center text-gray-600">
                     <span className="text-green-500 mr-2">⏰</span>
                     <span className="text-sm">
                       {new Date(session.dateTime).toLocaleTimeString()}
                     </span>
                   </div>
-                  
+
                   <div className="flex items-center text-gray-600">
                     <span className="text-purple-500 mr-2">{participantInfo.icon}</span>
                     <span className="text-sm">
@@ -524,22 +519,20 @@ const MyLearning = () => {
 
                 {/* Status Badge */}
                 <div className="mb-4">
-                  <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                    session.status === 'Scheduled' 
-                      ? 'bg-green-100 text-green-800' 
-                      : session.status === 'Completed' 
-                      ? 'bg-blue-100 text-blue-800'
-                      : 'bg-red-100 text-red-800'
-                  }`}>
+                  <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${session.status === 'Scheduled'
+                      ? 'bg-green-100 text-green-800'
+                      : session.status === 'Completed'
+                        ? 'bg-blue-100 text-blue-800'
+                        : 'bg-red-100 text-red-800'
+                    }`}>
                     {session.status || 'Scheduled'}
                   </span>
-                  
+
                   {/* Role indicator */}
-                  <span className={`ml-2 inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                    activeTab === "learning"
+                  <span className={`ml-2 inline-block px-2 py-1 rounded-full text-xs font-medium ${activeTab === "learning"
                       ? 'bg-blue-100 text-blue-700'
                       : 'bg-green-100 text-green-700'
-                  }`}>
+                    }`}>
                     {activeTab === "learning" ? "Student" : "Teacher"}
                   </span>
 
@@ -564,20 +557,19 @@ const MyLearning = () => {
                   <button
                     onClick={buttonConfig.handler}
                     disabled={isDeleting || session.status === 'Completed'}
-                    className={`w-full text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:translate-y-[-1px] shadow-md hover:shadow-lg ${
-                      session.status === 'Completed' 
-                        ? 'bg-gray-400 cursor-not-allowed' 
-                        : !isPastDue 
-                        ? 'bg-gray-500 cursor-not-allowed'
-                        : buttonConfig.className
-                    } ${isDeleting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`w-full text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:translate-y-[-1px] shadow-md hover:shadow-lg ${session.status === 'Completed'
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : !isPastDue
+                          ? 'bg-gray-500 cursor-not-allowed'
+                          : buttonConfig.className
+                      } ${isDeleting ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
-                    {isDeleting ? '⏳ Processing...' : 
-                     session.status === 'Completed' ? '✅ Completed' :
-                     !isPastDue ? '⏳ Not Started' : 
-                     buttonConfig.text}
+                    {isDeleting ? '⏳ Processing...' :
+                      session.status === 'Completed' ? '✅ Completed' :
+                        !isPastDue ? '⏳ Not Started' :
+                          buttonConfig.text}
                   </button>
-                  
+
                   {/* Manual Delete Button for completed sessions */}
                   {session.status === 'Completed' && (
                     <button

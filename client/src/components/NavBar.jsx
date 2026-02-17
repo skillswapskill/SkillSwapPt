@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { BellIcon } from "@heroicons/react/24/outline";
-import { SignOutButton } from "@clerk/clerk-react";
-import { useUser, useAuth } from "@clerk/clerk-react";
+import { useUser, useClerk, useAuth, SignOutButton } from "@clerk/clerk-react";
 import { apiClient } from "../config/api";
+import { motion, AnimatePresence } from "framer-motion";
+
 
 // ✨ Loading Skeleton Components
 const SkeletonLoader = ({ className }) => (
@@ -53,11 +54,11 @@ const NavBarSkeleton = () => (
   </header>
 );
 
-function NavBar() {
+const NavBar = () => {
+  const { user, isLoaded, isSignedIn } = useUser();
+  const { getToken } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
-  const { user, isLoaded } = useUser();
-  const { getToken } = useAuth();
 
   /* ─── NOTIFICATION STATE ─────────────────────────────── */
   const [panelOpen, setPanelOpen] = useState(false);
@@ -75,7 +76,7 @@ function NavBar() {
       setIsLoadingNotifications(true);
       try {
         const token = await getToken();
-        
+
         if (!token) {
           console.error("❌ No auth token available");
           return;
@@ -87,7 +88,7 @@ function NavBar() {
             'Content-Type': 'application/json',
           },
         });
-        
+
         const notificationsData = response.data.notification || [];
         setNotifications(notificationsData);
       } catch (error) {
@@ -150,18 +151,26 @@ function NavBar() {
   }, []);
 
   // Mark notification as read
-  const markAsRead = (notificationId) => {
+  // Mark notification as read
+  const markAsRead = async (notificationId) => {
+    const targetId = notificationId?.$oid || notificationId || notificationId._id;
+
+    // Optimistic update
     setNotifications((prev) =>
       prev.map((n) => {
         const currentId = n._id?.$oid || n._id;
-        const targetId = notificationId?.$oid || notificationId;
-        
         if (currentId === targetId) {
           return { ...n, isRead: true };
         }
         return n;
       })
     );
+
+    try {
+      await apiClient.put(`/api/notification/${targetId}/read`);
+    } catch (error) {
+      console.error("Failed to mark notification as read:", error);
+    }
   };
 
   // Mark all as read
@@ -174,7 +183,7 @@ function NavBar() {
   // ✅ Fixed refresh notifications with auth
   const refreshNotifications = async () => {
     if (!isLoaded || !user) return;
-    
+
     setIsLoadingNotifications(true);
     try {
       const token = await getToken();
@@ -189,7 +198,7 @@ function NavBar() {
           'Content-Type': 'application/json',
         },
       });
-      
+
       setNotifications(response.data.notification || []);
     } catch (error) {
       console.error("❌ Error refreshing notifications:", error);
@@ -299,8 +308,8 @@ function NavBar() {
                            max-w-full sm:max-w-sm md:max-w-md lg:w-96 
                            bg-white rounded-lg md:rounded-xl lg:rounded-2xl 
                            border border-gray-100 md:border-0 shadow-xl md:shadow-2xl 
-                           max-h-[calc(100vh-6rem)] md:max-h-[75vh] overflow-hidden z-50 
-                           transform transition-all duration-300 ease-out"
+                           max-h-[calc(100vh-6rem)] md:max-h-[75vh] overflow-hidden z-20 
+                           transform transition-all duration-300 ease-out origin-top-right"
                   style={{
                     background: 'linear-gradient(135deg, #ffffff 0%, #fafbff 50%, #f8faff 100%)',
                     boxShadow: '0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 20px 40px -12px rgba(59, 130, 246, 0.1)'
@@ -377,7 +386,7 @@ function NavBar() {
                         </div>
                         {notifications.map((n, index) => {
                           const notificationId = getNotificationId(n);
-                          
+
                           return (
                             <button
                               key={notificationId || index}
@@ -385,11 +394,10 @@ function NavBar() {
                                 markAsRead(n._id);
                                 setPanelOpen(false);
                               }}
-                              className={`w-full text-left px-3 sm:px-4 md:px-6 py-3 md:py-4 flex gap-2 sm:gap-3 md:gap-4 transition-all duration-200 hover:scale-[1.01] hover:shadow-sm relative group ${
-                                !n.isRead ? 
-                                "bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 border-l-4 border-purple-400 hover:from-blue-100 hover:via-purple-100 hover:to-pink-100" : 
+                              className={`w-full text-left px-3 sm:px-4 md:px-6 py-3 md:py-4 flex gap-2 sm:gap-3 md:gap-4 transition-all duration-200 hover:scale-[1.01] hover:shadow-sm relative group ${!n.isRead ?
+                                "bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 border-l-4 border-purple-400 hover:from-blue-100 hover:via-purple-100 hover:to-pink-100" :
                                 "bg-white hover:bg-gradient-to-r hover:from-gray-50 hover:to-slate-50"
-                              }`}
+                                }`}
                             >
                               <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 flex-none bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-200">
                                 <BellIcon className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-purple-600" />
@@ -404,11 +412,10 @@ function NavBar() {
                                     {formatNotificationDate(n.createdAt)}
                                   </p>
                                   <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-                                    <span className={`text-[10px] sm:text-xs px-1 sm:px-1.5 md:px-2 py-0.5 md:py-1 rounded-full font-semibold ${
-                                      n.type === 'credit' ? 'bg-gradient-to-r from-red-100 to-pink-100 text-red-700' :
+                                    <span className={`text-[10px] sm:text-xs px-1 sm:px-1.5 md:px-2 py-0.5 md:py-1 rounded-full font-semibold ${n.type === 'credit' ? 'bg-gradient-to-r from-red-100 to-pink-100 text-red-700' :
                                       n.type === 'welcome' ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-700' :
-                                      'bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700'
-                                    }`}>
+                                        'bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700'
+                                      }`}>
                                       {n.type}
                                     </span>
                                     {!n.isRead && (
@@ -430,7 +437,9 @@ function NavBar() {
               )}
             </div>
 
-            {/* Profile Dropdown */}
+
+
+            {/* Profile Dropdown / Mobile Menu Trigger */}
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -447,53 +456,113 @@ function NavBar() {
                 />
               </button>
 
-              {dropdownOpen && (
-                <div className="absolute right-0 mt-2 w-44 sm:w-48 bg-white shadow-lg rounded-md py-2 z-50 border border-gray-100">
-                  {/* User info section at the top */}
-                  <div className="px-4 py-2 border-b border-gray-100">
-                    <p className="text-sm font-medium text-gray-800 truncate">
-                      {user?.firstName && user?.lastName
-                        ? `${user.firstName} ${user.lastName}`
-                        : user?.firstName || "User"}
-                    </p>
-                    <p className="text-xs text-gray-500 truncate">
-                      {user?.primaryEmailAddress?.emailAddress || ""}
-                    </p>
-                  </div>
-                  <Link to="/" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    Home
-                  </Link>
-                  <Link to="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    Profile
-                  </Link>
-                  <Link to="/dashboard" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    Dashboard
-                  </Link>
-                  <Link to="/Community" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    Community
-                  </Link>
-                  <Link to="/my-learning" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    My Learning
-                  </Link>
-                  <Link to="/redeem" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    Redeem Credits
-                  </Link>
-                  <Link to="/payment" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    Buy Credits
-                  </Link>
-                  <SignOutButton>
-                    <button className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
-                      Logout
-                    </button>
-                  </SignOutButton>
-                </div>
-              )}
+              <AnimatePresence>
+                {dropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9, y: -10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.9, y: -10 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                    className="absolute right-0 mt-2 w-64 sm:w-72 bg-white shadow-xl rounded-xl py-2 z-50 border border-gray-100 transform origin-top-right"
+                  >
+                    {/* User info section */}
+                    <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
+                      <p className="text-sm font-bold text-gray-800 truncate">
+                        {user?.firstName && user?.lastName
+                          ? `${user.firstName} ${user.lastName}`
+                          : user?.firstName || "User"}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate mt-0.5">
+                        {user?.primaryEmailAddress?.emailAddress || ""}
+                      </p>
+                    </div>
+
+                    <div className="py-2 max-h-[60vh] overflow-y-auto">
+                      {/* Mobile-Only Navigation Links */}
+                      <div className="lg:hidden border-b border-gray-100 mb-2 pb-2">
+                        <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                          Navigation
+                        </div>
+                        <Link
+                          to="/dashboard"
+                          onClick={() => setDropdownOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                        >
+                          <span>📊</span> Dashboard
+                        </Link>
+                        <Link
+                          to="/community"
+                          onClick={() => setDropdownOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                        >
+                          <span>👥</span> Community
+                        </Link>
+                        <Link
+                          to="/careers"
+                          onClick={() => setDropdownOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                        >
+                          <span>💼</span> Careers
+                        </Link>
+                        <Link
+                          to="/my-learning"
+                          onClick={() => setDropdownOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                        >
+                          <span>📚</span> My Learning
+                        </Link>
+                      </div>
+
+                      {/* Account Links */}
+                      <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider lg:hidden">
+                        Account
+                      </div>
+                      <Link
+                        to="/profile"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                      >
+                        <span>👤</span> Profile
+                      </Link>
+                      <Link
+                        to="/redeem"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                      >
+                        <span>🎁</span> Redeem Credits
+                      </Link>
+                      <Link
+                        to="/payment"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                      >
+                        <span>💳</span> Buy Credits
+                      </Link>
+                      <Link
+                        to="/support"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                      >
+                        <span>❓</span> Support
+                      </Link>
+
+                      <div className="border-t border-gray-100 mt-2 pt-2">
+                        <SignOutButton>
+                          <button className="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors font-medium">
+                            <span>🚪</span> Logout
+                          </button>
+                        </SignOutButton>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </div>
       </div>
     </header>
   );
-}
+}; // ✅ Added closing brace for component
 
 export default NavBar;

@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  HeartIcon, 
-  ChatBubbleLeftIcon, 
-  ArrowUpIcon, 
+import {
+  HeartIcon,
+  ChatBubbleLeftIcon,
+  ArrowUpIcon,
   PaperAirplaneIcon,
   PhotoIcon,
   FaceSmileIcon,
@@ -18,10 +18,10 @@ import {
   TrashIcon,
   CheckIcon
 } from '@heroicons/react/24/outline';
-import { 
-  HeartIcon as HeartSolid, 
+import {
+  HeartIcon as HeartSolid,
   ArrowUpIcon as ArrowUpSolid,
-  BookmarkIcon as BookmarkSolid 
+  BookmarkIcon as BookmarkSolid
 } from '@heroicons/react/24/solid';
 import { useUser } from '@clerk/clerk-react';
 import { useApi } from '../hooks/useApi';
@@ -29,8 +29,8 @@ import { useApi } from '../hooks/useApi';
 // Credit Coin SVG Component
 const CreditCoinIcon = ({ className = "w-4 h-4" }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-    <circle cx="12" cy="12" r="10" className="text-yellow-400"/>
-    <circle cx="12" cy="12" r="7" className="text-yellow-500"/>
+    <circle cx="12" cy="12" r="10" className="text-yellow-400" />
+    <circle cx="12" cy="12" r="7" className="text-yellow-500" />
     <text x="12" y="16" textAnchor="middle" className="fill-yellow-900 text-xs font-bold">₹</text>
   </svg>
 );
@@ -93,7 +93,7 @@ const Community = () => {
       status: error.response?.status,
       config: error.config
     });
-    
+
     setErrors(prev => ({
       ...prev,
       [context]: error.response?.data?.message || error.message || 'Unknown error'
@@ -113,7 +113,7 @@ const Community = () => {
     console.log(`🔄 Fetching posts with sort: ${activeTab}`);
     setFetchingPosts(true);
     clearError('fetchPosts');
-    
+
     try {
       const response = await apiClient.get(`/api/community/posts?sort=${activeTab}`);
       console.log('✅ Posts fetched successfully:', response.data);
@@ -131,19 +131,19 @@ const Community = () => {
       console.warn('⚠️ User data not loaded yet');
       return false;
     }
-    
+
     if (!user) {
       console.warn('⚠️ User not logged in');
       alert('Please log in to perform this action');
       return false;
     }
-    
+
     if (!user.id) {
       console.error('❌ User ID missing');
       alert('User ID is missing. Please try logging out and back in.');
       return false;
     }
-    
+
     return true;
   };
 
@@ -155,14 +155,14 @@ const Community = () => {
         userId: userId,
         creditsEarned: 1
       });
-      
+
       if (response.data.success) {
         console.log('✅ Credits awarded successfully');
         setCreditNotification({
           show: true,
           message: '🪙 You earned 1 credit for posting!'
         });
-        
+
         setTimeout(() => {
           setCreditNotification({ show: false, message: '' });
         }, 4000);
@@ -189,7 +189,7 @@ const Community = () => {
 
     console.log('📷 Image selected:', file.name, file.size);
     setSelectedImage(file);
-    
+
     const reader = new FileReader();
     reader.onload = (e) => setImagePreview(e.target.result);
     reader.readAsDataURL(file);
@@ -249,7 +249,7 @@ const Community = () => {
         content: editContent.trim(),
         userId: user.id
       });
-      
+
       if (response.data.success) {
         await fetchPosts();
         setEditingPost(null);
@@ -273,7 +273,7 @@ const Community = () => {
         content: editContent.trim(),
         userId: user.id
       });
-      
+
       if (response.data.success) {
         await fetchPosts();
         setEditingComment(null);
@@ -307,7 +307,7 @@ const Community = () => {
         });
         console.log('✅ Comment deleted successfully');
       }
-      
+
       await fetchPosts();
       setDeleteConfirm({ isOpen: false, type: '', id: '', postId: '' });
     } catch (error) {
@@ -329,7 +329,7 @@ const Community = () => {
 
   const copyPostLink = async (post) => {
     const postUrl = `${window.location.origin}/community/post/${post._id}`;
-    
+
     try {
       await navigator.clipboard.writeText(postUrl);
       setCopySuccess(true);
@@ -351,7 +351,7 @@ const Community = () => {
   const shareToSocialMedia = (platform, post) => {
     const postUrl = `${window.location.origin}/community/post/${post._id}`;
     const text = `Check out this post from ${post.username} on SkillSwap Community: "${post.content.substring(0, 100)}${post.content.length > 100 ? '...' : ''}"`;
-    
+
     const shareUrls = {
       twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(postUrl)}`,
       linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(postUrl)}&title=${encodeURIComponent('SkillSwap Community Post')}&summary=${encodeURIComponent(text)}`,
@@ -368,103 +368,103 @@ const Community = () => {
 
   // FIXED: handleCreatePost with NO character limits
   // ENHANCED: handleCreatePost with detailed error debugging
-const handleCreatePost = async (e) => {
-  e.preventDefault();
-  console.log('🚀 handleCreatePost called - DEBUGGING MODE');
-  
-  if (!validateUserData()) return;
-  
-  if (!newPost.trim() && !selectedImage) {
-    console.warn('⚠️ Post content and image are both empty');
-    alert('Please enter some content or select an image for your post');
-    return;
-  }
-  
-  setLoading(true);
-  clearError('createPost');
-  
-  try {
-    let imageUrl = '';
-    let imagePublicId = '';
-    
-    if (selectedImage) {
-      setUploadingImage(true);
-      console.log('📷 Uploading image to Cloudinary...');
-      
-      const formData = new FormData();
-      formData.append('image', selectedImage);
-      
-      const imageResponse = await apiClient.post('/api/community/upload-image', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      
-      imageUrl = imageResponse.data.imageUrl;
-      imagePublicId = imageResponse.data.publicId;
-      console.log('✅ Image uploaded to Cloudinary:', imageUrl);
-      setUploadingImage(false);
+  const handleCreatePost = async (e) => {
+    e.preventDefault();
+    console.log('🚀 handleCreatePost called - DEBUGGING MODE');
+
+    if (!validateUserData()) return;
+
+    if (!newPost.trim() && !selectedImage) {
+      console.warn('⚠️ Post content and image are both empty');
+      alert('Please enter some content or select an image for your post');
+      return;
     }
 
-    const postData = {
-      content: newPost.trim(),
-      userId: user.id,
-      username: user.username || user.firstName || 'Unknown User',
-      userAvatar: user.imageUrl || '',
-      imageUrl: imageUrl,
-      imagePublicId: imagePublicId
-    };
-    
-    console.log('📤 SENDING POST DATA:', postData);
-    console.log('🌐 API Base URL:', baseUrl);
-    console.log('🔑 User ID:', user.id);
-    console.log('📝 Content Length:', newPost.trim().length);
-    
-    const response = await apiClient.post('/api/community/posts', postData);
-    console.log('✅ Post created successfully:', response.data);
-    
-    setNewPost('');
-    removeImage();
-    await fetchPosts();
-    await awardPostCredits(user.id);
-    
-    alert('Post created successfully! 🎉 You earned 1 credit!');
-    
-  } catch (error) {
-    console.error('❌ DETAILED ERROR ANALYSIS:');
-    console.error('Error object:', error);
-    console.error('Error message:', error.message);
-    console.error('Error response:', error.response);
-    console.error('Error response data:', error.response?.data);
-    console.error('Error response status:', error.response?.status);
-    console.error('Error response headers:', error.response?.headers);
-    console.error('Error config:', error.config);
-    
-    handleError(error, 'createPost');
-    
-    // More specific error handling
-    if (error.response?.status === 400) {
-      alert(`❌ Bad Request: ${error.response.data.message || 'Invalid data sent to server'}`);
-    } else if (error.response?.status === 500) {
-      alert(`❌ Server Error: ${error.response.data.message || 'Internal server error'}`);
-    } else if (error.response?.data?.message) {
-      alert(`❌ Error: ${error.response.data.message}`);
-    } else {
-      alert(`❌ Unknown Error: ${error.message}`);
+    setLoading(true);
+    clearError('createPost');
+
+    try {
+      let imageUrl = '';
+      let imagePublicId = '';
+
+      if (selectedImage) {
+        setUploadingImage(true);
+        console.log('📷 Uploading image to Cloudinary...');
+
+        const formData = new FormData();
+        formData.append('image', selectedImage);
+
+        const imageResponse = await apiClient.post('/api/community/upload-image', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+        imageUrl = imageResponse.data.imageUrl;
+        imagePublicId = imageResponse.data.publicId;
+        console.log('✅ Image uploaded to Cloudinary:', imageUrl);
+        setUploadingImage(false);
+      }
+
+      const postData = {
+        content: newPost.trim(),
+        userId: user.id,
+        username: user.username || user.firstName || 'Unknown User',
+        userAvatar: user.imageUrl || '',
+        imageUrl: imageUrl,
+        imagePublicId: imagePublicId
+      };
+
+      console.log('📤 SENDING POST DATA:', postData);
+      console.log('🌐 API Base URL:', baseUrl);
+      console.log('🔑 User ID:', user.id);
+      console.log('📝 Content Length:', newPost.trim().length);
+
+      const response = await apiClient.post('/api/community/posts', postData);
+      console.log('✅ Post created successfully:', response.data);
+
+      setNewPost('');
+      removeImage();
+      await fetchPosts();
+      await awardPostCredits(user.id);
+
+      alert('Post created successfully! 🎉 You earned 1 credit!');
+
+    } catch (error) {
+      console.error('❌ DETAILED ERROR ANALYSIS:');
+      console.error('Error object:', error);
+      console.error('Error message:', error.message);
+      console.error('Error response:', error.response);
+      console.error('Error response data:', error.response?.data);
+      console.error('Error response status:', error.response?.status);
+      console.error('Error response headers:', error.response?.headers);
+      console.error('Error config:', error.config);
+
+      handleError(error, 'createPost');
+
+      // More specific error handling
+      if (error.response?.status === 400) {
+        alert(`❌ Bad Request: ${error.response.data.message || 'Invalid data sent to server'}`);
+      } else if (error.response?.status === 500) {
+        alert(`❌ Server Error: ${error.response.data.message || 'Internal server error'}`);
+      } else if (error.response?.data?.message) {
+        alert(`❌ Error: ${error.response.data.message}`);
+      } else {
+        alert(`❌ Unknown Error: ${error.message}`);
+      }
+    } finally {
+      setLoading(false);
+      setUploadingImage(false);
     }
-  } finally {
-    setLoading(false);
-    setUploadingImage(false);
-  }
-};
+  };
 
 
   const handleLike = async (postId) => {
     if (!validateUserData()) return;
-    
+
     console.log(`❤️ Liking post: ${postId}`);
     clearError('like');
-    
+
     try {
       const response = await apiClient.post(`/api/community/posts/${postId}/like`, {
         userId: user.id
@@ -478,10 +478,10 @@ const handleCreatePost = async (e) => {
 
   const handleUpvote = async (postId) => {
     if (!validateUserData()) return;
-    
+
     console.log(`⬆️ Upvoting post: ${postId}`);
     clearError('upvote');
-    
+
     try {
       const response = await apiClient.post(`/api/community/posts/${postId}/upvote`, {
         userId: user.id
@@ -496,28 +496,28 @@ const handleCreatePost = async (e) => {
   // FIXED: handleComment with NO character limits
   const handleComment = async (postId) => {
     if (!validateUserData()) return;
-    
+
     const content = commentText[postId];
     if (!content?.trim()) {
       console.warn('⚠️ Comment content is empty');
       alert('Please enter a comment');
       return;
     }
-    
+
     console.log(`💬 Adding comment to post: ${postId} - NO LIMITS!`);
     clearError('comment');
-    
+
     const commentData = {
       content: content.trim(),
       userId: user.id,
       username: user.username || user.firstName || 'Unknown User',
       userAvatar: user.imageUrl || ''
     };
-    
+
     try {
       const response = await apiClient.post(`/api/community/posts/${postId}/comment`, commentData);
       console.log('✅ Comment added successfully:', response.data);
-      
+
       setCommentText(prev => ({ ...prev, [postId]: '' }));
       await fetchPosts();
     } catch (error) {
@@ -536,7 +536,7 @@ const handleCreatePost = async (e) => {
       const now = new Date();
       const postDate = new Date(date);
       const diffInMinutes = Math.floor((now - postDate) / (1000 * 60));
-      
+
       if (diffInMinutes < 1) return 'Just now';
       if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
       if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
@@ -565,7 +565,7 @@ const handleCreatePost = async (e) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 relative overflow-hidden">
       <div className="pt-20 sm:pt-24"></div>
-      
+
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400/20 to-purple-600/20 rounded-full blur-3xl animate-pulse"></div>
@@ -624,7 +624,7 @@ const handleCreatePost = async (e) => {
               <h3 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 Share Post
               </h3>
-              <button 
+              <button
                 onClick={closeShareModal}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
               >
@@ -665,7 +665,7 @@ const handleCreatePost = async (e) => {
 
             <div className="space-y-3">
               <h4 className="text-sm font-semibold text-gray-600 mb-3">Share on social media</h4>
-              
+
               {[
                 { platform: 'twitter', name: 'Twitter', icon: '𝕏', color: 'hover:bg-gray-100' },
                 { platform: 'linkedin', name: 'LinkedIn', icon: 'in', color: 'hover:bg-blue-50' },
@@ -710,7 +710,7 @@ const handleCreatePost = async (e) => {
               <span className="text-sm font-medium text-gray-700">Hot discussions</span>
             </div>
           </div>
-          
+
           <div className="flex space-x-1 bg-white/70 rounded-2xl p-1 shadow-md border border-blue-200/30">
             {[
               { id: 'trending', label: 'Trending', icon: '🔥' },
@@ -720,11 +720,10 @@ const handleCreatePost = async (e) => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${
-                  activeTab === tab.id
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${activeTab === tab.id
                     ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
                     : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
-                }`}
+                  }`}
               >
                 <span>{tab.icon}</span>
                 {tab.label}
@@ -742,7 +741,7 @@ const handleCreatePost = async (e) => {
             {Object.entries(errors).map(([key, value]) => (
               <div key={key} className="text-red-700 text-xs">
                 <strong>{key}:</strong> {value}
-                <button 
+                <button
                   onClick={() => clearError(key)}
                   className="ml-2 text-red-500 hover:text-red-700"
                 >
@@ -780,7 +779,7 @@ const handleCreatePost = async (e) => {
                       <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
                     </div>
                   </div>
-                  
+
                   <div className="flex-1 space-y-3">
                     <div className="relative">
                       <textarea
@@ -823,7 +822,7 @@ const handleCreatePost = async (e) => {
                         )}
                       </div>
                     )}
-                    
+
                     <div className="flex justify-between items-center">
                       <div className="flex gap-2">
                         <input
@@ -833,7 +832,7 @@ const handleCreatePost = async (e) => {
                           accept="image/*"
                           className="hidden"
                         />
-                        
+
                         <button
                           type="button"
                           onClick={triggerImageSelect}
@@ -842,7 +841,7 @@ const handleCreatePost = async (e) => {
                         >
                           <PhotoIcon className="w-5 h-5" />
                         </button>
-                        
+
                         <button
                           type="button"
                           className="p-2 text-yellow-500 hover:bg-yellow-100 rounded-lg transition-all duration-300 hover:scale-110"
@@ -850,7 +849,7 @@ const handleCreatePost = async (e) => {
                         >
                           <FaceSmileIcon className="w-5 h-5" />
                         </button>
-                        
+
                         <button
                           type="button"
                           className="p-2 text-orange-500 hover:bg-orange-100 rounded-lg transition-all duration-300 hover:scale-110"
@@ -859,7 +858,7 @@ const handleCreatePost = async (e) => {
                           <FireIcon className="w-5 h-5" />
                         </button>
                       </div>
-                      
+
                       <button
                         type="submit"
                         disabled={(!newPost.trim() && !selectedImage) || loading}
@@ -896,8 +895,8 @@ const handleCreatePost = async (e) => {
         {/* Posts Feed */}
         <div className="space-y-4">
           {posts.map((post, index) => (
-            <div 
-              key={post._id} 
+            <div
+              key={post._id}
               className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-lg border border-blue-200/30 overflow-hidden hover:shadow-xl hover:scale-[1.01] transition-all duration-300 group"
               style={{ animationDelay: `${index * 50}ms` }}
             >
@@ -931,15 +930,15 @@ const handleCreatePost = async (e) => {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="relative flex-shrink-0">
-                    <button 
+                    <button
                       onClick={(e) => toggleDropdown(e, 'post', post._id)}
                       className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all"
                     >
                       <EllipsisHorizontalIcon className="w-4 h-4" />
                     </button>
-                    
+
                     {showDropdown[`post-${post._id}`] && (
                       <div className="absolute right-0 top-full mt-2 bg-white rounded-xl shadow-xl border border-gray-200 py-1 z-20 min-w-[140px]">
                         {post.userId === user?.id && (
@@ -971,7 +970,7 @@ const handleCreatePost = async (e) => {
                     )}
                   </div>
                 </div>
-                
+
                 <div className="prose max-w-none">
                   {editingPost === post._id ? (
                     <div className="mb-3">
@@ -1006,7 +1005,7 @@ const handleCreatePost = async (e) => {
                       <p className="text-gray-700 leading-relaxed text-base mb-3 whitespace-pre-wrap">{post.content}</p>
                     )
                   )}
-                  
+
                   {post.imageUrl && (
                     <div className="mb-3">
                       <img
@@ -1035,7 +1034,7 @@ const handleCreatePost = async (e) => {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1">
                     {[
@@ -1077,12 +1076,12 @@ const handleCreatePost = async (e) => {
                       </button>
                     ))}
                   </div>
-                  
+
                   <div className="flex items-center gap-1">
                     <button className="p-2 text-gray-500 hover:text-blue-500 hover:bg-blue-50 rounded-xl transition-all hover:scale-110">
                       <BookmarkIcon className="w-4 h-4" />
                     </button>
-                    <button 
+                    <button
                       onClick={() => handleShare(post)}
                       className="p-2 text-gray-500 hover:text-green-500 hover:bg-green-50 rounded-xl transition-all hover:scale-110"
                     >
@@ -1144,7 +1143,7 @@ const handleCreatePost = async (e) => {
                               <span className="font-semibold text-gray-800 text-sm truncate">{comment.username}</span>
                               <span className="text-xs text-gray-500 flex-shrink-0">{getTimeAgo(comment.createdAt)}</span>
                             </div>
-                            
+
                             {comment.userId === user?.id && (
                               <div className="relative flex-shrink-0">
                                 <button
@@ -1153,7 +1152,7 @@ const handleCreatePost = async (e) => {
                                 >
                                   <EllipsisHorizontalIcon className="w-3 h-3" />
                                 </button>
-                                
+
                                 {showDropdown[`comment-${post._id}-${comment._id}`] && (
                                   <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20 min-w-[100px]">
                                     <button
@@ -1175,7 +1174,7 @@ const handleCreatePost = async (e) => {
                               </div>
                             )}
                           </div>
-                          
+
                           {editingComment === `${post._id}-${comment._id}` ? (
                             <div>
                               <textarea
