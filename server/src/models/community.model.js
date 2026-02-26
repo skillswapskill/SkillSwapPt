@@ -3,8 +3,32 @@ import mongoose from 'mongoose';
 const commentSchema = new mongoose.Schema({
   content: {
     type: String,
-    required: true
+    required: false
     // ✅ NO maxlength restriction
+  },
+  imageUrl: {
+    type: String,
+    default: ''
+  },
+  imagePublicId: {
+    type: String,
+    default: ''
+  },
+  videoUrl: {
+    type: String,
+    default: ''
+  },
+  videoPublicId: {
+    type: String,
+    default: ''
+  },
+  audioUrl: {
+    type: String,
+    default: ''
+  },
+  audioPublicId: {
+    type: String,
+    default: ''
   },
   userId: {
     type: String,
@@ -35,6 +59,22 @@ const postSchema = new mongoose.Schema({
     default: ''
   },
   imagePublicId: {
+    type: String,
+    default: ''
+  },
+  videoUrl: {
+    type: String,
+    default: ''
+  },
+  videoPublicId: {
+    type: String,
+    default: ''
+  },
+  audioUrl: {
+    type: String,
+    default: ''
+  },
+  audioPublicId: {
     type: String,
     default: ''
   },

@@ -35,7 +35,7 @@ const server = createServer(app);
 // Dynamic CORS Configuration
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://skillswap.company", 
+  "https://skillswap.company",
   "http://localhost:8081",
   "http://172.16.75.25:8081"
 ];
@@ -104,7 +104,7 @@ io.on('connection', (socket) => {
       await suspiciousActivityController.handleSuspiciousActivity(socket, data);
     } catch (error) {
       console.error('❌ Error in suspicious activity handler:', error);
-      socket.emit('error', { 
+      socket.emit('error', {
         type: 'suspicious-activity-error',
         message: 'Failed to process suspicious activity detection',
         timestamp: new Date().toISOString()
@@ -129,7 +129,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Handle video call events (integrate with your existing ZegoCloud setup)
+  // Handle video call events (integrate with the video chat setup)
   socket.on('video-call-started', ({ sessionId, userId }) => {
     socket.join(`video-${sessionId}`);
     console.log(`📹 Video call started for session ${sessionId}`);
@@ -145,7 +145,7 @@ io.on('connection', (socket) => {
   socket.on('disconnect', (reason) => {
     const { userId, sessionId } = socket;
     console.log(`👋 User ${userId || socket.id} disconnected from session ${sessionId || 'unknown'}, reason: ${reason}`);
-    
+
     // Clean up if user was in a session
     if (sessionId) {
       socket.leave(sessionId);

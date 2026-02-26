@@ -27,8 +27,8 @@ class ErrorBoundary extends React.Component {
             <div className="text-red-500 text-6xl mb-4">⚠️</div>
             <h2 className="text-2xl font-bold text-gray-800 mb-4">Something went wrong</h2>
             <p className="text-gray-600 mb-6">{this.state.error?.message || "An unexpected error occurred"}</p>
-            <button 
-              onClick={() => window.location.reload()} 
+            <button
+              onClick={() => window.location.reload()}
               className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200"
             >
               Reload Page
@@ -45,9 +45,9 @@ const JoinRoom = () => {
   const { sessionId } = useParams()
   const { user } = useUser()
   const navigate = useNavigate()
-  
+
   const { get } = useApi()
-  
+
   const [sessionData, setSessionData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -71,11 +71,11 @@ const JoinRoom = () => {
     try {
       setLoading(true)
       console.log('Fetching session data for:', sessionId)
-      
+
       // Try to fetch session data
       const response = await get(`/api/sessions/session/${sessionId}`)
       const session = response.data
-      
+
       console.log('Session data loaded:', session)
 
       if (!session) {
@@ -97,7 +97,7 @@ const JoinRoom = () => {
 
     } catch (error) {
       console.error('Failed to fetch session data:', error)
-      
+
       if (error.response?.status === 404) {
         setError('Session not found.')
       } else if (error.response?.status >= 500) {
@@ -105,7 +105,7 @@ const JoinRoom = () => {
       } else {
         setError('Failed to load meeting data. Please try again.')
       }
-      
+
       setLoading(false)
     }
   }
@@ -145,8 +145,8 @@ const JoinRoom = () => {
           <p className="text-gray-300 mb-2">Preparing your session...</p>
           <div className="flex justify-center">
             <div className="animate-bounce text-purple-400">●</div>
-            <div className="animate-bounce text-purple-400 mx-1" style={{animationDelay: '0.1s'}}>●</div>
-            <div className="animate-bounce text-purple-400" style={{animationDelay: '0.2s'}}>●</div>
+            <div className="animate-bounce text-purple-400 mx-1" style={{ animationDelay: '0.1s' }}>●</div>
+            <div className="animate-bounce text-purple-400" style={{ animationDelay: '0.2s' }}>●</div>
           </div>
         </div>
       </div>
@@ -162,15 +162,15 @@ const JoinRoom = () => {
           <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-6 text-left">
             <p className="text-red-700 leading-relaxed">{error}</p>
           </div>
-          
+
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button 
+            <button
               onClick={fetchSessionData}
               className="bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
             >
               🔄 Try Again
             </button>
-            <button 
+            <button
               onClick={goBack}
               className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
             >
@@ -185,8 +185,8 @@ const JoinRoom = () => {
   return (
     <ErrorBoundary>
       <div className="meeting-page relative">
-        {/* Meeting Header */}
-        <div className="absolute top-4 left-4 z-50 bg-black bg-opacity-70 backdrop-blur-sm text-white px-6 py-3 rounded-xl shadow-lg border border-white border-opacity-20">
+        {/* Meeting Header - Repositioned to top-center to avoid logo conflict */}
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-black bg-opacity-70 backdrop-blur-sm text-white px-6 py-3 rounded-xl shadow-lg border border-white border-opacity-20">
           <div className="flex items-center gap-3">
             <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
             <div>
@@ -198,22 +198,10 @@ const JoinRoom = () => {
           </div>
         </div>
 
-        {/* Meeting Time Info */}
-        {sessionData?.dateTime && (
-          <div className="absolute top-4 right-4 z-50 bg-blue-600 bg-opacity-80 backdrop-blur-sm text-white px-4 py-2 rounded-lg text-sm">
-            <div className="text-center">
-              <div className="font-medium">
-                {new Date(sessionData.dateTime).toLocaleDateString()}
-              </div>
-              <div className="opacity-90">
-                {new Date(sessionData.dateTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-              </div>
-            </div>
-          </div>
-        )}
+
 
         {/* Video Call Component */}
-        <VideoCall 
+        <VideoCall
           sessionId={sessionId}
           userId={user.id}
           userName={user.firstName || user.username || "User"}

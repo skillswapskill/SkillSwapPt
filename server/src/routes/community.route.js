@@ -15,61 +15,70 @@ cloudinary.config({
 // Configure multer for memory storage
 const storage = multer.memoryStorage();
 const fileFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith('image/')) {
+  const allowedMime = ['image/', 'video/', 'audio/'];
+  const extMatch = file.originalname.match(/\.(mp4|webm|avi|mkv|mov|mp3|wav|ogg)$/i);
+  if (allowedMime.some(type => file.mimetype.startsWith(type)) || extMatch || file.mimetype === 'application/octet-stream') {
     cb(null, true);
   } else {
-    cb(new Error('Only image files are allowed!'), false);
+    cb(new Error(`Only image, video, or audio files are allowed!`), false);
   }
 };
 
-const upload = multer({ 
+const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }
+  limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
 });
 
-// Image upload endpoint
-router.post('/upload-image', upload.single('image'), async (req, res) => {
+// Media upload endpoint
+router.post('/upload-media', upload.single('media'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({
         success: false,
-        message: 'No image file provided'
+        message: 'No media file provided'
       });
     }
 
-    console.log('📷 Uploading image to Cloudinary...');
+    console.log(`📷 Uploading ${req.file.mimetype} to Cloudinary...`);
 
     const base64String = req.file.buffer.toString('base64');
     const dataURI = `data:${req.file.mimetype};base64,${base64String}`;
 
-    const cloudinaryResponse = await cloudinary.uploader.upload(dataURI, {
+    let resourceType = 'auto';
+    const options = {
       folder: 'community_posts',
-      public_id: `post_${Date.now()}_${Math.round(Math.random() * 1E9)}`,
+      public_id: `media_${Date.now()}_${Math.round(Math.random() * 1E9)}`,
       overwrite: true,
-      resource_type: 'image',
-      transformation: [
+      resource_type: resourceType,
+    };
+
+    if (req.file.mimetype.startsWith('image/')) {
+      options.transformation = [
         { width: 1200, height: 1200, crop: 'limit' },
         { quality: 'auto' },
         { fetch_format: 'auto' }
-      ]
-    });
+      ];
+    }
 
-    const imageUrl = cloudinaryResponse.secure_url;
+    const cloudinaryResponse = await cloudinary.uploader.upload(dataURI, options);
 
-    console.log('✅ Image uploaded to Cloudinary:', imageUrl);
-    
+    const mediaUrl = cloudinaryResponse.secure_url;
+
+    console.log(`✅ Media uploaded to Cloudinary: ${mediaUrl}`);
+
     res.status(200).json({
       success: true,
-      message: 'Image uploaded successfully',
-      imageUrl: imageUrl,
-      publicId: cloudinaryResponse.public_id
+      message: 'Media uploaded successfully',
+      mediaUrl: mediaUrl,
+      publicId: cloudinaryResponse.public_id,
+      mediaType: req.file.mimetype
     });
   } catch (error) {
     console.error('❌ Cloudinary upload failed:', error);
     res.status(500).json({
       success: false,
-      message: 'Error uploading image',
+      message: 'Error uploading media',
       error: error.message
     });
   }
@@ -80,43 +89,43 @@ router.get('/posts', async (req, res) => {
   try {
     const { sort = 'latest', limit = 20, page = 1 } = req.query;
     const skip = (page - 1) * limit;
-    
+
     let sortOptions = {};
-    
+
     switch (sort) {
       case 'trending':
         const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-        const posts = await Post.find({ 
-          createdAt: { $gte: weekAgo } 
+        const posts = await Post.find({
+          createdAt: { $gte: weekAgo }
         })
-        .sort({ engagement: -1, createdAt: -1 })
-        .limit(parseInt(limit))
-        .skip(skip);
-        
+          .sort({ engagement: -1, createdAt: -1 })
+          .limit(parseInt(limit))
+          .skip(skip);
+
         return res.status(200).json({
           success: true,
           posts,
           total: posts.length,
           page: parseInt(page)
         });
-        
+
       case 'popular':
         sortOptions = { engagement: -1, createdAt: -1 };
         break;
-        
+
       case 'latest':
       default:
         sortOptions = { createdAt: -1 };
         break;
     }
-    
+
     const posts = await Post.find()
       .sort(sortOptions)
       .limit(parseInt(limit))
       .skip(skip);
-    
+
     const total = await Post.countDocuments();
-    
+
     res.status(200).json({
       success: true,
       posts,
@@ -139,16 +148,16 @@ router.post('/posts', async (req, res) => {
   try {
     console.log('📥 Received POST request to create post');
     console.log('📝 Request body:', req.body);
-    
-    const { content, userId, username, userAvatar, tags, imageUrl, imagePublicId } = req.body;
-    
+
+    const { content, userId, username, userAvatar, tags, imageUrl, imagePublicId, videoUrl, videoPublicId, audioUrl, audioPublicId } = req.body;
+
     // Enhanced validation logging
     console.log('🔍 Validating request data...');
     console.log('- userId:', userId);
     console.log('- username:', username);
     console.log('- content:', content ? `${content.length} characters` : 'empty');
     console.log('- imageUrl:', imageUrl ? 'present' : 'not present');
-    
+
     if (!userId || !username) {
       console.log('❌ Missing required fields');
       return res.status(400).json({
@@ -157,11 +166,11 @@ router.post('/posts', async (req, res) => {
       });
     }
 
-    if (!content && !imageUrl) {
-      console.log('❌ No content or image provided');
+    if (!content && !imageUrl && !videoUrl && !audioUrl) {
+      console.log('❌ No content or media provided');
       return res.status(400).json({
         success: false,
-        message: 'Post must have either content or an image'
+        message: 'Post must have either content or media attached'
       });
     }
 
@@ -172,6 +181,10 @@ router.post('/posts', async (req, res) => {
       content: content || '',
       imageUrl: imageUrl || '',
       imagePublicId: imagePublicId || '',
+      videoUrl: videoUrl || '',
+      videoPublicId: videoPublicId || '',
+      audioUrl: audioUrl || '',
+      audioPublicId: audioPublicId || '',
       userId,
       username,
       userAvatar: userAvatar || '',
@@ -184,7 +197,7 @@ router.post('/posts', async (req, res) => {
     console.log('💾 Saving post to database...');
     const savedPost = await newPost.save();
     console.log('✅ Post saved successfully:', savedPost._id);
-    
+
     res.status(201).json({
       success: true,
       message: 'Post created successfully',
@@ -195,7 +208,7 @@ router.post('/posts', async (req, res) => {
     console.error('Error message:', error.message);
     console.error('Error stack:', error.stack);
     console.error('Error name:', error.name);
-    
+
     // Handle specific MongoDB validation errors
     if (error.name === 'ValidationError') {
       const validationErrors = Object.values(error.errors).map(err => err.message);
@@ -206,7 +219,7 @@ router.post('/posts', async (req, res) => {
         errors: validationErrors
       });
     }
-    
+
     res.status(500).json({
       success: false,
       message: 'Server error while creating post',
@@ -326,12 +339,12 @@ router.put('/posts/:postId/comments/:commentId', async (req, res) => {
 router.post('/posts/:postId/comment', async (req, res) => {
   try {
     const { postId } = req.params;
-    const { content, userId, username, userAvatar } = req.body;
+    const { content, userId, username, userAvatar, imageUrl, imagePublicId, videoUrl, videoPublicId, audioUrl, audioPublicId } = req.body;
 
-    if (!content || !userId || !username) {
+    if ((!content && !imageUrl && !videoUrl && !audioUrl) || !userId || !username) {
       return res.status(400).json({
         success: false,
-        message: 'Missing required fields'
+        message: 'Missing required fields or content'
       });
     }
 
@@ -346,16 +359,22 @@ router.post('/posts/:postId/comment', async (req, res) => {
     }
 
     const newComment = {
-      content,
+      content: content || '',
       userId,
       username,
       userAvatar,
+      imageUrl: imageUrl || '',
+      imagePublicId: imagePublicId || '',
+      videoUrl: videoUrl || '',
+      videoPublicId: videoPublicId || '',
+      audioUrl: audioUrl || '',
+      audioPublicId: audioPublicId || '',
       createdAt: new Date()
     };
 
     post.comments.push(newComment);
     await post.save();
-    
+
     res.status(201).json({
       success: true,
       message: 'Comment added successfully',
@@ -433,7 +452,7 @@ router.post('/posts/:postId/like', async (req, res) => {
     }
 
     const likedIndex = post.likes.indexOf(userId);
-    
+
     if (likedIndex > -1) {
       post.likes.splice(likedIndex, 1);
     } else {
@@ -441,7 +460,7 @@ router.post('/posts/:postId/like', async (req, res) => {
     }
 
     await post.save();
-    
+
     res.status(200).json({
       success: true,
       message: likedIndex > -1 ? 'Post unliked' : 'Post liked',
@@ -472,7 +491,7 @@ router.post('/posts/:postId/upvote', async (req, res) => {
     }
 
     const upvoteIndex = post.upvotes.indexOf(userId);
-    
+
     if (upvoteIndex > -1) {
       post.upvotes.splice(upvoteIndex, 1);
     } else {
@@ -480,7 +499,7 @@ router.post('/posts/:postId/upvote', async (req, res) => {
     }
 
     await post.save();
-    
+
     res.status(200).json({
       success: true,
       message: upvoteIndex > -1 ? 'Upvote removed' : 'Post upvoted',
@@ -517,18 +536,24 @@ router.delete('/posts/:postId', async (req, res) => {
       });
     }
 
-    // Delete associated image from Cloudinary if exists
-    if (post.imagePublicId) {
-      try {
-        await cloudinary.uploader.destroy(post.imagePublicId);
-        console.log('✅ Image deleted from Cloudinary:', post.imagePublicId);
-      } catch (error) {
-        console.warn('⚠️ Failed to delete image from Cloudinary:', error);
+    // Delete associated media from Cloudinary if exists
+    const deleteMedia = async (publicId, resourceType) => {
+      if (publicId) {
+        try {
+          await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
+          console.log(`✅ Media deleted from Cloudinary: ${publicId}`);
+        } catch (error) {
+          console.warn(`⚠️ Failed to delete media from Cloudinary:`, error);
+        }
       }
-    }
+    };
+
+    await deleteMedia(post.imagePublicId, 'image');
+    await deleteMedia(post.videoPublicId, 'video');
+    await deleteMedia(post.audioPublicId, 'video');
 
     await Post.findByIdAndDelete(postId);
-    
+
     res.status(200).json({
       success: true,
       message: 'Post deleted successfully'
@@ -549,14 +574,14 @@ router.get('/posts/user/:userId', async (req, res) => {
     const { userId } = req.params;
     const { limit = 10, page = 1 } = req.query;
     const skip = (page - 1) * limit;
-    
+
     const posts = await Post.find({ userId })
       .sort({ createdAt: -1 })
       .limit(parseInt(limit))
       .skip(skip);
-    
+
     const total = await Post.countDocuments({ userId });
-    
+
     res.status(200).json({
       success: true,
       posts,
