@@ -185,18 +185,6 @@ const JoinRoom = () => {
   return (
     <ErrorBoundary>
       <div className="meeting-page relative">
-        {/* Meeting Header - Repositioned to top-center to avoid logo conflict */}
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-black bg-opacity-70 backdrop-blur-sm text-white px-6 py-3 rounded-xl shadow-lg border border-white border-opacity-20">
-          <div className="flex items-center gap-3">
-            <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-            <div>
-              <h3 className="font-semibold text-lg">{sessionData?.skill || 'Meeting Room'}</h3>
-              <div className="flex items-center gap-4 text-sm opacity-90">
-                <span>Welcome: {user.firstName || user.username || "User"}</span>
-              </div>
-            </div>
-          </div>
-        </div>
 
 
 
@@ -208,15 +196,6 @@ const JoinRoom = () => {
           sessionData={sessionData}
         />
 
-        {/* Exit Button */}
-        <div className="absolute bottom-6 left-6 z-50">
-          <button
-            onClick={goBack}
-            className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
-          >
-            🚪 Exit Meeting
-          </button>
-        </div>
       </div>
     </ErrorBoundary>
   )
